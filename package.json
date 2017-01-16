@@ -13,6 +13,7 @@
     "react-native-card-view": "0.0.3",
     "react-native-cookies": "^2.0.0",
     "react-native-gifted-chat": "0.0.10",
+    "react-native-material-ui": "^1.6.0",
     "react-native-textinput-effects": "^0.3.0",
     "react-native-vector-icons": "^4.0.0"
   },

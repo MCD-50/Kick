@@ -12,13 +12,26 @@ import {
   View,
   Button,
   Navigator,
+  
 } from 'react-native';
 
 var fluxify = require('fluxify');
-import { Home } from './src/ui/Home.js';
 
+import Main from './src/ui/Main.js';
+import { COLOR, ThemeProvider } from 'react-native-material-ui';
+var UIManager = require('UIManager');
 
-
+const uiTheme = {
+  palette: {
+    primaryColor: '#333333',
+    accentColor: '#ff4500',
+  },
+  toolbar: {
+    container: {
+      height: 55,
+    },
+  },
+};
 
 export default class chatApp extends Component {
 
@@ -26,25 +39,29 @@ export default class chatApp extends Component {
     super(params);
   }
 
+  componentWillMount() {
+    if (UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }
+
   renderScene(route, navigator) {
     let routeId = route.id;
     if (routeId === 'HomePage') {
       return (
-        <Home navigator={navigator} route={route}/>
+        <Main navigator={navigator} route={route} />
       );
     }
-    // if (routeId === 'CreateNewGroupPage') {
-    //   return (
-    //     <TabView navigator={navigator} data={movies} />
-    //   );
-    // }
   }
 
   render() {
     return (
-      <Navigator
-        initialRoute={{ id: 'HomePage', name: 'Home' }}
-        renderScene={this.renderScene.bind(this)} />
+      <ThemeProvider uiTheme={uiTheme}>
+        <Navigator
+          initialRoute={{ id: 'HomePage', name: 'Home' }}
+          renderScene={this.renderScene.bind(this)} />
+      </ThemeProvider>
+
     );
   }
 }
