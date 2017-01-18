@@ -8,6 +8,12 @@ const afterMethod = 'frappe.utils.bot.get_bot_reply?question=';
 const login = 'usr=Administrator&pwd=qwe';
 const loginUrl = 'http://192.168.0.106:3000/api/method/login?' + login;
 
+export const DOMAIN = 'DOMAIN';
+export const EMAIL = 'EMAIL';
+export const SID = 'SID';
+export const FIRST_RUN = 'FIRST_RUN';
+export const FULL_URL ='FULL_URL';
+
 
 function getCommon() {
     return header + localHost;

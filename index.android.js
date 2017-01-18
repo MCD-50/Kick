@@ -12,20 +12,43 @@ import {
   View,
   Button,
   Navigator,
-  
 } from 'react-native';
 
 var fluxify = require('fluxify');
 
-import Main from './src/ui/Main.js';
+import CookieManager from 'react-native-cookies';
+import { isFirstRun, getStoredDataFromKey } from './src/helper/SharedReferencesHelper.js';
+
 import { COLOR, ThemeProvider } from 'react-native-material-ui';
 var UIManager = require('UIManager');
 
+
+const login = 'usr=Administrator&pwd=qwe';
+const loginUrl = 'http://192.168.0.106:3000/api/method/login?' + login;
+
+import MainPage from './src/ui/MainPage.js';
+import ChatPage from './src/ui/ChatPage.js';
+import LoginPage from './src/ui/LoginPage.js';
+import SplashPage from './src/ui/SplashPage.js';
+import BotList from './src/ui/BotList.js';
+
+import { FULL_URL, SID } from './src/helper/AppConstant.js';
+
+const TEXTBOLDPRICOLOR = '#212121';
+const TEXTGRAYSECCOLOR = '#8F8F8F'
+const PRICOLOR = '#527DA3'
+const ACCENTCOLOR = '#6AA1CE'
+
+
 const uiTheme = {
   palette: {
-    primaryColor: '#333333',
-    accentColor: '#ff4500',
+    primaryColor: PRICOLOR,
+    accentColor: ACCENTCOLOR,
+    primaryTextColor: TEXTBOLDPRICOLOR,
+    secondaryTextColor: TEXTGRAYSECCOLOR,
+    alternateTextColor: 'white'
   },
+
   toolbar: {
     container: {
       height: 55,
@@ -33,32 +56,95 @@ const uiTheme = {
   },
 };
 
-export default class chatApp extends Component {
+const _this = {};
 
+export default class chatApp extends Component {
   constructor(params) {
     super(params);
+    this.state = {
+      isLogged: false,
+      isFirstRun: false
+    }
+    _this = this;
   }
 
-  componentWillMount() {
+
+
+  componentDidMount() {
+
     if (UIManager.setLayoutAnimationEnabledExperimental) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
     }
+
+    isFirstRun().then((value) => {
+      this.setState({ isFirstRun: value })
+    });
+
+    if (this.state.isFirstRun) {
+      this.setState({
+        isLogged: false
+      });
+    } else {
+      getStoredDataFromKey(FULL_URL)
+        .then((full) => {
+          if (full) {
+            CookieManager.get(full, (err, cookie) => {
+              let isAuthenticated;
+              if (cookie && cookie.sid && cookie.sid !== 'Guest') {
+                isAuthenticated = true;
+              }
+              else {
+                isAuthenticated = false;
+              }
+              this.setState({
+                isLogged: isAuthenticated
+              });
+            });
+          } else {
+            this.setState({
+              isLogged: false
+            });
+          }
+        })
+    }
   }
+
 
   renderScene(route, navigator) {
     let routeId = route.id;
-    if (routeId === 'HomePage') {
+    if (routeId === 'SplashPage') {
       return (
-        <Main navigator={navigator} route={route} />
+        <SplashPage navigator={navigator} route={route} />
+      );
+    }
+    else if (routeId === 'Base') {
+      if (_this.state.isLogged) {
+        return (<MainPage navigator={navigator} route={route} />);
+      } else {
+        return (<LoginPage navigator={navigator} route={route} />);
+      }
+    }
+    else if (routeId === 'ChatPage') {
+      return (
+        <ChatPage navigator={navigator} route={route} />
+      );
+    } else if (routeId === 'HomePage') {
+      return (
+        <MainPage navigator={navigator} route={route} />
+      );
+    } else if (routeId === 'BotPage') {
+      return (
+        <BotList navigator={navigator} route={route} />
       );
     }
   }
 
+
+
   render() {
     return (
       <ThemeProvider uiTheme={uiTheme}>
-        <Navigator
-          initialRoute={{ id: 'HomePage', name: 'Home' }}
+        <Navigator initialRoute={{ id: 'SplashPage', name: 'Splash', data: {} }}
           renderScene={this.renderScene.bind(this)} />
       </ThemeProvider>
 
@@ -92,7 +178,6 @@ var helloStore = fluxify.createStore({
   },
   actionCallbacks: {
     changeName: function (state, action) {
-
       // Stores updates are only made inside store's action callbacks
       state.set({ name: action.payload.name });
     }

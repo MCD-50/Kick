@@ -35,6 +35,8 @@
 		D2476CC5CF944024A8CAB7B9 /* Octicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D191EC0E4B9C41189DFC45BA /* Octicons.ttf */; };
 		398A8372CDD54268ABCCB075 /* SimpleLineIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1B38D8CC4671413188719D21 /* SimpleLineIcons.ttf */; };
 		5378358ECEAE44528498BA84 /* Zocial.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5423D42620134F5494A0D75A /* Zocial.ttf */; };
+		A97D3556F2304A3DA834E3C2 /* libSQLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 80AEF5F98D764CD88A165C8C /* libSQLite.a */; };
+		64A917519D9541C49849456E /* libsqlite3.0.tbd in Resources */ = {isa = PBXBuildFile; fileRef = F9D2B093157E40D2BA4B23A1 /* libsqlite3.0.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -259,6 +261,9 @@
 		D191EC0E4B9C41189DFC45BA /* Octicons.ttf */ = {isa = PBXFileReference; name = "Octicons.ttf"; path = "../node_modules/react-native-vector-icons/Fonts/Octicons.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		1B38D8CC4671413188719D21 /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; name = "SimpleLineIcons.ttf"; path = "../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		5423D42620134F5494A0D75A /* Zocial.ttf */ = {isa = PBXFileReference; name = "Zocial.ttf"; path = "../node_modules/react-native-vector-icons/Fonts/Zocial.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2A5D3831D0F94042BCF38E8B /* SQLite.xcodeproj */ = {isa = PBXFileReference; name = "SQLite.xcodeproj"; path = "../node_modules/react-native-sqlite-storage/src/ios/SQLite.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
+		80AEF5F98D764CD88A165C8C /* libSQLite.a */ = {isa = PBXFileReference; name = "libSQLite.a"; path = "libSQLite.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
+		F9D2B093157E40D2BA4B23A1 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; name = "libsqlite3.0.tbd"; path = "usr/lib/libsqlite3.0.tbd"; sourceTree = SDKROOT; fileEncoding = undefined; lastKnownFileType = sourcecode.text-based-dylib-definition; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -287,6 +292,8 @@
 				139FDEF61B0652A700C62182 /* libRCTWebSocket.a in Frameworks */,
 				8A3DAED7A90345ED844604D5 /* libRNCookieManagerIOS.a in Frameworks */,
 				309EDF221B2B47B18756151E /* libRNVectorIcons.a in Frameworks */,
+				A97D3556F2304A3DA834E3C2 /* libSQLite.a in Frameworks */,
+				64A917519D9541C49849456E /* libsqlite3.0.tbd in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -433,6 +440,7 @@
 				139FDEE61B06529A00C62182 /* RCTWebSocket.xcodeproj */,
 				5DF268A90B1B4DBA802C89B3 /* RNCookieManagerIOS.xcodeproj */,
 				2DEFA418CB444B61BC89FC08 /* RNVectorIcons.xcodeproj */,
+				2A5D3831D0F94042BCF38E8B /* SQLite.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -454,6 +462,7 @@
 				00E356EF1AD99517003FC87E /* chatAppTests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				6CDA89E08EA9493B9B4EA5F4 /* Resources */,
+				C11B3A62AB8C494EA71C3675 /* Frameworks */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -483,6 +492,15 @@
 				5423D42620134F5494A0D75A /* Zocial.ttf */,
 			);
 			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
+		C11B3A62AB8C494EA71C3675 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F9D2B093157E40D2BA4B23A1 /* libsqlite3.0.tbd */,
+			);
+			name = Frameworks;
 			path = "";
 			sourceTree = "<group>";
 		};
@@ -887,6 +905,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 			};
 			name = Debug;
@@ -903,6 +922,7 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/chatApp.app/chatApp";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);

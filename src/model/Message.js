@@ -15,7 +15,6 @@ export class Message {
         return this.toWhom;
     }
 
-
     getText() {
         return this.text;
     }
