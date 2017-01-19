@@ -152,6 +152,27 @@ export default class chatApp extends Component {
   }
 }
 
+// <Navigator
+//   renderScene={(route, navigator) =>
+//     // ...
+//   }
+//   configureScene={(route, routeStack) =>
+//     Navigator.SceneConfigs.FloatFromBottom}
+// />
+// Navigator.SceneConfigs.PushFromRight (default)
+// Navigator.SceneConfigs.FloatFromRight
+// Navigator.SceneConfigs.FloatFromLeft
+// Navigator.SceneConfigs.FloatFromBottom
+// Navigator.SceneConfigs.FloatFromBottomAndroid
+// Navigator.SceneConfigs.FadeAndroid
+// Navigator.SceneConfigs.SwipeFromLeft
+// Navigator.SceneConfigs.HorizontalSwipeJump
+// Navigator.SceneConfigs.HorizontalSwipeJumpFromRight
+// Navigator.SceneConfigs.HorizontalSwipeJumpFromLeft
+// Navigator.SceneConfigs.VerticalUpSwipeJump
+// Navigator.SceneConfigs.VerticalDownSwipeJump
+
+
 
 // <View style={styles.container}>
 //         <Text style={styles.welcome}>

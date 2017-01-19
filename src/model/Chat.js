@@ -1,36 +1,61 @@
 
 export class Chat {
 
-    constructor(fromWhomId, toWhomId, message) {
-        this.fromWhomId = fromWhomId;
-        this.toWhomId = toWhomId;
-        this.message = message;
+    constructor(name, latestMsg, image, newMsgCount) {
+            this.name = name,
+            this.latestMsg = latestMsg,
+            this.image = image,
+            this.newMsgCount = newMsgCount
     }
 
-    getFromWhomId() {
-        return this.fromWhomId;
+
+    getId() {
+        return this.id;
     }
 
-    getToWhomId() {
-        return this.toWhomId;
+    getName() {
+        return this.name;
     }
 
-    getMessage() {
-        return this.message;
+    getLatestMsg() {
+        return this.latestMsg;
     }
 
-    setFromWhomId(fromWhomId) {
-        this.fromWhomId = fromWhomId;
+    getImage() {
+        return this.image;
     }
 
-    setToWhomId(toWhomId) {
-        this.toWhomId = toWhomId;
+    getNewMsgCount() {
+        return this.newMsgCount;
     }
 
-    setMessage(message) {
-        this.message = message;
+    setId(id) {
+        this.id = id;
     }
 
+    setName(name) {
+        this.name = name;
+    }
+
+    setLatestMsg(latestMsg) {
+        this.latestMsg = latestMsg;
+    }
+
+    setImage(image) {
+        this.image = image;
+    }
+
+    setNewMsgCount(newMsgCount) {
+        this.newMsgCount = newMsgCount;
+    }
+
+    setLongLatestMessage(longLatestMessage){
+        this.longLatestMessage = longLatestMessage;
+    }
+
+    getLongLatestMessage(){
+        return this.longLatestMessage;
+    }
 }
 
 

@@ -1,20 +1,80 @@
-import React from 'react';
-import SQLite from 'react-native-sqlite-storage';
+import React, { Component } from 'react';
 
+import DB from '../utils/DatabaseUtils.js';
 
-var database_name = "kickbdname.db";
-var database_version = "1.0";
-var database_displayname = "db";
-var database_size = 200000;
+class DatabaseHelper extends Component {
 
-let conn = SQLite.openDatabase(database_name, database_version, database_displayname, database_size, openDBHandler, errorDBHandler);
-
-class Database {
-    getConnection() {
-        return conn;
+    //chat related functions.
+    getAllChats(callback) {
+        DB.CHATS.get_all(function (results) {
+            callback(results);
+        });
     }
+
+    updateChat(chatId, data, callback) {
+        DB.CHATS.update_id(chatId, data, function (results) {
+            callback(results);
+        })
+    }
+
+    addNewChat(data, callback) {
+        DB.CHATS.add(data, function (results) {
+            callback(results);
+        })
+    }
+
+    getChatById(chatId, callback) {
+        DB.CHATS.get_id(chatId, function (results) {
+            callback(results);
+        })
+    }
+
+    removeChatById(chatId, callback) {
+        DB.CHATS.remove_id(chatId, function (results) {
+            callback(results);
+        })
+    }
+
+    //chatitem related function
+    getAllChatItemForChatByChatId(chatId, callback) {
+        DB.CHATITEM.get_id(chatId, function (results) {
+            callback(results);
+        })
+    }
+
+    addNewChatItem(data, callback) {
+        DB.CHATITEM.add(data, function (results) {
+            callback(results);
+        })
+    }
+
+    getChatItemById(chatItemId, callback) {
+        DB.CHATITEM.get_id(chatItemId, function (results) {
+            callback(results);
+        })
+    }
+
+    removeChatItemById(chatItemId, callback) {
+        DB.CHATITEM.remove_id(chatItemId, function (results) {
+            callback(results);
+        })
+    }
+
+
+    //remove database
+    removeAllDatabaseItems(callback) {
+        DB.CHATS.erase_db(function (results) {
+            console.log(results);
+            DB.CHATITEM.erase_db(function (results) {
+                console.log(results);
+            })
+        })
+
+
+    }
+
 }
 
-const database = new Database();
+const databaseHelper = new DatabaseHelper();
 
-export default database;
+export default databaseHelper;  

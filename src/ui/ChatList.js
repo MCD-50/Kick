@@ -2,8 +2,13 @@ import { View, StyleSheet, StatusBar, ListView, ToastAndroid, ScrollView, Platfo
 import React, { Component, PropTypes } from 'react';
 
 import { Toolbar, Icon, Avatar, ListItem, ActionButton } from 'react-native-material-ui';
-
 import { Params } from '../model/Params.js';
+import { Chat } from '../model/Chat.js';
+var DBEvents = require('react-native-db-models').DBEvents;
+
+import DatabaseHelper from '../helper/DatabaseHelper.js';
+import DatabaseWrapper from '../utils/DatabaseWrapper.js';
+
 
 const styles = StyleSheet.create({
     container: {
@@ -35,6 +40,28 @@ class ChatList extends Component {
 
         this.renderListItem = this.renderListItem.bind(this);
         this.onChangeText = this.onChangeText.bind(this);
+        this.callback = this.callback.bind(this);
+        this.setAllChats = this.setAllChats.bind(this);
+    }
+
+
+    componentWillMount() {
+        this.setAllChats()
+    }
+
+    setAllChats() {
+        DatabaseWrapper.getAllChats((results) => {
+            console.log(results)
+            
+            let chats = Object.keys(results.rows).map((key) => {
+                const item = results.rows[key];
+                const chat = new Chat(item.name, item.latestMsg, item.image, item.newMsgCount);
+                chat.setId(item._id);
+                return chat;
+            })
+
+            this.setState({ dataSource: ds.cloneWithRows(chats) });
+        })
     }
 
     onChangeText(value) {
@@ -42,23 +69,47 @@ class ChatList extends Component {
         //search related tasks;
     }
 
-    renderListItem(chatlistItem) {
+    renderListItem(chat) {
         const searchText = this.state.searchText.toLowerCase();
 
-        if (searchText.length > 0 && chatlistItem.toLowerCase().indexOf(searchText) < 0) {
+        if (searchText.length > 0 && chat.getName().toLowerCase().indexOf(searchText) < 0) {
             return null;
         }
 
         return (
             <ListItem
                 divider
-                leftElement={<Avatar text={chatlistItem[0]} />}
-                centerElement={chatlistItem}
+                leftElement={<Avatar text={chat.getName()[0]} />}
+                centerElement={{
+                    primaryText: chat.getName(),
+                    secondaryText: chat.getLatestMsg(),
+                }}
+
                 onPress={() => this.props.navigator.push({
-                    id: 'ChatPage', name: chatlistItem, data: new Params(chatlistItem + '987', 'ChatList', 'https://facebook.github.io/react/img/logo_og.png')
+                    id: 'ChatPage', name: chat.getName(),
+                    data: new Params(chat.getName() + '987', 'ChatList', 'https://facebook.github.io/react/img/logo_og.png')
                 })} />
         );
     }
+
+    callback() {
+        this.setAllChats();
+    }
+
+    // recursiveDelete(ids) {
+    //     let length = ids.length;
+    //     if (length == 0) {
+    //         DatabaseHelper.getAllChats(function (results) {
+    //             console.log(results);
+    //             //this.setState({dataSource : results});
+    //         })
+    //         return;
+    //     }
+    //     DatabaseHelper.removeChatById(ids[length - 1], (results) => {
+    //         ids.pop();
+    //         this.recursiveDelete(ids);
+    //     })
+    // }
 
     render() {
         return (
@@ -81,7 +132,8 @@ class ChatList extends Component {
                         // }
 
                         this.props.navigator.push({
-                            id: 'BotPage', name: 'Bots', data: {}
+                            id: 'BotPage', name: 'Bots', data: {},
+                            callback: this.callback
                         })
 
                     } } />
@@ -94,7 +146,6 @@ class ChatList extends Component {
                     ref={'LISTVIEW'}
                     renderRow={(item) => this.renderListItem(item)}
                     />
-
 
             </View>
         )

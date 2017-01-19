@@ -1,21 +1,21 @@
-import { View, StyleSheet, Image, StatusBar, ToastAndroid, ListView, ScrollView, Platform, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Image, BackAndroid, StatusBar, ToastAndroid, ListView, ScrollView, Platform, Animated, Easing } from 'react-native';
 import React, { Component, PropTypes } from 'react';
 
 import { Toolbar, Icon, Avatar, ListItem } from 'react-native-material-ui';
-
 import { Bot } from '../model/Bot.js';
+import {Chat} from '../model/Chat.js';
+import DatabaseHelper from '../helper/DatabaseHelper.js';
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    avatarImage:{
-        width:40,
-        height:40,
-        borderRadius:40,
-        elevation:2,
-        alignItems:'center',
-        justifyContent:'center'
+    avatarImage: {
+        width: 40,
+        height: 40,
+        borderRadius: 40,
+        alignItems: 'center',
+        justifyContent: 'center'
     }
 });
 
@@ -29,6 +29,7 @@ const menuItems = [
 ]
 
 const bots = [
+    
     new Bot('Todo', 'Creates new todo', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
     new Bot('Customer', 'Creates new customer', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
     new Bot('Help', 'Helps user', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
@@ -51,6 +52,31 @@ class BotList extends Component {
 
         this.renderListItem = this.renderListItem.bind(this);
         this.onChangeText = this.onChangeText.bind(this);
+        this.addBackEvent();
+    }
+
+    addBackEvent() {
+        BackAndroid.addEventListener('hardwareBackPress', () => {
+            if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                this.props.route.callback();
+                this.props.navigator.pop();
+                return true;
+            }
+            return false;
+        });
+    }
+
+
+    componentWillUnmount() {
+        BackAndroid.removeEventListener('hardwareBackPress', () => {
+            if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                console.log(this.props.route);
+                this.props.route.callback();
+                this.props.navigator.pop();
+                return true;
+            }
+            return false;
+        });
     }
 
 
@@ -66,21 +92,25 @@ class BotList extends Component {
             return null;
         }
 
-
-
         //onPress={() => this.props.navigator.push(route)}
         ///onLeftElementPress={() => this.onAvatarPressed(title)}
+
         
 
         return (
             <ListItem
                 divider
-                leftElement={<Image style={styles.avatarImage} source={{uri:chatlistItem.getAvatar()}} />}
+                leftElement={<Image style={styles.avatarImage} source={{ uri: chatlistItem.getAvatar() }} />}
                 centerElement={{
                     primaryText: chatlistItem.getName(),
                     secondaryText: chatlistItem.getSDescription()
                 }}
-                onPress={() => console.log('pressed key')}
+
+                onPress={() => DatabaseHelper.addNewChat(
+                    new Chat(chatlistItem.getName(), chatlistItem.getSDescription(),
+                    chatlistItem.getAvatar(), 0), function (results) {
+                    console.log(results);
+                })}
                 />
         );
     }
@@ -91,7 +121,11 @@ class BotList extends Component {
             <View style={styles.container}>
                 <Toolbar
                     leftElement="arrow-back"
-                    onLeftElementPress={() => this.props.navigator.pop()}
+                    onLeftElementPress={() => {
+                        this.props.route.callback();
+                        this.props.navigator.pop();
+                    } }
+
                     centerElement='Bots'
                     searchable={{
                         autoFocus: true,
@@ -104,6 +138,7 @@ class BotList extends Component {
                     }}
                     onRightElementPress={(action) => {
                         if (Platform.OS === 'android') {
+
                             //ToastAndroid.show(menuItems[action.index], ToastAndroid.SHORT);
                         }
                     } } />
@@ -111,7 +146,7 @@ class BotList extends Component {
 
                 <ListView
                     dataSource={this.state.dataSource} //data source
-                    keyboardShouldPersistTaps = 'always'
+                    keyboardShouldPersistTaps='always'
                     keyboardDismissMode='interactive'
                     ref={'LISTVIEW'}
                     renderRow={(item) => this.renderListItem(item)}
