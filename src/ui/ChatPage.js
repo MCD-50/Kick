@@ -1,10 +1,17 @@
 import { View, StyleSheet, StatusBar, ToastAndroid, ScrollView, Platform, Animated, Easing } from 'react-native';
 import React, { Component, PropTypes } from 'react';
 
-import { Toolbar, Icon, Avatar, ListItem, ActionButton } from 'react-native-material-ui';
 
-import { GiftedChat } from 'react-native-gifted-chat';
+import { AirChatUI } from 'react-native-air-chat';
 import { Message } from '../model/Message.js';
+
+import Toolbar from './customUI/ToolbarUI.js';
+
+import SendUI from './customUI/SendUI.js';
+
+import RequestHelper from '../helper/RequestHelper.js';
+import TodoParser from '../parser/TodoParser.js';
+
 
 const styles = StyleSheet.create({
     container: {
@@ -21,18 +28,23 @@ const menuItems = [
     'Add to contacts', 'View contact', 'Clear chat', 'Mail chat'
 ]
 
+let count = 1;
+let prevMsg = " ";
 class ChatPage extends Component {
 
     constructor(params) {
         super(params);
         const data = this.props.route.data;
 
+        console.log(data);
         this.state = {
             input: '',
             id: data.getId(),
             messages: [],
             userName: data.getUserName(),
-            avatar: data.getAvatar()
+            avatar: data.getAvatar(),
+            isPrivate: true,
+            type: data.getType(),
         };
 
         //this.renderListItem = this.renderListItem.bind(this);
@@ -41,24 +53,30 @@ class ChatPage extends Component {
 
         //this.onChangeText = this.onChangeText.bind(this);
         this.showReply = this.showReply.bind(this);
-
-
-        this.renderComposer = this.renderComposer.bind(this);
         this.renderSend = this.renderSend.bind(this);
-        this.renderCustomActions = this.renderCustomActions.bind(this);
-        this.renderCustomViews = this.renderCustomViews.bind(this);
-        this.renderBubble = this.renderBubble.bind(this);
-        this.renderFooter = this.renderFooter.bind(this);
     }
 
     onSend(messages = []) {
+
+        let _messages = messages.map((message) => {
+            return Object.assign({}, message, {
+                isNotification: false,
+            });
+        })
+
         this.setState((previousState) => {
             return {
-                messages: GiftedChat.append(previousState.messages, messages),
+                messages: AirChatUI.append(previousState.messages, _messages),
             };
         });
-        //getMessageFromString(messages[0].text)
-        this.showReply(messages[0].text);
+
+
+
+        console.log(this.state.type);
+        if (this.state.type === 'BOT') {
+            this.showReply(messages[0].text.toLowerCase());
+        }
+
     }
 
     onChangeText(value) {
@@ -66,46 +84,125 @@ class ChatPage extends Component {
     }
 
     showReply(stringData) {
-        console.log(stringData);
-        this.setState((previousState) => {
-            return {
-                messages: GiftedChat.append(previousState.messages, {
-                    _id: Math.round(Math.random() * 1000000),
-                    text: stringData,
-                    createdAt: new Date(),
-                    user: {
-                        _id: 6867696090,
-                        name: 'Erpnext',
-                        avatar: 'https://facebook.github.io/react/img/logo_og.png',
-                    }
-                }),
-            };
-        });
+        if (stringData.includes('create')) {
+            prevMsg = stringData;
+            this.setState((previousState) => {
+                return {
+                    messages: AirChatUI.append(previousState.messages, {
+                        _id: Math.round(Math.random() * 1000000),
+                        text: 'Enter Description',
+                        createdAt: new Date(),
+                        user: {
+                            _id: 6867696090,
+                            name: 'Erpnext',
+                            isPrivate: this.state.isPrivate,
+                        },
+                        isNotification: false,
+                    }),
+                };
+            });
+        }
+
+        else if (stringData.includes('delete')) {
+
+            this.setState((previousState) => {
+                return {
+                    messages: AirChatUI.append(previousState.messages, {
+                        _id: Math.round(Math.random() * 1000000),
+                        text: 'Enter id of Todo',
+                        createdAt: new Date(),
+                        user: {
+                            _id: 6867696090,
+                            name: 'Erpnext',
+                            isPrivate: this.state.isPrivate,
+                        },
+                        isNotification: false,
+                    }),
+                };
+            });
+        }
+        else if (stringData.includes('update')) {
+            this.setState((previousState) => {
+                return {
+                    messages: AirChatUI.append(previousState.messages, {
+                        _id: Math.round(Math.random() * 1000000),
+                        text: 'Enter id of todo',
+                        createdAt: new Date(),
+                        user: {
+                            _id: 6867696090,
+                            name: 'Erpnext',
+                            isPrivate: this.state.isPrivate,
+                        },
+                        isNotification: false,
+                    }),
+                };
+            });
+        }
+        else if (prevMsg.includes('create')) {
+            RequestHelper.setData('http://192.168.0.106:3000', 'ToDo', { 'description': stringData }).then((data) => {
+                this.setState((previousState) => {
+                    return {
+                        messages: AirChatUI.append(previousState.messages, {
+                            _id: Math.round(Math.random() * 1000000),
+                            text: TodoParser.getName(data),
+                            createdAt: new Date(),
+                            user: {
+                                _id: 6867696090,
+                                name: 'Erpnext',
+                                isPrivate: this.state.isPrivate,
+                            },
+                            isNotification: false,
+                        }),
+                    };
+                });
+            })
+        } else if (prevMsg.includes('delete')) {
+            RequestHelper.removeData('http://192.168.0.106:3000', 'ToDo', stringData).then((data) => {
+                this.setState((previousState) => {
+                    return {
+                        messages: AirChatUI.append(previousState.messages, {
+                            _id: Math.round(Math.random() * 1000000),
+                            text: data,
+                            createdAt: new Date(),
+                            user: {
+                                _id: 6867696090,
+                                name: 'Erpnext',
+                                isPrivate: this.state.isPrivate,
+                            },
+                            isNotification: false,
+                        }),
+                    };
+                });
+            })
+        }
+        else {
+            this.setState((previousState) => {
+                return {
+                    messages: AirChatUI.append(previousState.messages, {
+                        _id: Math.round(Math.random() * 1000000),
+                        text: 'Sorry try create or delete',
+                        createdAt: new Date(),
+                        user: {
+                            _id: 6867696090,
+                            name: 'Erpnext',
+                            isPrivate: this.state.isPrivate,
+                        },
+                        isNotification: true,
+                    }),
+                };
+            });
+        }
+        prevMsg = stringData;
+        console.log(prevMsg);
     }
 
-    renderComposer(props) {
-        console.log(props);
-    }
 
     renderSend(props) {
-        console.log(props);
+        return (
+            <SendUI {...props} />
+        )
     }
 
-    renderCustomViews(props) {
-        console.log(props);
-    }
-
-    renderCustomActions(props) {
-        console.log(props);
-    }
-
-    renderBubble(props) {
-        console.log(props);
-    }
-
-    renderFooter(props) {
-        console.log(props);
-    }
 
 
     render() {
@@ -126,23 +223,19 @@ class ChatPage extends Component {
                         }
                     } } />
 
-                <GiftedChat
+                <AirChatUI
                     messages={this.state.messages}
                     onSend={this.onSend}
-
                     user={{
                         _id: this.state.id,
                         name: this.state.userName,
-                        avatar: this.state.avatar,
+                        isPrivate: this.state.isPrivate,
                     }}
 
-                    renderComposer={this.renderComposer}
+                    keyboardDismissMode='interactive'
+                    enableEmptySections={true}
                     renderSend={this.renderSend}
-                    renderCustomViews={this.renderCustomViews}
-                    renderCustomActions={this.renderCustomActions}
-                    renderBubble={this.renderBubble}
-                    renderFooter={this.renderFooter} />
-
+                    />
             </View>
         )
     }

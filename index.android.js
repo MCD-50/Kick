@@ -22,7 +22,6 @@ import { isFirstRun, getStoredDataFromKey } from './src/helper/SharedReferencesH
 import { COLOR, ThemeProvider } from 'react-native-material-ui';
 var UIManager = require('UIManager');
 
-
 const login = 'usr=Administrator&pwd=qwe';
 const loginUrl = 'http://192.168.0.106:3000/api/method/login?' + login;
 
@@ -38,7 +37,6 @@ const TEXTBOLDPRICOLOR = '#212121';
 const TEXTGRAYSECCOLOR = '#8F8F8F'
 const PRICOLOR = '#527DA3'
 const ACCENTCOLOR = '#6AA1CE'
-
 
 const uiTheme = {
   palette: {

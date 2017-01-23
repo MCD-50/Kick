@@ -214,10 +214,6 @@ class LoginPage extends Component {
                         [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
                     );
                 })
-
-
-
-
         } else {
             CookieManager.clearAll((err, res) => {
                 console.log('cookies cleared!');

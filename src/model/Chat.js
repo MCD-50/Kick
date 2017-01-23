@@ -1,11 +1,13 @@
 
 export class Chat {
 
-    constructor(name, latestMsg, image, newMsgCount) {
-            this.name = name,
-            this.latestMsg = latestMsg,
-            this.image = image,
-            this.newMsgCount = newMsgCount
+    constructor(name, latestMsg, image, newMsgCount, longLatestMessage = '', type) {
+            this.name = name;
+            this.latestMsg = latestMsg;
+            this.image = image;
+            this.newMsgCount = newMsgCount;
+            this.longLatestMessage = longLatestMessage;
+            this.type = type;
     }
 
 
@@ -55,6 +57,14 @@ export class Chat {
 
     getLongLatestMessage(){
         return this.longLatestMessage;
+    }
+
+    getType(){
+        return this.type;
+    }
+
+    setType(type){
+        this.type = type;
     }
 }
 

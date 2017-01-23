@@ -1,8 +1,9 @@
 export class Params{
-    constructor(id, userName, avatar) {
+    constructor(id, userName, avatar, type) {
         this.id = id,
         this.userName = userName,
-        this.avatar = avatar
+        this.avatar = avatar,
+        this.type = type;
     }
 
     getId(){
@@ -27,5 +28,13 @@ export class Params{
 
     setAvatar(avatar){
         this.avatar = avatar;
+    }
+
+    setType(type){
+        this.type = type;
+    }
+
+    getType(){
+        return this.type;
     }
 }

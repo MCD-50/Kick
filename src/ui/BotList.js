@@ -1,8 +1,10 @@
 import { View, StyleSheet, Image, BackAndroid, StatusBar, ToastAndroid, ListView, ScrollView, Platform, Animated, Easing } from 'react-native';
 import React, { Component, PropTypes } from 'react';
 
-import { Toolbar, Icon, Avatar, ListItem } from 'react-native-material-ui';
-import { Bot } from '../model/Bot.js';
+import { Icon, Avatar, ListItem } from 'react-native-material-ui';
+
+import Toolbar from './customUI/ToolbarUI.js';
+
 import {Chat} from '../model/Chat.js';
 import DatabaseHelper from '../helper/DatabaseHelper.js';
 
@@ -13,9 +15,7 @@ const styles = StyleSheet.create({
     avatarImage: {
         width: 40,
         height: 40,
-        borderRadius: 40,
-        alignItems: 'center',
-        justifyContent: 'center'
+        borderRadius: 40
     }
 });
 
@@ -29,12 +29,11 @@ const menuItems = [
 ]
 
 const bots = [
-    
-    new Bot('Todo', 'Creates new todo', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
-    new Bot('Customer', 'Creates new customer', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
-    new Bot('Help', 'Helps user', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
-    new Bot('Assign', 'Assign task', 'hgvbf vjhvbvhvdkffv jvbfvfbvkfj', 'https://cdn3.iconfinder.com/data/icons/rcons-user-action/32/boy-512.png'),
-]
+    new Chat('Todo', 'Creates new todo', 'man_avatar', 0, 'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT'),
+    new Chat('Customer', 'Creates new customer', 'man_avatar', 0, 'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT'),
+    new Chat('Help', 'Helps user', 'man_avatar', 0,'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT'),
+    new Chat('Assign', 'Assign task vjbfljv dkjjvbvbskfv dkjjvbfsjkvbfsv djvbjvbvsv kjvnkfvnfv', 'man_avatar', 0, 'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT')
+ ]
 
 
 const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1.id !== r2.id });
@@ -81,40 +80,40 @@ class BotList extends Component {
 
 
     onChangeText(value) {
+        console.log(this.state.searchText);
         this.setState({ searchText: value });
 
     }
 
-    renderListItem(chatlistItem) {
+    renderListItem(chat) {
         const searchText = this.state.searchText.toLowerCase();
 
-        if (searchText.length > 0 && chatlistItem.getName().toLowerCase().indexOf(searchText) < 0) {
+        if (searchText.length > 0 && chat.getName().toLowerCase().indexOf(searchText) < 0) {
             return null;
         }
 
         //onPress={() => this.props.navigator.push(route)}
         ///onLeftElementPress={() => this.onAvatarPressed(title)}
-
+        //<Image style={styles.avatarImage} source={{uri: src}} />
+        //const src =  chat.getImage();
         
 
         return (
             <ListItem
                 divider
-                leftElement={<Image style={styles.avatarImage} source={{ uri: chatlistItem.getAvatar() }} />}
+                leftElement={<Avatar icon='person'/>}
                 centerElement={{
-                    primaryText: chatlistItem.getName(),
-                    secondaryText: chatlistItem.getSDescription()
+                    primaryText: chat.getName(),
+                    secondaryText: chat.getLatestMsg()
                 }}
 
                 onPress={() => DatabaseHelper.addNewChat(
-                    new Chat(chatlistItem.getName(), chatlistItem.getSDescription(),
-                    chatlistItem.getAvatar(), 0), function (results) {
+                    chat, function (results) {
                     console.log(results);
                 })}
                 />
         );
     }
-
 
     render() {
         return (
@@ -148,6 +147,7 @@ class BotList extends Component {
                     dataSource={this.state.dataSource} //data source
                     keyboardShouldPersistTaps='always'
                     keyboardDismissMode='interactive'
+                    enableEmptySections={true}
                     ref={'LISTVIEW'}
                     renderRow={(item) => this.renderListItem(item)}
                     />

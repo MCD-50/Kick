@@ -26,9 +26,7 @@ class MainPage extends Component {
     render() {
         return (
             <Container>
-                <View style={{ flex: 1 }}>
-                    <ChatList navigator={this.props.navigator} route={this.props.route} />
-                </View>
+               <ChatList navigator={this.props.navigator} route={this.props.route} />
             </Container>
         );
     }
