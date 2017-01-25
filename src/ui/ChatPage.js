@@ -12,6 +12,10 @@ import SendUI from './customUI/SendUI.js';
 import RequestHelper from '../helper/RequestHelper.js';
 import TodoParser from '../parser/TodoParser.js';
 
+window.navigator.userAgent = "react-native"
+
+var io = require("socket.io-client");
+
 
 const styles = StyleSheet.create({
     container: {
@@ -30,13 +34,30 @@ const menuItems = [
 
 let count = 1;
 let prevMsg = " ";
+let ws;
 class ChatPage extends Component {
 
     constructor(params) {
         super(params);
         const data = this.props.route.data;
-
         console.log(data);
+
+        // this.socket = io('http://192.168.3.104:9000', { jsonp: false });
+        this.socket = io('http://192.168.0.114:9000', {
+           transports: ['websocket'],
+           extraHeaders: { 'origin' : 'http://192.168.0.114:8000'}
+               // you need to explicitly tell it to use websockets
+        });
+
+        
+
+        this.socket.on('connect', () => {
+            console.log('connected!');
+        });
+
+
+
+
         this.state = {
             input: '',
             id: data.getId(),
@@ -54,6 +75,31 @@ class ChatPage extends Component {
         //this.onChangeText = this.onChangeText.bind(this);
         this.showReply = this.showReply.bind(this);
         this.renderSend = this.renderSend.bind(this);
+
+
+
+        // ws.onopen = () => {
+        //     // connection opened
+
+        //    console.log('opened'); // send a message
+        // };
+
+        // ws.onmessage = (e) => {
+        //     // a message was received
+        //     console.log(e.data);
+        //     // e.data.room_name
+        // };
+
+        // ws.onerror = (e) => {
+        //     // an error occurred
+        //     console.log(e.message);
+        // };
+
+        // ws.onclose = (e) => {
+        //     // connection closed
+        //     console.log(e.code, e.reason);
+        // };
+
     }
 
     onSend(messages = []) {
@@ -71,17 +117,21 @@ class ChatPage extends Component {
         });
 
 
-
         console.log(this.state.type);
         if (this.state.type === 'BOT') {
-            this.showReply(messages[0].text.toLowerCase());
+            //ws.send(messages[0].text);
+            //fetch('http://192.168.0.106:8000/api/method/frappe.utils.parser.bot_request?doctype=ToDo&message=ping');
+            //this.showReply(messages[0].text.toLowerCase());
         }
 
     }
 
+
+
     onChangeText(value) {
         console.log(value);
     }
+
 
     showReply(stringData) {
         if (stringData.includes('create')) {

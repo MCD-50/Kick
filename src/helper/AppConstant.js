@@ -13,7 +13,7 @@ export const EMAIL = 'EMAIL';
 export const SID = 'SID';
 export const FIRST_RUN = 'FIRST_RUN';
 export const FULL_URL ='FULL_URL';
-
+export const SERVER_URL = 'SERVER_URL';
 
 function getCommon() {
     return header + localHost;

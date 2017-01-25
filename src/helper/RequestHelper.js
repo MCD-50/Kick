@@ -77,6 +77,7 @@ class RequestHelper extends React.Component {
         return fetch(url, method)
             .then(res => res.json())
             .then((data) => {
+                console.log(data);
                 let _data = this.getParserFromDoctype(doctype, data);
                 if (_data != null) {
                     return _data;

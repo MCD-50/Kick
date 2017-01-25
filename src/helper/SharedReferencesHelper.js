@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { AsyncStorage } from 'react-native';
-import { FIRST_RUN, EMAIL, DOMAIN, FULL_URL }  from './AppConstant.js';
+import { FIRST_RUN, EMAIL, DOMAIN, FULL_URL, SERVER_URL } from './AppConstant.js';
 
 
 export function getStoredDataFromKey(key) {
@@ -16,6 +16,16 @@ export function isFirstRun() {
         })
 }
 
+export function hasServerUrl() {
+    return getStoredDataFromKeyAsync(SERVER_URL)
+        .then((value) => {
+            if (value === null) {
+                return false;
+            }
+            return true;
+        })
+}
+
 export function setData(key, data) {
     setDataAsync(key, data);
 }
@@ -26,16 +36,21 @@ async function getStoredDataFromKeyAsync(key) {
     } catch (error) {
         if (key === FIRST_RUN)
             setDataAsync(FIRST_RUN, 'False');
-        return 'Guest';
+        else if (key === SERVER_URL)
+            return null;
+        else
+            return 'Guest';
     }
 }
 
 async function setDataAsync(key, data) {
     try {
+        console.log(data);
+        console.log(key);
         await AsyncStorage.setItem(key, data);
-       
-        getStoredDataFromKeyAsync(key)
-        .then(console);
+        
+        // getStoredDataFromKeyAsync(key)
+        //     .then(console);
 
     } catch (error) {
         console.log(error);

@@ -4,5 +4,3 @@ project(':react-native-vector-icons').projectDir = new File(rootProject.projectD
 include ':app'
 include ':react-native-cookies'
 project(':react-native-cookies').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-cookies/android')
-include ':SocketIo'
-project(':SocketIo').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-socketio/android')

@@ -153,7 +153,6 @@ class LoginPage extends Component {
         console.log(email + domain + password);
 
         if (domain && email && password) {
-
             let fullUrl = header + domain + loginMethod + 'usr=' + email + '&pwd=' + password;
 
             fetch(header + domain + '/api/method/ping', {
@@ -189,6 +188,9 @@ class LoginPage extends Component {
                             } else {
                                 CookieManager.get(fullUrl, (err, cookie) => {
                                     if (cookie && cookie.sid && cookie.sid !== 'Guest') {
+
+                                        //set server url after login
+                                        this.props.route.callback(domain);
                                         setData(DOMAIN, domain);
                                         setData(EMAIL, email);
                                         setData(SID, cookie.sid);
