@@ -3,7 +3,7 @@
 try {
     var path = require("path");
     var Launcher = require("/home/shachi/.vscode/extensions/vsmobile.vscode-react-native-0.2.5/out/debugger/launcher.js").Launcher;
-    new Launcher("/home/shachi/ReactApps/chatApp", "/home/shachi/ReactApps/chatApp").launch();
+    new Launcher("/home/shachi/ReactApps/Kick/chatApp", "/home/shachi/ReactApps/Kick/chatApp").launch();
 } catch (e) {
     throw new Error("Unable to launch application. Try deleting .vscode/launchReactNative.js and restarting vscode.");
 }

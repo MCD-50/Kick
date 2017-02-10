@@ -7,13 +7,20 @@ import {
     Platform,
 } from 'react-native';
 
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import Icon from './Icon.js';
 
 const styles = StyleSheet.create({
     container: {
-        height: 50,
         justifyContent: 'flex-end',
+        height: 51,
     },
+    icon: {
+        flex: 1,
+        marginLeft: 10,
+        marginRight: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
 });
 
 const defaultProps = {
@@ -37,16 +44,13 @@ class SendUI extends Component {
     render() {
 
         if (this.props.text.trim().length > 0) {
-
             return (<TouchableOpacity
                 style={[styles.container, this.props.containerStyle]}
                 onPress={() => {
                     this.props.onSend({ text: this.props.text.trim() }, true);
                 } }
                 accessibilityTraits="button">
-                <View style={{
-                    marginLeft: 10, marginRight: 10, marginBottom: 13
-                }}>
+                <View style={styles.icon}>
                     <Icon name='send' color='#527DA3' size={23} />
                 </View>
             </TouchableOpacity>);
@@ -58,7 +62,7 @@ class SendUI extends Component {
 
                 } }
                 accessibilityTraits="button">
-                <View style={{ marginLeft: 10, marginRight: 10, marginBottom: 13 }}>
+                <View style={styles.icon}>
                     <Icon name='attach-file' color='#B8B8B8' size={23} />
                 </View>
             </TouchableOpacity>);

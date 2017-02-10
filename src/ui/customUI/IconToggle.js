@@ -3,8 +3,8 @@ import React, { PureComponent, PropTypes } from 'react';
 /* eslint-enable import/no-unresolved, import/extensions */
 
 import Color from 'color';
-import { ELEVATION_ZINDEX } from '../../styles/getPlatformElevation';
-import Icon from './Icon';
+import { ELEVATION_ZINDEX } from './utils/getplatformelevation.js';
+import Icon from './Icon.js';
 
 const propTypes = {
     color: PropTypes.string,

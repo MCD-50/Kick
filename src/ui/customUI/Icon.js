@@ -1,7 +1,7 @@
-/* eslint-disable import/no-unresolved, import/extensions */
+
 import VectorIcon from 'react-native-vector-icons/MaterialIcons';
 import React, { PureComponent, PropTypes } from 'react';
-/* eslint-enable import/no-unresolved, import/extensions */
+
 
 const propTypes = {
     name: PropTypes.string.isRequired,

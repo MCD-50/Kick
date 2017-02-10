@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 /* eslint-enable import/no-unresolved, import/extensions */
 import IconToggle from './IconToggle.js';
-import isFunction from '../../utils/isFunction.js';
+import isFunction from './utils/isfunction.js';
 
 const UIManager = NativeModules.UIManager;
 
@@ -206,7 +206,7 @@ function getStyles(props, context, state) {
 }
 const addBackButtonListener = callback => BackAndroid.addEventListener('closeRequested', callback);
 
-class Toolbar extends PureComponent {
+class ToolbarUI extends PureComponent {
     constructor(props) {
         super(props);
 
@@ -352,7 +352,8 @@ class Toolbar extends PureComponent {
                     onChangeText={this.onSearchTextChanged}
                     onSubmitEditing={searchable.onSubmitEditing}
                     placeholder={searchable.placeholder}
-                    style={style.titleText}
+                    placeholderTextColor={'white'}
+                    style={[style.titleText, {color:'white'}]}
                     underlineColorAndroid="transparent"
                     value={this.state.searchValue}
                 />
@@ -507,8 +508,8 @@ class Toolbar extends PureComponent {
 
 }
 
-Toolbar.propTypes = propTypes;
-Toolbar.defaultProps = defaultProps;
-Toolbar.contextTypes = contextTypes;
+ToolbarUI.propTypes = propTypes;
+ToolbarUI.defaultProps = defaultProps;
+ToolbarUI.contextTypes = contextTypes;
 
-export default Toolbar;
+export default ToolbarUI;
