@@ -11,14 +11,14 @@ import Communications from 'react-native-communications';
 
 
 const textStyle = {
-  fontSize: 14,
+  fontSize: 15,
   marginTop: 3,
   marginLeft: 10,
   marginRight: 10,
 };
 
 const headerStyle = {
-  fontSize: 14,
+  fontSize: 15,
   marginTop: 3,
   marginLeft: 10,
   marginRight: 10,

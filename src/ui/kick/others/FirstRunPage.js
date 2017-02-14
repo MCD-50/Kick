@@ -7,6 +7,7 @@ import {
     TextInput,
     ScrollView,
     Picker,
+    Alert
 } from 'react-native'
 
 import { setData } from '../../../helpers/AppStore.js';
@@ -14,9 +15,8 @@ import Container from '../../Container.js';
 import Toolbar from '../../customUI/ToolbarUI.js';
 import { UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN, FIRST_NAME, LAST_NAME, FIRST_RUN } from '../../../constants/AppConstant.js';
 import { Page } from '../../../enums/Page.js';
-import { addDefaultBots } from '../../../helpers/CollectionUtils.js';
+import CollectionUtils from '../../../helpers/CollectionUtils.js';
 
-let defaultBots;
 
 const styles = StyleSheet.create({
     container: {
@@ -84,11 +84,15 @@ class FirstRunPage extends Component {
         }
     }
 
+
+
     isAllowed() {
         let state = this.state;
+
         let firstName = state.firstName;
         let lastName = state.lastName;
-        if (firstName && firstName.trim().length > 0)
+
+        if (firstName && lastName && firstName.trim().length > 0 && lastName.trim().length > 0)
             return true;
         return false;
     }
@@ -102,19 +106,19 @@ class FirstRunPage extends Component {
         );
     }
 
+
     saveName() {
         if (this.isAllowed()) {
             setData(FIRST_NAME, this.state.firstName);
-            if (this.state.lastName.trim().length > 0)
-                setData(LAST_NAME, this.state.lastName);
+            setData(LAST_NAME, this.state.lastName);
             setData(FIRST_RUN, 'false');
-            addDefaultBots(() => {
+            CollectionUtils.addDefaultBots(() => {
                 let page = Page.CHAT_LIST_PAGE;
                 this.props.navigator.replace({ id: page.id, name: page.name });
             })
 
         } else {
-            this.showAlert('Info...', 'Please fill in all the details');
+            this.showAlert('Info...', 'Please fill in all the fields');
         }
     }
 
@@ -141,8 +145,8 @@ class FirstRunPage extends Component {
 
                     <View style={styles.innerContainer}>
                         <TextInput style={styles.textInput}
-                            placeholder='Last name (optional)'
-                            onChange={(e) => this.onType(e, 1)}
+                            placeholder='Last name (required)'
+                            onChange={(e) => this.onType(e, 2)}
                             placeholderTextColor={this.props.placeholderTextColor}
                             multiline={this.props.multiline}
                             autoCapitalize='sentences'

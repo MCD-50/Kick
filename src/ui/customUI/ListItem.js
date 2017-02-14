@@ -44,6 +44,10 @@ const propTypes = {
     rightElement: PropTypes.oneOfType([
         PropTypes.element,
         PropTypes.string,
+        PropTypes.shape({
+            upperElement: PropTypes.string,
+            lowerElement: PropTypes.element,
+        }),
     ]),
     onRightElementPress: PropTypes.func,
 };
@@ -216,11 +220,35 @@ class ListItem extends PureComponent {
             onRightElementPress(onPressValue);
         }
     };
+
+
     renderLeftElement = (styles) => {
-        const { leftElement } = this.props;
+
+        const { leftElement, centerElement  } = this.props;
 
         if (!leftElement) {
             return null;
+        }
+
+        let leftStyle = null;
+
+        if ((typeof centerElement === 'string')
+            || (centerElement.secondaryText == null && centerElement.tertiaryText == null)
+            || (typeof centerElement.secondaryText === undefined && typeof centerElement.tertiaryText === undefined)) {
+            leftStyle = {
+                width: 42,
+                marginLeft: 10,
+                marginRight: 6,
+            };
+        } else if ((centerElement.secondaryText == null || typeof centerElement.secondaryText === undefined)
+            && (centerElement.tertiaryText != null && typeof centerElement.tertiaryText != undefined)) {
+            leftStyle = {
+                width: 42,
+                marginLeft: 10,
+                marginRight: 6,
+            };
+        } else {
+            leftStyle = styles.leftElementContainer;
         }
 
         const flattenLeftElement = StyleSheet.flatten(styles.leftElement);
@@ -243,11 +271,13 @@ class ListItem extends PureComponent {
         }
 
         return (
-            <View style={styles.leftElementContainer}>
+            <View style={leftStyle}>
                 {content}
             </View>
         );
     }
+
+
     renderCenterElement = (styles) => {
         const { centerElement } = this.props;
         let content = null;
@@ -258,6 +288,7 @@ class ListItem extends PureComponent {
             let primaryText = null;
             let secondaryText = null;
             let tertiaryText = null;
+            let size = 20;
 
             if (typeof centerElement === 'string') {
                 primaryText = centerElement;
@@ -266,78 +297,194 @@ class ListItem extends PureComponent {
                 secondaryText = centerElement.secondaryText;
                 tertiaryText = centerElement.tertiaryText;
             }
+
+
+
+            if (tertiaryText != null && typeof tertiaryText != undefined && (tertiaryText == 'people' || tertiaryText == 'group')) {
+                size = 22;
+            }
+
             const numberOfLines = !tertiaryText ?
                 getNumberOfSecondaryTextLines(this.state.numberOfLines) : 1;
 
-            content = (
-                <View style={styles.textViewContainer}>
-                    <View style={styles.firstLine}>
-                        <View style={styles.primaryTextContainer}>
-                            <Text numberOfLines={1} style={styles.primaryText}>
-                                {primaryText}
-                            </Text>
+            if (tertiaryText != null && typeof tertiaryText != undefined) {
+                content = (
+                    <View style={styles.textViewContainer}>
+                        <View style={styles.firstLine}>
+                            <View style={styles.primaryTextContainer}>
+                                <Text numberOfLines={1} style={styles.primaryText}>
+                                    {primaryText}
+                                </Text>
+                            </View>
                         </View>
+                        {secondaryText &&
+                            <View>
+                                <Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
+                                    {secondaryText}
+                                </Text>
+                            </View>
+                        }
+                        <Icon name={tertiaryText} size={size} style={{ color: 'black' }} />
                     </View>
-                    {secondaryText &&
-                        <View>
-                            <Text numberOfLines={numberOfLines} style={styles.secondaryText}>
-                                {secondaryText}
-                            </Text>
+                );
+            } else {
+                content = (
+                    <View style={styles.textViewContainer}>
+                        <View style={styles.firstLine}>
+                            <View style={styles.primaryTextContainer}>
+                                <Text numberOfLines={1} style={styles.primaryText}>
+                                    {primaryText}
+                                </Text>
+                            </View>
                         </View>
-                    }
-                    {tertiaryText &&
-                        <View>
-                            <Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
-                                {tertiaryText}
-                            </Text>
-                        </View>
-                    }
-                </View>
-            );
+                        {secondaryText &&
+                            <View>
+                                <Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
+                                    {secondaryText}
+                                </Text>
+                            </View>
+                        }
+                    </View>)
+            }
+
+
+
+            // content = (
+            //     <View style={styles.textViewContainer}>
+            //         <View style={styles.firstLine}>
+            //             <View style={styles.primaryTextContainer}>
+            //                 <Text numberOfLines={1} style={styles.primaryText}>
+            //                     {primaryText}
+            //                 </Text>
+            //             </View>
+            //         </View>
+            //         {secondaryText &&
+            //             <View>
+            //                 <Text numberOfLines={numberOfLines} style={styles.secondaryText}>
+            //                     {secondaryText}
+            //                 </Text>
+            //             </View>
+            //         }
+
+            //         {tertiaryText &&
+            //             <View>
+            //                 <Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
+            //                     {tertiaryText}
+            //                 </Text>
+            //             </View>
+            //         }
+            //     </View>
+            // );
         }
+
 
         return (
             <View style={styles.centerElementContainer}>
                 {content}
-            </View>
-        );
+            </View>)
     }
+
+
+
     renderRightElement = (styles) => {
-        const { rightElement } = this.props;
+        const { rightElement, centerElement } = this.props;
 
         let content = null;
-        let elements = null;
 
-        if (typeof rightElement === 'string') {
-            elements = [rightElement];
-        } else if (Array.isArray(rightElement)) {
-            elements = rightElement;
+        if (!rightElement) {
+            return null;
         }
 
-        const flattenRightElement = StyleSheet.flatten(styles.rightElement);
+        let height = null;
+        let margin = null;
 
-        if (elements) {
-            content = elements.map((action, i) => (
-                <IconToggle
-                    key={`${action}${i}`}
-                    color={flattenRightElement.color}
-                    onPress={() => this.onRightElementPressed({ action })}
-                >
-                    <Icon name={action} size={24} style={styles.rightElement} />
-                </IconToggle>
-            ));
+        if (centerElement.tertiaryText == null || typeof centerElement.tertiaryText === undefined) {
+            height = 35;
+            margin = 3;
         } else {
-            content = (
-                <TouchableWithoutFeedback onPress={this.onRightElementPressed}>
-                    <View>
-                        {rightElement}
-                    </View>
-                </TouchableWithoutFeedback>
-            );
+            height = 42;
+            margin = 0;
         }
+
+        if (React.isValidElement(rightElement)) {
+            content = rightElement;
+        } else if (rightElement) {
+
+            let upperElement = null;
+            let lowerElement = null;
+
+            if (typeof rightElement === 'string') {
+                upperElement = rightElement;
+            } else {
+                upperElement = rightElement.upperElement;
+                lowerElement = rightElement.lowerElement;
+            }
+
+            const flattenRightElement = StyleSheet.flatten(styles.rightElement);
+
+
+            if (upperElement && upperElement != '0' && lowerElement) {
+                content = (
+                    <View>
+                        <Text style={[styles.tertiaryText, { marginTop: margin, height: height - margin, fontSize: 12 }]}>
+                            {upperElement}
+                        </Text>
+                        <View style={{ alignItems: 'flex-end' }}>
+                            {lowerElement}
+                        </View>
+                    </View>);
+            } else if (upperElement && upperElement != '0') {
+                content = (
+                    <View style={{ marginTop: margin }}>
+                        <Text style={[styles.tertiaryText, { fontSize: 12 }]}>
+                            {upperElement}
+                        </Text>
+                    </View>);
+            } else if (lowerElement) {
+                content = (
+                    <View style={{ marginTop: height, alignItems: 'flex-end' }}>
+                        {lowerElement}
+                    </View>);
+            }
+        }
+
+
+        if (content == null)
+            return null;
+
+        // let content = null;
+        // let elements = null;
+
+
+        // if (typeof rightElement === 'string') {
+        //     elements = [rightElement];
+        // } else if (Array.isArray(rightElement)) {
+        //     elements = rightElement;
+        // }
+
+        // const flattenRightElement = StyleSheet.flatten(styles.rightElement);
+
+        // if (elements) {
+        //     content = elements.map((action, i) => (
+        //         <IconToggle
+        //             key={`${action}${i}`}
+        //             color={flattenRightElement.color}
+        //             onPress={() => this.onRightElementPressed({ action })}>
+        //             <Icon name={action} size={24} style={styles.rightElement} />
+        //         </IconToggle>
+        //     ));
+        // } else {
+        //     content = (
+        //         <TouchableWithoutFeedback onPress={this.onRightElementPressed}>
+        //             <View>
+        //                 {rightElement}
+        //             </View>
+        //         </TouchableWithoutFeedback>
+        //     );
+        // }
 
         return (
-            <View style={styles.rightElementContainer}>
+            <View style={[styles.rightElementContainer]}>
                 {content}
             </View>
         );

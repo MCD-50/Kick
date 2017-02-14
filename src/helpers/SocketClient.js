@@ -35,32 +35,44 @@ class SocketClient {
         this.socket.on('open', () => this.onOpenInternal());
         this.socket.on('error', (e) => this.onErrorInternal(e));
         this.socket.on('close', (e) => this.onCloseInternal(e));
-        this.socket.on('bot_message_from_server', (msg) => this.onMessageInternal(msg));
+        this.socket.on('message_from_server', (msg) => this.onMessageInternal(msg));
         this.socket.on('notification_from_server', (noti) => this.onNotificationInternal(noti));
     }
 
     onConnectInternal() {
-        this.stateChangeCallbacks.connect.forEach(callback => callback());
+        let callbacks = this.stateChangeCallbacks.connect;
+        this.stateChangeCallbacks.connect = [];
+        callbacks.forEach(callback => callback());
     }
 
     onOpenInternal() {
-        this.stateChangeCallbacks.open.forEach(callback => callback());
+        let callbacks = this.stateChangeCallbacks.open;
+        this.stateChangeCallbacks.open = [];
+        callbacks.forEach(callback => callback());
     }
 
     onErrorInternal(e) {
-        this.stateChangeCallbacks.error.forEach(callback => callback(e));
+        let callbacks = this.stateChangeCallbacks.error;
+        this.stateChangeCallbacks.error = [];
+        callbacks.forEach(callback => callback(e));
     }
 
     onCloseInternal(e) {
-        this.stateChangeCallbacks.close.forEach(callback => callback(e));
+        let callbacks = this.stateChangeCallbacks.close;
+        this.stateChangeCallbacks.close = [];
+        callbacks.forEach(callback => callback(e));
     }
 
     onMessageInternal(msg) {
-        this.stateChangeCallbacks.message.forEach(callback => callback(msg));
+        let callbacks = this.stateChangeCallbacks.message;
+        this.stateChangeCallbacks.message = [];
+        callbacks.forEach(callback => callback(msg));
     }
 
     onNotificationInternal(noti) {
-        this.stateChangeCallbacks.notification.forEach(callback => callback(noti));
+        let callbacks = this.stateChangeCallbacks.notification;
+        this.stateChangeCallbacks.notification = [];
+        callbacks.forEach(callback => callback(noti));
     }
 
     //query is object which contains the various params needed by server.

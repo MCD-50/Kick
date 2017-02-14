@@ -100,7 +100,13 @@ const defaultProps = {
     },
     containerStyle: {},
     info: {
+        buttonText: '',
         listItems: [],
+    },
+    action: {
+        actionName: null,
+        actionOnButtonClick: null,
+        actionOnListItemClick: null
     },
     textStyle: {},
     headerStyle: {},
@@ -114,8 +120,8 @@ const propTypes = {
     info: React.PropTypes.object,
     textStyle: Text.propTypes.style,
     headerStyle: Text.propTypes.style,
-    onViewMore : React.PropTypes.func,
-    onItemClicked : React.PropTypes.func, 
+    onViewMore: React.PropTypes.func,
+    onItemClicked: React.PropTypes.func,
 };
 
 const colors = [

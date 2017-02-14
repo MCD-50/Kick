@@ -106,6 +106,10 @@ const propTypes = {
     centerElement: PropTypes.oneOfType([
         PropTypes.element,
         PropTypes.string,
+        PropTypes.shape({
+            upperText: PropTypes.string,
+            lowerText: PropTypes.string,
+        }),
     ]),
     /**
     * Will be shown on the right side.
@@ -214,7 +218,7 @@ class ToolbarUI extends PureComponent {
         if (props.isSearchActive) {
             this.backButtonListener = addBackButtonListener(this.onSearchCloseRequested);
         } else {
-            this.backButtonListener = { remove: () => {} };
+            this.backButtonListener = { remove: () => { } };
         }
 
         this.state = {
@@ -238,7 +242,7 @@ class ToolbarUI extends PureComponent {
         UIManager.showPopupMenu(
             findNodeHandle(this.menu),
             labels,
-            () => {},
+            () => { },
             (result, index) => {
                 if (onRightElementPress) {
                     onRightElementPress({ action: 'menu', result, index });
@@ -353,7 +357,7 @@ class ToolbarUI extends PureComponent {
                     onSubmitEditing={searchable.onSubmitEditing}
                     placeholder={searchable.placeholder}
                     placeholderTextColor={'white'}
-                    style={[style.titleText, {color:'white'}]}
+                    style={[style.titleText, { color: 'white' }]}
                     underlineColorAndroid="transparent"
                     value={this.state.searchValue}
                 />
@@ -361,6 +365,8 @@ class ToolbarUI extends PureComponent {
         }
 
         let content = null;
+        let upperText = null;
+        let lowerText = null;
 
         if (typeof centerElement === 'string') {
             content = (
@@ -371,7 +377,19 @@ class ToolbarUI extends PureComponent {
                 </Animated.View>
             );
         } else {
-            content = centerElement;
+            upperText = centerElement.upperText;
+            lowerText = centerElement.lowerText;
+            content = (
+                <View style={style.centerElementContainer}>
+                    <Text numberOfLines={1} style={style.titleText}>
+                        {upperText}
+                    </Text>
+                    <Text numberOfLines={1} style={{ color:'#f1f1f1', fontSize: 12 }}>
+                        {lowerText}
+                    </Text>
+                </View>)
+
+            //content = centerElement;
         }
 
         if (!content) {
@@ -384,6 +402,8 @@ class ToolbarUI extends PureComponent {
             </TouchableWithoutFeedback>
         );
     }
+
+
     renderRightElement = (style) => {
         const { rightElement, onRightElementPress, searchable, size } = this.props;
         const { isSearchActive, searchValue } = this.state;

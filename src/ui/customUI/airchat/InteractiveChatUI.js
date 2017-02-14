@@ -78,6 +78,11 @@ const defaultProps = {
     info: {
         buttonText: '',
     },
+    action: {
+        actionName: null,
+        actionOnButtonClick: null,
+        actionOnListItemClick: null
+    },
     containerStyle: {},
     textStyle: {},
     headerStyle: {},
@@ -102,7 +107,7 @@ const propTypes = {
         right: Text.propTypes.style,
     }),
 
-    onViewInfo : React.PropTypes.func,
+    onViewInfo: React.PropTypes.func,
 };
 
 const colors = [

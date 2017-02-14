@@ -105,7 +105,7 @@ export default function getTheme(theme, ...more) {
             container: {
                 width: spacing.avatarSize,
                 height: spacing.avatarSize,
-                borderRadius: spacing.avatarSize ,
+                borderRadius: spacing.avatarSize,
                 backgroundColor: darkenOrLighten(palette.canvasColor, 0.26).toString(),
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -118,13 +118,13 @@ export default function getTheme(theme, ...more) {
             container: {
                 width: 16,
                 height: 16,
-                borderRadius: 16,
+                borderRadius: 4,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: palette.primaryColor,
+                backgroundColor: '#f1f1f3',
             },
             content: {
-                color: palette.canvasColor,
+                color: palette.secondaryTextColor,
                 fontWeight: fontWeight.medium,
                 fontSize: 9,
             },
@@ -253,8 +253,6 @@ export default function getTheme(theme, ...more) {
             container: {
                 backgroundColor: palette.borderColor,
                 height: StyleSheet.hairlineWidth,
-                marginLeft: 10,
-                marginRight: 10,
             },
         }, theme.divider)),
         drawer: StyleSheet.create(merge({
@@ -365,11 +363,14 @@ export default function getTheme(theme, ...more) {
                 alignItems: 'center',
             },
             leftElementContainer: {
-                width: 45,
+                width: 42,
                 marginLeft: 10,
+                alignItems: 'flex-start',
+                marginTop: 14,
+                marginRight: 6,
             },
             centerElementContainer: {
-                paddingLeft: 16,
+                paddingLeft: 10,
                 flex: 1,
             },
             textViewContainer: {},
@@ -385,11 +386,14 @@ export default function getTheme(theme, ...more) {
                 flex: 1,
             },
             secondaryText: {
-                color: palette.listItemSecondaryTextColor,
+                color: palette.listItemPrimaryTextColor,
                 ...typography.body1,
             },
             rightElementContainer: {
-                paddingRight: 4,
+                paddingRight: 0,
+                height: 55,
+                alignItems: 'center',
+                justifyContent: 'space-between'
             },
             leftElement: {
                 margin: 16,
@@ -441,10 +445,10 @@ export default function getTheme(theme, ...more) {
         }, theme.toolbar)),
         toolbarSearchActive: StyleSheet.create(merge({
             container: {
-                backgroundColor: palette.canvasColor,
+                backgroundColor: palette.primaryColor,
             },
             leftElement: {
-                color: palette.secondaryTextColor,
+                color: palette.canvasColor,
             },
             centerElementContainer: {},
             titleText: {
@@ -452,9 +456,10 @@ export default function getTheme(theme, ...more) {
                 marginLeft: 16,
                 color: palette.primaryTextColor,
                 fontWeight: fontWeight.normal,
+                fontSize: 18
             },
             rightElement: {
-                color: palette.secondaryTextColor,
+                color: palette.canvasColor,
             },
         }, theme.toolbarSearchActive)),
     }, baseTheme);

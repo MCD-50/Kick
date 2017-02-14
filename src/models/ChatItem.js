@@ -2,9 +2,10 @@
 export class ChatItem {
 
     //message is an object refer Messaage.js for more info. 
-    constructor(message, chatId) {
+    constructor(message, chatId, type) {
         this.message = message;
         this.chatId = chatId;
+        this.type = type;
     }
 
     getId() {
@@ -19,6 +20,10 @@ export class ChatItem {
         return this.message;
     }
 
+    getType() {
+        return this.type;
+    }
+
     setId(id) {
         this.id = id;
     }
@@ -29,6 +34,10 @@ export class ChatItem {
 
     setChatId(chatId) {
         this.chatId = chatId;
+    }
+
+    setType(type) {
+        this.type = type;
     }
 
 }

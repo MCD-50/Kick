@@ -16,7 +16,7 @@ import ViewMorePage from './src/ui/kick/chat/ViewMorePage.js';
 
 import BotListPage from './src/ui/kick/main/BotListPage.js';
 import ChatListPage from './src/ui/kick/main/ChatListPage.js';
-import ConatctListPage from './src/ui/kick/main/ContactListPage.js';
+import ContactListPage from './src/ui/kick/main/ContactListPage.js';
 import LoginPage from './src/ui/kick/main/LoginPage.js';
 import SettingsPage from './src/ui/kick/main/SettingsPage.js';
 
@@ -27,8 +27,8 @@ import FirstRunPage from './src/ui/kick/others/FirstRunPage.js';
 import GroupInfoPage from './src/ui/kick/others/GroupInfoPage.js';
 import OwnerInfoPage from './src/ui/kick/others/OwnerInfoPage.js';
 import SplashPage from './src/ui/kick/others/SplashPage.js';
-
-
+import NewGroupPage from './src/ui/kick/others/NewGroupPage.js';
+import NewContactPage from './src/ui/kick/others/NewContactPage.js';
 
 const uiTheme = {
     toolbar: {
@@ -37,6 +37,8 @@ const uiTheme = {
         },
     },
 };
+
+
 
 class Kick extends Component {
     constructor(params) {
@@ -83,6 +85,10 @@ class Kick extends Component {
             return <ConatctListPage navigator={navigator} route={route} />
         else if (id == 16)
             return <ChatInfoPage navigator={navigator} route={route} />
+        else if (id == 17)
+            return <NewContactPage navigator={navigator} route={route} />
+        else if (id == 18)
+            return <NewGroupPage navigator={navigator} route={route} />
     }
 
     render() {

@@ -1,49 +1,24 @@
 import React from 'react';
 import DB from './DatabaseUtils.js';
 import { Type } from '../enums/Type.js';
-let chats = [];
+
+
 class DatabaseHelper {
+    constructor() {
+        this.chats = [];
+        this.isLocked = false;
+    }
 
-    // getAllBots(callback) {
-    //     return DB.BOTS.get_all((results) => {
-    //         callback(results);
-    //     })
-    // }
+    setLock(val) {
+        this.isLocked = val;
+    }
 
-    // removeBotByName(names, callback) {
-    //     let length = names.length;
-    //     if (length == 0) {
-    //         callback('Removed bot');
-    //         return;
-    //     }
-
-    //     DB.BOTS.remove({ name: names[length - 1] }, function (results) {
-    //         names.pop();
-    //         this.removeBotByName(names, callback);
-    //     })
-    // }
-
-    // addNewBot(datas, callback) {
-    //     let length = datas.length;
-    //     if (length == 0) {
-    //         callback('Added bots');
-    //         return;
-    //     }
-
-    //     DB.BOTS.add(datas[length - 1], function (results) {
-    //         datas.pop();
-    //         this.addNewBot(datas, callback);
-    //     })
-    // }
-
-    getAllChats(callback) {
-        return DB.CHATS.get_all((results) => {
-            callback(results);
-        });
+    getLock() {
+        return this.isLocked;
     }
 
     checkIfChatExists(data, callback) {
-        
+
         if (data.type == Type.BOT) {
             this.getChatByQuery({ title: data.title }, (results) => {
                 if (results.length > 0)
@@ -63,7 +38,7 @@ class DatabaseHelper {
         }
 
         else if (data.type == Type.PERSONAL) {
-            getChatByQuery({ email: data.email }, (results) => {
+            this.getChatByQuery({ email: data.email }, (results) => {
                 if (results.length > 0)
                     callback(true);
                 else
@@ -74,16 +49,98 @@ class DatabaseHelper {
         }
     }
 
+
+    // Read operation on chats and chatItems;
+
+    getAllChats(callback) {
+        this.setLock(true);
+        return DB.CHATS.get_all((results) => {
+            this.setLock(false);
+            callback(results);
+        });
+    }
+
+    //don't set lock over this.
     getChatByQuery(query, callback) {
         return DB.CHATS.get(query, (results) => {
             callback(results);
         })
     }
 
-    addNewChat(datas, callback) {
-        let length = datas.length;
-        
+    getChatById(chatIds, callback) {
+        this.items = [];
+        this.setLock(true);
+        this.getChatByIdInternal(chatIds, callback);
+    }
+
+    getChatByIdInternal(chatIds, callback) {
+
+        let length = chatIds.length;
         if (length == 0) {
+            this.setLock(false);
+            callback(this.items);
+            return;
+        }
+
+        DB.CHATS.get_id(chatIds[length - 1], (results) => {
+            results.map((item) => this.items.push(item));
+            chatIds.pop();
+            this.getChatByIdInternal(chatIds, callback);
+        })
+    }
+
+    getAllChatItemForChatByChatId(chatIds, callback) {
+        this.items = [];
+        this.setLock(true);
+        this.getAllChatItemForChatByChatIdInternal(chatIds, callback);
+    }
+
+    getAllChatItemForChatByChatIdInternal(chatIds, callback) {
+        let length = chatIds.length;
+        if (length == 0) {
+            this.setLock(false);
+            callback(this.items);
+            return;
+        }
+
+        DB.CHATITEMS.get({ chatId: chatIds[length - 1] }, (results) => {
+            results.map((item) => this.items.push(item));
+            chatIds.pop();
+            this.getAllChatItemForChatByChatIdInternal(chatIds, callback);
+        })
+    }
+
+    getChatItemById(chatIds, callback) {
+        this.items = [];
+        thid.setLock(true);
+        this.getChatItemByIdInternal(chatIds, callback);
+    }
+
+    getChatItemByIdInternal(chatIds, callback) {
+        let length = chatIds.length;
+        if (length == 0) {
+            this.setLock(false);
+            callback(this.items);
+            return;
+        }
+
+        DB.CHATITEMS.get_id(chatIds[length - 1], (results) => {
+            results.map((item) => this.items.push(item));
+            chatIds.pop();
+            this.getChatItemByIdInternal(chatIds, callback);
+        });
+    }
+
+    //create operation on chats and chatItems;
+    addNewChat(datas, callback) {
+        this.setLock(true);
+        this.addNewChatInternal(datas, callback);
+    }
+
+    addNewChatInternal(datas, callback) {
+        let length = datas.length;
+        if (length == 0) {
+            this.setLock(false);
             callback('Added chats');
             return;
         }
@@ -91,125 +148,112 @@ class DatabaseHelper {
         this.checkIfChatExists(datas[length - 1], (val) => {
             if (val) {
                 datas.pop();
-                this.addNewChat(datas, callback);
+                this.addNewChatInternal(datas, callback);
             } else {
                 DB.CHATS.add(datas[length - 1], (results) => {
                     datas.pop();
-                    this.addNewChat(datas, callback);
+                    this.addNewChatInternal(datas, callback);
                 })
             }
         })
-
     }
 
-    getChatById(chatIds, callback) {
-        items = [];
-        getChatByIdInternal(chatIds, callback);
+    addNewChatItem(datas, callback) {
+        this.setLock(true);
+        console.log(datas);
+        this.addNewChatItemInternal(datas, callback);
     }
 
-    getChatByIdInternal(chatIds, callback) {
-
-        let length = chatIds.length;
+    addNewChatItemInternal(datas, callback) {
+        let length = datas.length;
         if (length == 0) {
-            callback(items);
+            this.setLock(false);
+            callback('Added chats');
             return;
         }
-
-        DB.CHATS.get_id(chatIds[length - 1], (results) => {
-            items.push(results);
-            chatIds.pop();
-            this.getChatByIdInternal(chatIds, callback);
+        DB.CHATITEMS.add(datas[length - 1], (results) => {
+            console.log(results);
+            datas.pop();
+            this.addNewChatItemInternal(datas, callback);
         })
     }
 
 
-    // updateChat(chatIds, datas, callback) {
-    //     let length = chatIds.length;
-    //     if (length == 0) {
-    //         callback('Updated chats');
-    //         return;
-    //     }
+    //update operation on chats and chatItems;
 
-    //     DB.CHATS.update_id(chatIds[length - 1], datas[length - 1], function (results) {
-    //         chatIds.pop();
-    //         datas.pop();
-    //         this.updateChat(chatIds, datas, callback);
-    //     })
-    // }
+    updateChat(chatIds, datas, callback) {
+        this.setLock(true);
+        this.updateChatInternal(chatIds, datas, callback);
+    }
 
 
-    removeChatById(chatIds, callback) {
+    updateChatInternal(chatIds, datas, callback) {
         let length = chatIds.length;
         if (length == 0) {
+            this.setLock(false);
+            callback('Updated chats');
+            return;
+        }
+
+        DB.CHATS.update_id(chatIds[length - 1], datas[length - 1], (results) => {
+            chatIds.pop();
+            datas.pop();
+            this.updateChatInternal(chatIds, datas, callback);
+        })
+    }
+
+    updateChatByQuery(query, data, callback) {
+        this.setLock(true);
+        this.updateChatByQueryInternal(query, data, callback);
+    }
+
+
+    updateChatByQueryInternal(query, data, callback) {
+        DB.CHATS.update(query, data, (results) => {
+            this.setLock(false);
+            callback(results);
+        })
+    }
+
+
+    //delete operation on chats and chatItems; 
+
+    removeChatById(chatIds, callback) {
+        this.setLock(true);
+        this.removeChatByIdInternal(chatIds, callback);
+    }
+
+
+    removeChatByIdInternal(chatIds, callback) {
+        let length = chatIds.length;
+        if (length == 0) {
+            this.setLock(false);
             callback('Removed chats');
             return;
         }
         DB.CHATS.remove_id(chatIds[length - 1], (results) => {
             chatIds.pop();
-            this.removeChatById(chatIds, callback);
+            this.removeChatByIdInternal(chatIds, callback);
         })
     }
 
 
-
-    addNewChatItem(datas, callback) {
-        let length = datas.length;
-        if (length == 0) {
-            callback('Added chats');
-            return;
-        }
-        DB.CHATITEMS.add(datas[length - 1], (results) => {
-            datas.pop();
-            this.addNewChatItem(datas, callback);
-        })
-    }
-
-    getAllChatItemForChatByChatId(chatIds, callback) {
-        items = [];
-        getAllChatItemForChatByChatIdInternal(chatIds, callback);
-    }
-
-    getAllChatItemForChatByChatIdInternal(chatIds, callback) {
-        let length = chatIds.length;
-        if (length == 0) {
-            callback(items);
-            return;
-        }
-        DB.CHATITEMS.get_id(chatIds[length - 1], (results) => {
-            items.push(results);
-            chatIds.pop();
-            this.getAllChatItemForChatByChatIdInternal(chatIds, callback);
-        })
-    }
-
-    getChatItemById(chatIds, callback) {
-        items = [];
-        getChatItemByIdInternal(chatIds, callback);
-    }
-
-
-    getChatItemByIdInternal(chatIds, callback) {
-        let length = chatIds.length;
-        if (length == 0) {
-            callback(items);
-            return;
-        }
-
-        DB.CHATITEMS.get_id(chatIds[length - 1], (results) => {
-            chatIds.pop();
-            this.getChatItemByIdInternal(chatIds, callback);
-        });
-    }
 
     removeChatItemById(chatIds, callback) {
+        this.setLock(true);
+        this.removeChatByIdInternal(chatIds, callback);
+    }
+
+    removeChatItemByIdInternal(chatIds, callback) {
         let length = chatIds.length;
         if (length == 0) {
+            this.setLock(false);
             callback('Removed chats');
             return;
         }
         DB.CHATITEMS.remove_id(chatItemId, (results) => {
             chatIds.pop();
-            this.removeChatItemById(chatIds, callback);
+            this.removeChatItemByIdInternal(chatIds, callback);
         })
     }
 

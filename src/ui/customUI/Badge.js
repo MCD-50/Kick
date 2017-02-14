@@ -116,7 +116,7 @@ class Badge extends PureComponent {
     }
     render() {
         const styles = getStyles(this.props, this.context);
-        console.log(this.props);
+       
         return (
             <View style={{ flexDirection: 'row' }}>
                 {this.renderChildren()}

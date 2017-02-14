@@ -9,24 +9,29 @@ import {
 
 import Toolbar from '../../customUI/ToolbarUI.js';
 import Conatainer from '../../Container.js';
+import { UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN } from '../../../constants/AppConstant.js';
 
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-
+        marginLeft: LEFTMARGIN,
+        marginRight: RIGHTMARGIN,
+        marginBottom: DOWNMARGIN,
+        marginTop: UPMARGIN,
     },
     view: {
-        margin: 10,
+        marginBottom: 10,
         justifyContent: 'flex-start',
         alignItems: 'flex-start',
     },
+
     headerText: {
-        fontSize: 18,
-        fontWeight: 'bold'
+        fontSize: 17,
     },
+
     text: {
-        fontSize: 15,
+        fontSize: 14,
     }
 
 });
@@ -41,11 +46,9 @@ class ViewInfo extends Component {
 
     constructor(params) {
         super(params);
-
-        console.log(this.props);
         this.state = {
-            data: this.props.route.item,
-            fields: this.props.route.fields,
+            data: this.props.route.data.info.listItems,
+            fields: this.props.route.data.info.fields,
         }
 
         this.addBackEvent = this.addBackEvent.bind(this);
@@ -53,6 +56,14 @@ class ViewInfo extends Component {
         this.renderItem = this.renderItem.bind(this);
         this.renderItems = this.renderItems.bind(this);
 
+    }
+
+    componentWillMount() {
+        this.addBackEvent();
+    }
+
+    componentWillUnmount() {
+        this.removeBackEvent();
     }
 
     addBackEvent() {
@@ -75,24 +86,14 @@ class ViewInfo extends Component {
         });
     }
 
-    componentWillMount() {
-        this.addBackEvent();
-    }
-
-    componentWillUnmount() {
-        this.removeBackEvent();
-    }
-
-
     renderItem(key, value) {
+        let title = key[0].toUpperCase() + key.substring(1);
         return (
             <View key={key} style={styles.view}>
-                <Text style={styles.headerText}>{key[0].toUpperCase() + key.substring(1)} </Text>
-                <Text style={styles.text}>{value} </Text>
+                <Text style={styles.headerText}>{title.trim()} </Text>
+                <Text style={styles.text}> {value.trim()} </Text>
             </View>)
     }
-
-
 
     renderItems() {
         let data = this.state.data;

@@ -56,6 +56,7 @@ class MessageContainerUI extends React.Component {
     };
   }
 
+
   prepareMessages(messages) {
     return {
       keys: messages.map(m => m._id),
@@ -155,7 +156,7 @@ class MessageContainerUI extends React.Component {
         {...props}
         {...invertibleScrollViewProps}
         ref={component => this._invertibleScrollViewRef = component}
-        />
+      />
     );
   }
 
@@ -177,7 +178,7 @@ class MessageContainerUI extends React.Component {
           renderHeader={this.renderFooter}
           renderFooter={this.renderLoadEarlier}
           renderScrollComponent={this.renderScrollComponent}
-          />
+        />
       </View>
     );
   }

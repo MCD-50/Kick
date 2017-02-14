@@ -13,8 +13,8 @@ import { isFirstRun, getStoredDataFromKey, hasServerUrl, setData } from '../../.
 import { FULL_URL, SERVER_URL, SID, DOMAIN, EMAIL, FIRST_RUN } from '../../../constants/AppConstant.js';
 import { Page } from '../../../enums/Page.js';
 import Progress from '../../customUI/Progress.js';
-import { prepareDefaultBots } from '../../../helpers/CollectionUtils.js';
 var frappeIcon = require('../../../res/images/frappe.png');
+
 
 const styles = StyleSheet.create({
     container: {
@@ -141,7 +141,7 @@ class SplashPage extends Component {
         let page = Page.CHAT_LIST_PAGE;
         setTimeout(() => {
             this.setState({ showProgress: false });
-            this.props.navigator.replace({ id: page.id, name: page.name});
+            this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false });
         }, 3000);
 
     }
@@ -159,7 +159,7 @@ class SplashPage extends Component {
     renderProgressRing() {
         if (this.state.showProgress) {
             return (
-                <Progress color={colors} size={50} duration={500} />)
+                <Progress color={['#3f51b5']} size={50} duration={300} />)
         }
         return null;
     }

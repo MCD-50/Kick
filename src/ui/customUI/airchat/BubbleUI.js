@@ -78,8 +78,8 @@ const defaultProps = {
     onLongPress: null,
     renderMessageImage: null,
     renderMessageText: null,
-    renderInteractiveChat:null,
-    renderInteractiveList:null,
+    renderInteractiveChat: null,
+    renderInteractiveList: null,
     renderCustomView: null,
     renderTime: null,
     position: 'left',
@@ -267,11 +267,10 @@ class BubbleUI extends React.Component {
     }
 
     renderExtra(info) {
-        if (info.isInteractive) {
-            if (info.isInteractiveChat)
-                return this.renderInteractiveChat();
-            else
-                return this.renderInteractiveList();
+        if (info.isInteractiveChat) {
+            return this.renderInteractiveChat();
+        } else if (info.isInteractiveList) {
+            return this.renderInteractiveList();
         }
         else {
             return this.renderMessageText()

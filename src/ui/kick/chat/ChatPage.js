@@ -1,10 +1,28 @@
-import { View, StyleSheet, StatusBar, ToastAndroid, ScrollView, Platform, Animated, Easing } from 'react-native';
 import React, { Component, PropTypes } from 'react';
+import {
+    View,
+    StyleSheet,
+    BackAndroid,
+} from 'react-native';
+
+
+
+
+
 import { AirChatUI } from '../../customUI/airchat/AirChatUI.js';
 import { Message } from '../../../models/Message.js';
-import Toolbar from '../../customUI/ToolbarUI.js';
-import Conatainer from '../../Container.js';
 import SendUI from '../../customUI/SendUI.js';
+import Toolbar from '../../customUI/ToolbarUI.js';
+import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
+import Container from '../../Container.js';
+import { Page } from '../../../enums/Page.js';
+import CollectionUtils from '../../../helpers/CollectionUtils.js';
+import { Type } from '../../../enums/Type.js';
+import { EMAIL, FIRST_NAME } from '../../../constants/AppConstant.js';
+import { getStoredDataFromKey } from '../../../helpers/AppStore.js';
+import { ActionName } from '../../../enums/ActionName.js';
+import Progress from '../../customUI/Progress.js';
+
 
 window.navigator.userAgent = "react-native"
 import InternetHelper from '../../../helpers/InternetHelper.js';
@@ -15,6 +33,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    progress: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 });
 
 
@@ -25,293 +48,214 @@ const propTypes = {
 
 
 const menuItems = [
-    'Add to contacts', 'View contact', 'Clear chat', 'Mail chat'
+    'View info', 'Clear chat', 'Mail chat'
 ]
 
 
-let count = 1;
-let prevMsg = " ";
-let ws;
-
 class ChatPage extends Component {
-
     constructor(params) {
         super(params);
+
         const data = this.props.route.data;
         this.state = {
-            input: '',
-            id: data.getId(),
+            doctype: data.chat.type == Type.BOT ? data.chat.title : null,
+            chatId: data.chat.id,
+            chatType: data.chat.type,
+            userId: data.owner.userId,
+            userName: data.owner.userName,
+            domain: data.owner.domain,
+            room: data.chat.room,
+
+            isLoading: true,
             messages: [],
-            userName: data.getUserName(),
-            isGroupChat: false,
-            isAlert: false,
-            action: 'nothing',
-            type: data.getType(),
+
+            isGroupChat: data.chat.type == Type.GROUP ? true : false,
+            recentAction: {
+                actionName: null,
+                actionOnButtonClick: null,
+                actionOnListItemClick: null
+            },
+
         };
 
-        //this.renderListItem = this.renderListItem.bind(this);
+        this.addBackEvent = this.addBackEvent.bind(this);
+        this.removeBackEvent = this.removeBackEvent.bind(this);
         this.onSend = this.onSend.bind(this);
+        this.onMessageReceive = this.onMessageReceive.bind(this);
+        this.storeChatItemInDatabase = this.storeChatItemInDatabase.bind(this);
+        this.renderSend = this.renderSend.bind(this);
+        this.setStateData = this.setStateData.bind(this);
+        this.onBotMessageSend = this.onBotMessageSend.bind(this);
+
         this.onViewInfo = this.onViewInfo.bind(this);
         this.onViewMore = this.onViewMore.bind(this);
         this.onItemClicked = this.onItemClicked.bind(this);
-        this.onItemClickedExecute = this.onItemClickedExecute.bind(this),
-        this.getQueryFromAction = this.getQueryFromAction.bind(this);
-        this.renderSend = this.renderSend.bind(this);
-        this.onReceive = this.onReceive.bind(this);
-        this.socket = SocketHelper({}, ()=>console.log());
+        this.callback = this.callback.bind(this);
+        
+
+
+        this.socket = SocketHelper(this.onMessageReceive);
     }
 
-    onReceive(data) {
-        let info = data.info;
-        let message = data.message;
-        let doctype = data.doctype;
+    componentWillMount() {
+        this.addBackEvent();
+    }
 
+    componentWillUnmount() {
+        this.removeBackEvent();
+    }
+
+    componentDidMount() {
+        DatabaseHelper.getAllChatItemForChatByChatId([this.state.chatId], (results) => {
+            let messages = results.map((result) => {
+                return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
+            });
+            this.setStateData(messages.reverse());
+        })
+    }
+
+    addBackEvent() {
+        BackAndroid.addEventListener('hardwareBackPress', () => {
+            if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                this.props.navigator.pop();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    removeBackEvent() {
+        BackAndroid.removeEventListener('hardwareBackPress', () => {
+            if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                this.props.navigator.pop();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    setStateData(messages) {
         this.setState((previousState) => {
             return {
-                messages: AirChatUI.append(previousState.messages, {
-                    _id: Math.round(Math.random() * 1000000),
-                    text: message.message,
-                    createdAt: new Date(),
-                    user: {
-                        _id: 6867696090,
-                        name: 'Erpnext',
-                    },
-                    isAlert: false,
-                    isGroupChat: false,
-                    info: {
-                        buttonText: info.button_text,
-                        isInteractive: info.is_interactive,
-                        isInteractiveChat: info.is_interactive_chat,
-                        isInteractiveList: info.is_interactive_list,
-                        fields: info.fields,
-                        listItems: message.list,
-                        action: message.action,
-                    }
-                }),
-                action: message.action
-            };
-        });
+                isLoading: false,
+                messages: AirChatUI.append(previousState.messages, messages),
+                recentAction: this.state.recentAction,
+            }
+        })
+    }
+
+
+    onMessageReceive(message) {
+        this.setState({ isLoading: true, });
+
+        let chatItem = null;
+        if (this.state.chatType == Type.BOT) {
+            this.setState({ recentAction: message.action });
+            chatItem = CollectionUtils.convertToChatItemFromBotMessage(this.state.userName, this.state.userId,
+                message, this.state.chatId, this.state.chatType)
+
+        } else {
+            chatItem = CollectionUtils.convertToChatItemFromSocketMessage(message, this.state.chatId, this.state.chatType);
+        }
+
+        let messages = CollectionUtils.convertToAirChatMessageObjectFromChatItem(chatItem, this.state.isGroupChat);
+
+        this.setStateData(messages);
+        this.storeChatItemInDatabase(null, chatItem);
+    }
+
+    storeChatItemInDatabase(airChatObject, chatItemObject) {
+        if (airChatObject) {
+            let chatItem = CollectionUtils.convertToChatItemFromAirChatMessageObject(airChatObject, this.state.chatId, this.state.chatType);
+            DatabaseHelper.addNewChatItem([chatItem], (msg) => {
+                console.log(msg)
+            });
+
+        } else if (chatItemObject) {
+            DatabaseHelper.addNewChatItem([chatItemObject], (msg) => {
+                console.log(msg)
+            });
+        }
+
     }
 
     onSend(messages = []) {
+        this.setStateData(messages);
+        this.storeChatItemInDatabase(messages[0], null);
 
-        // let _messages = messages.map((message) => {
-        //     return Object.assign({}, message, {
+        // if (this.state.chatType == Type.BOT) {
+        //     this.onBotMessageSend(messages)
+        // } else {
+        //     let socketData = CollectionUtils.prepareQueryForSocketEmit(messages.text, this.state.userName, this.state.userId, this.state.room);
+        //     this.socket.sendMessage(socketData);
+        // }
 
-        //     });
-        // })
+    }
 
-        this.setState((previousState) => {
-            return {
-                messages: AirChatUI.append(previousState.messages, messages),
-            };
-        });
-
-
-        if (this.state.type === 'BOT') {
-            //this.socket.emit('bot_message_from_client', {'doctype': this.state.userName, 'query': messages[0].text});
-            //this.socket.emit('message', messages[0].text);
-            //ws.send(messages[0].text);
-            //fetch('http://192.168.0.106:8000/api/method/frappe.utils.bot_reply.get_reply?doctype=todo&query=' + messages[0].text + '&action=' + this.state.action + '&id=' + '-1');
-            //this.showReply(messages[0].text.toLowerCase());
-            RequestHelper.postData('http://192.168.0.106:8000', { 'doctype': this.state.userName.toLowerCase(), 'query': messages[0].text, 'action': this.state.action, 'id': '-1' })
-        }
+    //bot realted functions;
+    onBotMessageSend(messages = [], doctypeItemId = null, actionName = null, childActionName = null, pageCount = null) {
+        let postData = CollectionUtils.prepareQueryForPostDataBotType(this.state.doctype.toLowerCase()
+            , messages.text, doctypeItemId, actionName, childActionName, pageCount, this.state.room);
+        InternetHelper.sendData(this.state.domain, postData);
     }
 
     onViewInfo(message) {
-        this.props.navigator.push({ id: 'ViewInfo', name: 'View Info', 'item': message.info.listItems[0], 'fields': message.info.fields });
+        let page = Page.VIEW_INFO_PAGE;
+        this.props.navigator.push({ id: page.id, name: page.name, data: message.info });
     }
 
     onViewMore(message) {
-        this.props.navigator.push({ id: 'ViewMore', name: 'View More', 'message': message });
+        let page = Page.VIEW_MORE_PAGE;
+        this.props.navigator.push({ id: page.id, name: page.name, data: message.info });
     }
 
     onItemClicked(message, index) {
-        if (this.state.action.includes('nothing')) {
-            this.props.navigator.push({ id: 'ViewInfo', name: 'View Info', 'item': message.info.listItems[0], 'fields': message.info.fields });
-        } else if(this.state.action.includes('update')){
-            this.props.navigator.push({ id: 'UpdateInfo', name: 'Update Info', 'item': message.info.listItems[0], 'fields': message.info.fields });
-        } else {
-            const item = message.info.listItems[index];
-            let id = item['name'];
-            this.onItemClickedExecute(id);
-        }
+        let action = message.info.action;
+        let page, item = null;
+        switch (action.actionOnListItemClick) {
+            case ActionName.UPDATE:
+                page = Page.EDIT_INFO_PAGE;
+                let data = { message: message, index: index, callback: callback };
+                this.props.navigator.push({ id: page.id, name: page.name, data: data });
+                break;
 
-    }
+            case ActionName.DELETE:
+                item = message.info.listItems[index]
+                this.callback('Alright, delete item', item.name, ActionName.DELETE_ITEM);
+                break;
 
-    onItemClickedExecute(id) {
-
-        let query = this.getQueryFromAction(this.state.action, id);
-        let _msg = {
-            'doctype': this.state.userName.toLowerCase(),
-            'query': query,
-            'action': this.state.action,
-            'id': id,
-        };
-
-        message = {
-            _id: Math.round(Math.random() * 1000000),
-            text: query,
-            createdAt: new Date(),
-            user: {
-                _id: this.state.id,
-                name: this.state.userName,
-            },
-            isAlert: false,
-            isGroupChat: false,
-            info: {
-                buttonText: '',
-                isInteractive: false,
-                isInteractiveChat: false,
-                isInteractiveList: false,
-                fields: [],
-                listItems: [],
-                action: 'nothing',
-            }
-        }
-
-        if (this.state.type === 'BOT') {
-            this.setState((previousState) => {
-                return {
-                    messages: AirChatUI.append(previousState.messages, [message]),
-                };
-            });
-
-            RequestHelper.postData('http://192.168.0.106:8000', _msg);
-        }
-
-    }
-
-    getQueryFromAction(action, id) {
-        if (action.includes('delete')) {
-            return 'Delete ' + id + 'from ' + this.state.userName;
-        } else if (action.includes('update')) {
-            return 'Update ' + id;
+            case ActionName.INFO:
+                page = Page.VIEW_INFO_PAGE;
+                this.props.navigator.push({ id: page.id, name: page.name, data: message });
+                break;
         }
     }
 
-    onChangeText(value) {
-        console.log(value);
+
+    callback(text, name, childActionName) {
+
+        let message = CollectionUtils.createChatItem(this.state.userName, this.state.userId,
+            text, new Date(), null, null, null, null, null, null, null, null, null, this.state.chatId, Type.BOT);
+
+        switch (childActionName) {
+            case ActionName.DELETE_ITEM:
+                this.onBotMessageSend([message], name, ActionName.DELETE, childActionName, 0);
+                break;
+            case ActionName.UPDATE_ITEM:
+                this.onBotMessageSend([message], name, ActionName.UPDATE, childActionName, 0);
+                break;
+        }
     }
 
-
-    // showReply(stringData) {
-    //     if (stringData.includes('create')) {
-    //         prevMsg = stringData;
-    //         this.setState((previousState) => {
-    //             return {
-    //                 messages: AirChatUI.append(previousState.messages, {
-    //                     _id: Math.round(Math.random() * 1000000),
-    //                     text: 'Enter Description',
-    //                     createdAt: new Date(),
-    //                     user: {
-    //                         _id: 6867696090,
-    //                         name: 'Erpnext',
-    //                     },
-    //                 }),
-    //             };
-    //         });
-    //     }
-
-    //     else if (stringData.includes('delete')) {
-
-    //         this.setState((previousState) => {
-    //             return {
-    //                 messages: AirChatUI.append(previousState.messages, {
-    //                     _id: Math.round(Math.random() * 1000000),
-    //                     text: 'Enter id of Todo',
-    //                     createdAt: new Date(),
-    //                     user: {
-    //                         _id: 6867696090,
-    //                         name: 'Erpnext',
-    //                     },
-    //                 }),
-    //             };
-    //         });
-    //     }
-    //     else if (stringData.includes('update')) {
-    //         this.setState((previousState) => {
-    //             return {
-    //                 messages: AirChatUI.append(previousState.messages, {
-    //                     _id: Math.round(Math.random() * 1000000),
-    //                     text: 'Enter id of todo',
-    //                     createdAt: new Date(),
-    //                     user: {
-    //                         _id: 6867696090,
-    //                         name: 'Erpnext',
-    //                         isPrivate: this.state.isPrivate,
-    //                     },
-    //                     isNotification: false,
-    //                 }),
-    //             };
-    //         });
-    //     }
-    //     else if (prevMsg.includes('create')) {
-    //         RequestHelper.setData('http://192.168.0.106:3000', 'ToDo', { 'description': stringData }).then((data) => {
-    //             this.setState((previousState) => {
-    //                 return {
-    //                     messages: AirChatUI.append(previousState.messages, {
-    //                         _id: Math.round(Math.random() * 1000000),
-    //                         text: TodoParser.getName(data),
-    //                         createdAt: new Date(),
-    //                         user: {
-    //                             _id: 6867696090,
-    //                             name: 'Erpnext',
-    //                             isPrivate: this.state.isPrivate,
-    //                         },
-    //                         isNotification: false,
-    //                     }),
-    //                 };
-    //             });
-    //         })
-    //     } else if (prevMsg.includes('delete')) {
-    //         RequestHelper.removeData('http://192.168.0.106:3000', 'ToDo', stringData).then((data) => {
-    //             this.setState((previousState) => {
-    //                 return {
-    //                     messages: AirChatUI.append(previousState.messages, {
-    //                         _id: Math.round(Math.random() * 1000000),
-    //                         text: data,
-    //                         createdAt: new Date(),
-    //                         user: {
-    //                             _id: 6867696090,
-    //                             name: 'Erpnext',
-    //                             isPrivate: this.state.isPrivate,
-    //                         },
-    //                         isNotification: false,
-    //                     }),
-    //                 };
-    //             });
-    //         })
-    //     }
-    //     else {
-    //         this.setState((previousState) => {
-    //             return {
-    //                 messages: AirChatUI.append(previousState.messages, {
-    //                     _id: Math.round(Math.random() * 1000000),
-    //                     text: 'Sorry try create or delete',
-    //                     createdAt: new Date(),
-    //                     user: {
-    //                         _id: 6867696090,
-    //                         name: 'Erpnext',
-    //                         isPrivate: this.state.isPrivate,
-    //                     },
-    //                     isNotification: true,
-    //                 }),
-    //             };
-    //         });
-    //     }
-    //     prevMsg = stringData;
-    //     console.log(prevMsg);
-    // }
-
+    //end of bot related functions.
 
     renderSend(props) {
         return (
-            <SendUI {...props} />
+            <SendUI {...props } />
         )
     }
 
-
+    
 
     render() {
         return (
@@ -325,38 +269,34 @@ class ChatPage extends Component {
                         menu: { labels: menuItems },
                     }}
 
-                    onRightElementPress={(action) => {
-                        if (Platform.OS === 'android') {
-                            //ToastAndroid.show(menuItems[action.index], ToastAndroid.SHORT);
-                        }
-                    }} />
+                    onRightElementPress={(action) => { }} />
 
                 <AirChatUI
                     messages={this.state.messages}
                     onSend={this.onSend}
 
-
                     user={{
-                        _id: this.state.id,
+                        _id: this.state.userId,
                         name: this.state.userName,
                     }}
+
                     info={{
-                        buttonText: '',
-                        isInteractive: false,
-                        isInteractiveChat: false,
-                        isInteractiveList: false,
-                        fields: [],
-                        listItems: [],
-                        action: 'nothing',
+                        buttonText: null,
+                        isInteractiveChat: null,
+                        isInteractiveList: null,
+                        fields: null,
+                        listItems: null,
                     }}
 
+                    action={this.state.recentAction}
 
                     onViewInfo={this.onViewInfo}
                     onViewMore={this.onViewMore}
                     onItemClicked={this.onItemClicked}
 
-                    isAlert={this.state.isAlert}
+                    isAlert={false}
                     isGroupChat={this.state.isGroupChat}
+
                     keyboardDismissMode='interactive'
                     enableEmptySections={true}
                     renderSend={this.renderSend}

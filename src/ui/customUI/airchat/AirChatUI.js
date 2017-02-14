@@ -28,7 +28,7 @@ import TimeUI from './TimeUI.js';
 import InteractiveChatUI from './InteractiveChatUI.js';
 import InteractiveListUI from './InteractiveListUI.js';
 
-var backgroundImg = require('./images/whatsapp.png');
+var backgroundImg = require('./images/bgimage.jpg');
 
 // Min and max heights of ToolbarInput and Composer
 // Needed for Composer auto grow and ScrollView animation
@@ -98,17 +98,23 @@ const defaultProps = {
   renderMessage: null,
   renderSend: null,
   renderTime: null,
-  user: {},
+  user: {
+    _id: null,
+    name: null
+  },
   isAlert: false,
   isGroupChat: false,
   info: {
-    buttonText: '',
-    isInteractive: false,
-    isInteractiveChat: false,
-    isInteractiveList: false,
-    fields: [],
-    listItems: [],
-    action:'nothing',
+    buttonText: null,
+    isInteractiveChat: null,
+    isInteractiveList: null,
+    fields: null,
+    listItems: null,
+  },
+  action: {
+    actionName: null,
+    actionOnButtonClick: null,
+    actionOnListItemClick: null
   },
   bottomOffset: 0,
   isLoadingEarlier: false,
@@ -146,6 +152,7 @@ const propTypes = {
   isAlert: React.PropTypes.bool,
   isGroupChat: React.PropTypes.bool,
   info: React.PropTypes.object,
+  action: React.PropTypes.object,
   bottomOffset: React.PropTypes.number,
   isLoadingEarlier: React.PropTypes.bool,
   keyboardShouldPersistTaps: React.PropTypes.oneOf(['always', 'never', 'handled']),
@@ -413,10 +420,11 @@ class AirChatUI extends React.Component {
         ...message,
         user: this.props.user,
         info: this.props.info,
+        action: this.props.action,
         isAlert: this.props.isAlert,
         isGroupChat: this.props.isGroupChat,
         createdAt: new Date(),
-        _id: '-' + Math.round(Math.random() * 1000000),
+        _id: 'temp-' + Math.round(Math.random() * 1000000),
       };
     });
 
@@ -447,7 +455,7 @@ class AirChatUI extends React.Component {
     this.props.onViewMore(message);
   }
 
-  onItemClicked(message, index){
+  onItemClicked(message, index) {
     // console.log(message);
     // console.log(index);
     this.props.onItemClicked(message, index);
@@ -530,8 +538,8 @@ class AirChatUI extends React.Component {
 
   render() {
     if (this.state.isInitialized === true) {
-      return (
 
+      return (
         <ActionSheet ref={component => this._actionSheetRef = component}>
           <Image style={styles.backgroundImage} source={backgroundImg}>
             <View
@@ -559,6 +567,7 @@ class AirChatUI extends React.Component {
         </ActionSheet>
       );
     }
+
     return (
       <Image style={styles.backgroundImage} source={backgroundImg}>
         <View

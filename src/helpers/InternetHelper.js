@@ -1,12 +1,10 @@
-import React from 'react';
+
 
 class InternetHelper {
-
-
     login(full_url, alertCallback, successCallback) {
         let index = full_url.lastIndexOf('api');
         let ping_url = full_url.substring(0, index);
-        
+
         fetch(ping_url + 'api/method/ping', {
             method: "POST",
             headers: {
@@ -33,29 +31,24 @@ class InternetHelper {
                     }
                 }, (reject) => alertCallback('Network request failed.', 'Something went wrong. Please try in a little bit.'))
         }, (reject) => {
-            
+
             alertCallback('Network request failed.',
                 'Failed to connect to given domain, make sure the entered domain is correct and try in a little bit.');
         });
     }
 
 
-
-    sendData(uri, data) {
-        let url = uri + '/api/method/frappe.utils.bot_reply.get_reply';
-        const form = new FormData();
-        form.append('doctype', data.doctype);
-        form.append('query', data.query);
-        form.append('action', data.action);
-        form.append('id', data.id);
-
+    sendData(domain, data) {
+        console.log(domain);
+        
+        let url = 'http://' + domain + '/api/method/frappe.utils.bot_reply.get_reply';
         let method = {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'multipart/form-data',
+                'Content-Type': 'application/json',
             },
-            body: form
+            body: JSON.stringify(data)
         };
 
         fetch(url, method).then((succ) => {

@@ -1,18 +1,22 @@
 
 export class Message {
 
-    constructor(fromWhom, text, createdOn) {
-        this.fromWhom = fromWhom;
+    constructor(userName, userId, text, createdOn, isAlert, info, action) {
+        this.userName = userName;
+        this.userId = userId;
         this.text = text;
         this.createdOn = createdOn;
+        this.isAlert = isAlert;
+        this.info = info;
+        this.action = action;
     }
 
-    getFromWhom() {
-        return this.fromWhom;
+    getUserName() {
+        return this.userName;
     }
 
-    getIsBot() {
-        return this.isBot;
+    getUserId() {
+        return this.userId;
     }
 
     getText() {
@@ -23,24 +27,20 @@ export class Message {
         return this.createdOn;
     }
 
-    getButtonText() {
-        return this.buttonText;
+    getIsAlert() {
+        return this.isAlert;
     }
 
-    getList() {
-        return this.buttonText;
+    getInfo() {
+        return this.info;
     }
 
-    getAction(){
-        return this.action;
+    setUserName(userName) {
+        this.userName = userName;
     }
 
-    setFromWhom(fromWhom) {
-        this.fromWhom = fromWhom;
-    }
-
-    setIsBot(isBot) {
-        this.isBot = isBot;
+    setUserId(userId) {
+        this.userId = userId;
     }
 
     setText(text) {
@@ -51,18 +51,17 @@ export class Message {
         this.createdOn = createdOn;
     }
 
-    setButtonText(buttonText) {
-        this.buttonText = buttonText;
+    setIsAlert(isAlert) {
+        this.isAlert = isAlert;
     }
 
-    setList(list) {
-        this.list = list;
+    setInfo(info) {
+        this.info = info;
     }
 
-    setAction(action){
+    setAction(action) {
         this.action = action;
     }
-
 }
 
 

@@ -1,3 +1,6 @@
+//title, subTitle(Last Message Text), 
+//image, badge, type, room, isMute, email, 
+//lastActive, lastMessageTime, id
 
 export class Chat {
     constructor(title, subTitle, image, badge, type, room, isMute, email) {
@@ -51,6 +54,10 @@ export class Chat {
         return this.email;
     }
 
+    getLastMessageTime(){
+        return lastMessageTime;
+    }
+
     setId(id){
         this.id = id;
     }
@@ -89,6 +96,10 @@ export class Chat {
 
     setEmail(email){
         this.email = email;
+    }
+
+    setLastMessageTime(lastMessageTime){
+        this.lastMessageTime = lastMessageTime;
     }
 }
 

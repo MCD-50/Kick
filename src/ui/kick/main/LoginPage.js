@@ -23,7 +23,6 @@ import {
 } from '../../../constants/AppConstant.js';
 
 import Container from '../../Container.js';
-import ToolbarUI from '../../customUI/ToolbarUI.js';
 import { Page } from '../../../enums/Page.js';
 
 var frappeIcon = require('../../../res/images/frappe.png');

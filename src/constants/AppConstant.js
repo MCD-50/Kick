@@ -17,3 +17,11 @@ export const LEFTMARGIN = 10;
 export const RIGHTMARGIN = 10;
 export const UPMARGIN = 5;
 export const DOWNMARGIN = 5;
+
+export const HEADERTEXTSIZE = 18;
+export const HEADERTEXTSIZEBIG = 20;
+export const SUBHEADERTEXTSIZE = 16;
+export const TEXTINPUTTEXTSIZE = 17;
+export const BODYTEXTSIZE = 14;
+export const SMALLTEXTSIZE = 12;
+export const OTHERTEXTSIZE = 10;

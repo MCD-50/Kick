@@ -12,14 +12,15 @@ function initializeSocket(callback) {
 }
 
 //call is function which needs to be invoked;
-//query object contains infomation about mesaage, user, room, callback
-export default (query, callback) => {
+//query object contains infomation about message, user, room, callback
+
+export default (callback) => {
     socket.onConnect(() => console.log('Connected.'))
     socket.onOpen(() => console.log('Connection opened.'))
     socket.onError((event) => console.log('Error occured.'))
     socket.onClose((event) => console.log('Connection closed'))
-    socket.onMessage((msg) => console.log(msg));
-    socket.onNotification((noti) => console.log(noti));
+    socket.onMessage((msg) => callback(msg));
+    socket.onNotification((noti) => callback(noti));
 
     initializeSocket((socket_url) => {
         socket.initSocket(socket_url);

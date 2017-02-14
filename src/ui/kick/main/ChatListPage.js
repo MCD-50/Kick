@@ -1,7 +1,13 @@
-import { View, StyleSheet, StatusBar, ListView, ToastAndroid, ScrollView, Platform, Animated, Easing } from 'react-native';
 import React, { Component, PropTypes } from 'react';
+import {
+    View,
+    StyleSheet,
+    Text,
+    ListView,
+} from 'react-native';
 
-import { Chat } from '../../../models/Chat.js';
+
+import { Chat } from '../../../models/ChatItem.js';
 import Toolbar from '../../customUI/ToolbarUI.js';
 import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
 import Container from '../../Container.js';
@@ -9,13 +15,26 @@ import { Page } from '../../../enums/Page.js';
 import Avatar from '../../customUI/Avatar.js';
 import Badge from '../../customUI/Badge.js';
 import ListItem from '../../customUI/ListItem.js';
-import { convertToChat } from '../../../helpers/CollectionUtils.js';
+import CollectionUtils from '../../../helpers/CollectionUtils.js';
+import { Type } from '../../../enums/Type.js';
+import { EMAIL, FIRST_NAME, DOMAIN } from '../../../constants/AppConstant.js';
+import { getStoredDataFromKey } from '../../../helpers/AppStore.js';
+import Progress from '../../customUI/Progress.js';
+
+window.navigator.userAgent = "react-native"
+import InternetHelper from '../../../helpers/InternetHelper.js';
+import SocketHelper from '../../../helpers/SocketHelper.js';
 
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    progress: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 });
 
 const propTypes = {
@@ -26,7 +45,7 @@ const propTypes = {
 };
 
 const menuItems = [
-    'Add bot', 'New group', 'New chat', 'Profile', 'Settings'
+    'Bots', 'Contacts', 'New group', 'New contact', 'Profile', 'Settings'
 ]
 
 const defaultProps = {
@@ -48,28 +67,46 @@ class ChatList extends Component {
 
     constructor(params) {
         super(params);
+
         this.state = {
             searchText: '',
             isLoading: true,
-            chats: [],
             dataSource: ds.cloneWithRows([]),
+            userId: '',
+            userName: '',
+            domain: '',
         };
 
+        this.setStateData = this.setStateData.bind(this);
         this.renderListItem = this.renderListItem.bind(this);
         this.renderBadge = this.renderBadge.bind(this);
         this.getColor = this.getColor.bind(this);
-        this.callbackFromChatPage = this.callbackFromChatPage.bind(this);
-        this.callbackFromBotPage = this.callbackFromBotPage.bind(this);
-        this.callbackFromContactPage = this.callbackFromContactPage.bind(this);
+        this.getIcon = this.getIcon.bind(this);
+        this.callback = this.callback.bind(this);
+        this.rightElementPress = this.rightElementPress.bind(this);
+        this.onNotification = this.onNotification.bind(this);
+        this.socket = SocketHelper(this.onNotification);
+        this.renderElement = this.renderElement.bind(this);
     }
 
+    componentWillMount() {
+        getStoredDataFromKey(EMAIL).then((mail) => this.setState({ userId: mail }));
+        getStoredDataFromKey(FIRST_NAME).then((name) => this.setState({ userName: name }));
+        getStoredDataFromKey(DOMAIN).then((dom) => this.setState({ domain: dom }));
+    }
+
+
     componentDidMount() {
+        this.setStateData();
+    }
+
+
+    setStateData() {
         DatabaseHelper.getAllChats((results) => {
             let chats = Object.keys(results.rows).map((key) => {
-                return convertToChat(results.rows[key], true);
+                return CollectionUtils.convertToChat(results.rows[key], true);
             })
             this.setState({
-                chats: chats,
                 dataSource: ds.cloneWithRows(chats),
                 isLoading: false
             });
@@ -77,8 +114,6 @@ class ChatList extends Component {
         })
     }
 
-
-    
     onChangeText(value) {
         this.setState({ searchText: value });
     }
@@ -94,69 +129,140 @@ class ChatList extends Component {
         return null
     }
 
+
+    getIcon(type) {
+        if (type == Type.BOT) {
+            return 'toys';
+        } else if (type == Type.GROUP) {
+            return 'people';
+        } else {
+            return 'person';
+        }
+    }
+
+    onNotification(noti) {
+        //some code here;
+    }
+
     renderListItem(chat) {
         const searchText = this.state.searchText.toLowerCase();
-
-        if (searchText.length > 0 && searchText.indexOf(chat.title.toLowerCase()) < 0) {
+        if (searchText.length > 0 && chat.title.toLowerCase().indexOf(searchText) < 0) {
             return null;
         }
 
         return (
             <ListItem
                 divider
+
                 leftElement={<Avatar bgcolor={this.getColor(chat.title)} text={chat.title[0] + chat.title[1].toUpperCase()} />}
+
                 centerElement={{
                     primaryText: chat.title,
                     secondaryText: chat.subTitle,
+                    tertiaryText: this.getIcon(chat.type)
                 }}
 
-                rightElement={this.renderBadge(chat.badge)}
+                rightElement={{
+                    upperElement: chat.lastMessageTime,
+                    lowerElement: this.renderBadge(chat.badge),
+                }}
 
                 onPress={() => {
                     let page = Page.CHAT_PAGE;
-                    this.props.navigator.push({ id: page.id, name: page.name, data: chat })
+                    let state = this.state;
+                    let data = { chat: chat, callback: this.callback, owner: { userName: state.userName, userId: state.userId, domain: state.domain } }
+                    this.props.navigator.push({ id: page.id, name: page.name, data: data })
                 }} />
         );
     }
 
-    // callback() {
-    //     this.setAllChats();
-    // }
-    // searchable={{
-    //                     autoFocus: true,
-    //                     placeholder: 'Search chat',
-    //                     onChangeText: value => this.onChangeText(value),
-    //                     onSearchClosed: () => this.setState({ searchText: '' }),
-    //                 }}
-    //                 rightElement={{
-    //                     menu: { labels: menuItems },
-    //                 }}
 
-    //                 onRightElementPress={(action) => {
-    //                     // if (Platform.OS === 'android') {
-    //                     //     //ToastAndroid.show(menuItems[action.index], ToastAndroid.SHORT);
-    //                     // }
 
-    //                     this.props.navigator.push({
-    //                         id: 'BotPage', name: 'Bots', data: {},
-    //                         callback: this.callback
-    //                     })
-    //                 }}
+
+    callback(fromWhichPage) {
+        switch (fromWhichPage) {
+            case Page.BOT_LIST_PAGE.name:
+                break;
+            case Page.CHAT_PAGE.name:
+                break;
+            case Page.CONTACT_LIST_PAGE.name:
+                break;
+            case Page.NEW_GROUP_PAGE.name:
+                break;
+            default:
+                break;
+        }
+        this.setStateData();
+    }
+
+    rightElementPress(action) {
+        let page = null;
+        let data = null;
+        switch (action.index) {
+            case 0:
+                page = Page.BOT_LIST_PAGE;
+                data = { callback: this.callback }
+                break;
+            case 1:
+                page = Page.CONTACT_LIST_PAGE;
+                data = { callback: this.callback }
+                break;
+            case 2:
+                page = Page.NEW_GROUP_PAGE
+                break;
+            case 3: page = Page.NEW_CONTACT_PAGE
+                break;
+            case 4: page = Page.OWNER_INFO_PAGE
+                break;
+            case 5: page = Page.SETTINGS_PAGE
+                break;
+
+        }
+
+        if (page)
+            this.props.navigator.push({ id: page.id, name: page.name, data: data })
+    }
+
+    renderElement() {
+
+        if (this.state.isLoading) {
+            return (
+                <View style={styles.progress}>
+                    <Progress color={['#3f51b5']} size={50} duration={300} />
+                </View>)
+        }
+
+        return (
+            <ListView
+                dataSource={this.state.dataSource}
+                keyboardShouldPersistTaps='always'
+                keyboardDismissMode='interactive'
+                enableEmptySections={true}
+                ref={'LISTVIEW'}
+                renderRow={(item) => this.renderListItem(item)}
+            />
+        );
+    }
+
 
     render() {
         return (
             <Container>
+                <Toolbar
+                    centerElement={this.props.route.name}
+                    searchable={{
+                        autoFocus: true,
+                        placeholder: 'Search...',
+                        onChangeText: value => this.onChangeText(value),
+                        onSearchClosed: () => this.setState({ searchText: '' }),
+                    }}
+                    rightElement={{
+                        menu: { labels: menuItems },
+                    }}
+                    onRightElementPress={(action) => this.rightElementPress(action)}
 
-                <Toolbar centerElement='Chats' />
-
-                <ListView
-                    dataSource={this.state.dataSource} //data source
-                    keyboardShouldPersistTaps='always'
-                    keyboardDismissMode='interactive'
-                    enableEmptySections={true}
-                    ref={'LISTVIEW'}
-                    renderRow={(item) => this.renderListItem(item)}
                 />
+                {this.renderElement()}
 
             </Container>
         )
