@@ -1,5 +1,5 @@
 export const Type = {
-    BOT:'BOT',
-    PERSONAL:'PERSONAL',
-    GROUP:'GROUP',
+    BOT: 'bot',
+    PERSONAL: 'personal',
+    GROUP: 'group',
 }

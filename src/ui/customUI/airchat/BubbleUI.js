@@ -15,6 +15,12 @@ import TimeUI from './TimeUI.js';
 
 import { isSameDay, isSameUser, warnDeprecated } from './UtilsUI.js';
 
+let oldleft = '#FFFFFF';
+let oldright = '#E1FFC1';
+
+let newleft = '#f7f8fa';
+
+
 const styles = {
     left: StyleSheet.create({
         container: {
@@ -23,16 +29,16 @@ const styles = {
         },
         wrapper: {
             borderRadius: 4,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: newleft,
             marginRight: 60,
             minHeight: 20,
             justifyContent: 'flex-end',
         },
         containerToNext: {
-            borderBottomLeftRadius: 2,
+            borderBottomLeftRadius: 8,
         },
         containerToPrevious: {
-            borderTopLeftRadius: 2,
+            borderTopLeftRadius: 8,
         },
     }),
     right: StyleSheet.create({
@@ -42,16 +48,16 @@ const styles = {
         },
         wrapper: {
             borderRadius: 4,
-            backgroundColor: '#E1FFC1',
+            backgroundColor: oldright,
             marginLeft: 60,
             minHeight: 20,
             justifyContent: 'flex-end',
         },
         containerToNext: {
-            borderBottomRightRadius: 2,
+            borderBottomRightRadius: 8,
         },
         containerToPrevious: {
-            borderTopRightRadius: 2,
+            borderTopRightRadius: 8,
         },
     }),
     bottom: {

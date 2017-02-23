@@ -60,14 +60,24 @@ class SplashPage extends Component {
         this.renderProgressRing = this.renderProgressRing.bind(this);
         this.setServerUrl = this.setServerUrl.bind(this);
         this.resolveServerUrl = this.resolveServerUrl.bind(this);
+
     }
 
+
     componentDidMount() {
-        isFirstRun(false)
-            .then((value) => {
-                this.setState({ isFirstRun: value })
-                this.navigate(value);
-            });
+        InternetHelper.checkIfNetworkAvailable((isConnected) => {
+            console.log(isConnected);
+            if (isConnected) {
+                isFirstRun(false)
+                    .then((value) => {
+                        this.setState({ isFirstRun: value })
+                        this.navigate(value);
+                    });
+            } else {
+                this.showAlert('No connection', 'Please check your internet connection.', false);
+            }
+        })
+
     }
 
     navigate(isFirstRun) {
@@ -137,22 +147,26 @@ class SplashPage extends Component {
     setServerUrl(server_url, setData) {
         if (setData)
             setData(SERVER_URL, server_url);
-
         let page = Page.CHAT_LIST_PAGE;
         setTimeout(() => {
             this.setState({ showProgress: false });
-            this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false });
+            this.props.navigator.replace({ id: page.id, name: page.name});
         }, 3000);
 
     }
 
-    showAlert(title, body) {
+    showAlert(title, body, navigateToOtherPage = true) {
         this.setState({ showProgress: false });
         let page = Page.LOGIN_PAGE;
         Alert.alert(
             title,
             body,
-            [{ text: 'OK', onPress: () => this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false }) }]
+            [{
+                text: 'OK', onPress: () => {
+                    if (navigateToOtherPage)
+                        this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false })
+                }
+            }]
         );
     }
 

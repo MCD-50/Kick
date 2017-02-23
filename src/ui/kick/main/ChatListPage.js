@@ -4,10 +4,10 @@ import {
     StyleSheet,
     Text,
     ListView,
+    TouchableOpacity
 } from 'react-native';
 
 
-import { Chat } from '../../../models/ChatItem.js';
 import Toolbar from '../../customUI/ToolbarUI.js';
 import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
 import Container from '../../Container.js';
@@ -17,7 +17,7 @@ import Badge from '../../customUI/Badge.js';
 import ListItem from '../../customUI/ListItem.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import { Type } from '../../../enums/Type.js';
-import { EMAIL, FIRST_NAME, DOMAIN } from '../../../constants/AppConstant.js';
+import { EMAIL, FULL_NAME, DOMAIN } from '../../../constants/AppConstant.js';
 import { getStoredDataFromKey } from '../../../helpers/AppStore.js';
 import Progress from '../../customUI/Progress.js';
 
@@ -63,7 +63,7 @@ const colors = [
 ];
 
 const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1.id !== r2.id });
-class ChatList extends Component {
+class ChatListPage extends Component {
 
     constructor(params) {
         super(params);
@@ -80,6 +80,8 @@ class ChatList extends Component {
         this.setStateData = this.setStateData.bind(this);
         this.renderListItem = this.renderListItem.bind(this);
         this.renderBadge = this.renderBadge.bind(this);
+        this.onChangeText = this.onChangeText.bind(this);
+
         this.getColor = this.getColor.bind(this);
         this.getIcon = this.getIcon.bind(this);
         this.callback = this.callback.bind(this);
@@ -91,7 +93,7 @@ class ChatList extends Component {
 
     componentWillMount() {
         getStoredDataFromKey(EMAIL).then((mail) => this.setState({ userId: mail }));
-        getStoredDataFromKey(FIRST_NAME).then((name) => this.setState({ userName: name }));
+        getStoredDataFromKey(FULL_NAME).then((name) => this.setState({ userName: name }));
         getStoredDataFromKey(DOMAIN).then((dom) => this.setState({ domain: dom }));
     }
 
@@ -102,20 +104,19 @@ class ChatList extends Component {
 
 
     setStateData() {
-        DatabaseHelper.getAllChats((results) => {
-            let chats = Object.keys(results.rows).map((key) => {
-                return CollectionUtils.convertToChat(results.rows[key], true);
+        DatabaseHelper.getAllChatsByQuery({ isAddedToChatList: true }, (results) => {
+            let chats = results.map((result) => {
+                return CollectionUtils.convertToChat(result, true);
             })
             this.setState({
-                dataSource: ds.cloneWithRows(chats),
+                dataSource: ds.cloneWithRows(chats.reverse()),
                 isLoading: false
             });
-
         })
     }
 
-    onChangeText(value) {
-        this.setState({ searchText: value });
+    onChangeText(e) {
+        this.setState({ searchText: e });
     }
 
     getColor(name) {
@@ -149,34 +150,41 @@ class ChatList extends Component {
         if (searchText.length > 0 && chat.title.toLowerCase().indexOf(searchText) < 0) {
             return null;
         }
-
+        let title = (chat.title.length > 1) ? chat.title[0] + chat.title[1].toUpperCase() : ((chat.title.length > 0) ? chat.title[0] : 'UN');
         return (
             <ListItem
                 divider
 
-                leftElement={<Avatar bgcolor={this.getColor(chat.title)} text={chat.title[0] + chat.title[1].toUpperCase()} />}
+                leftElement={<Avatar bgcolor={this.getColor(chat.title)} text={title} />}
 
                 centerElement={{
                     primaryText: chat.title,
                     secondaryText: chat.subTitle,
-                    tertiaryText: this.getIcon(chat.type)
+                    tertiaryText: this.getIcon(chat.info.chatType)
                 }}
 
                 rightElement={{
-                    upperElement: chat.lastMessageTime,
-                    lowerElement: this.renderBadge(chat.badge),
+                    upperElement: chat.info.lastMessageTime,
+                    lowerElement: this.renderBadge(chat.info.newMessageCount),
                 }}
 
                 onPress={() => {
                     let page = Page.CHAT_PAGE;
                     let state = this.state;
-                    let data = { chat: chat, callback: this.callback, owner: { userName: state.userName, userId: state.userId, domain: state.domain } }
-                    this.props.navigator.push({ id: page.id, name: page.name, data: data })
+                    this.props.navigator.push({
+                        id: page.id,
+                        name: page.name,
+                        chat: chat,
+                        callback: this.callback,
+                        owner: {
+                            userName: state.userName,
+                            userId: state.userId,
+                            domain: state.domain
+                        }
+                    })
                 }} />
         );
     }
-
-
 
 
     callback(fromWhichPage) {
@@ -187,6 +195,8 @@ class ChatList extends Component {
                 break;
             case Page.CONTACT_LIST_PAGE.name:
                 break;
+            case Page.NEW_CONTACT_PAGE.name:
+                break;
             case Page.NEW_GROUP_PAGE.name:
                 break;
             default:
@@ -195,20 +205,21 @@ class ChatList extends Component {
         this.setStateData();
     }
 
+
     rightElementPress(action) {
         let page = null;
-        let data = null;
+        let isForGroupChat = false;
         switch (action.index) {
             case 0:
                 page = Page.BOT_LIST_PAGE;
-                data = { callback: this.callback }
                 break;
             case 1:
                 page = Page.CONTACT_LIST_PAGE;
-                data = { callback: this.callback }
                 break;
             case 2:
-                page = Page.NEW_GROUP_PAGE
+                //creating new group page
+                isForGroupChat = true;
+                page = Page.CONTACT_LIST_PAGE
                 break;
             case 3: page = Page.NEW_CONTACT_PAGE
                 break;
@@ -216,15 +227,25 @@ class ChatList extends Component {
                 break;
             case 5: page = Page.SETTINGS_PAGE
                 break;
-
         }
 
-        if (page)
-            this.props.navigator.push({ id: page.id, name: page.name, data: data })
+        if (page) {
+            this.props.navigator.push({
+                id: page.id,
+                name: page.name,
+                callback: this.callback,
+                owner: {
+                    userName: this.state.userName,
+                    userId: this.state.userId,
+                    domain: this.state.domain
+                },
+                isForGroupChat: isForGroupChat
+            });
+        }
+
     }
 
     renderElement() {
-
         if (this.state.isLoading) {
             return (
                 <View style={styles.progress}>
@@ -252,10 +273,11 @@ class ChatList extends Component {
                     centerElement={this.props.route.name}
                     searchable={{
                         autoFocus: true,
-                        placeholder: 'Search...',
-                        onChangeText: value => this.onChangeText(value),
+                        placeholder: 'Search chat...',
+                        onChangeText: e => this.onChangeText(e),
                         onSearchClosed: () => this.setState({ searchText: '' }),
                     }}
+
                     rightElement={{
                         menu: { labels: menuItems },
                     }}
@@ -269,6 +291,6 @@ class ChatList extends Component {
     }
 }
 
-ChatList.propTypes = propTypes;
+ChatListPage.propTypes = propTypes;
 
-export default ChatList;
+export default ChatListPage;

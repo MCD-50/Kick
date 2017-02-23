@@ -48,7 +48,7 @@ class SendUI extends Component {
                 style={[styles.container, this.props.containerStyle]}
                 onPress={() => {
                     this.props.onSend({ text: this.props.text.trim() }, true);
-                } }
+                }}
                 accessibilityTraits="button">
                 <View style={styles.icon}>
                     <Icon name='send' color='#527DA3' size={23} />
@@ -59,11 +59,11 @@ class SendUI extends Component {
             <TouchableOpacity
                 style={[styles.container, this.props.containerStyle]}
                 onPress={() => {
-
-                } }
+                    
+                }}
                 accessibilityTraits="button">
                 <View style={styles.icon}>
-                    <Icon name='attach-file' color='#B8B8B8' size={23} />
+                    <Icon name='attach-file' color='#527DA3' size={23} />
                 </View>
             </TouchableOpacity>);
     }

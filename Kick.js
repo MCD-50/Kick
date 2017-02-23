@@ -64,7 +64,7 @@ class Kick extends Component {
         else if (id == 5)
             return <BotListPage navigator={navigator} route={route} />
         else if (id == 6)
-            return <ConatctListPage navigator={navigator} route={route} />
+            return <ContactListPage navigator={navigator} route={route} />
         else if (id == 7)
             return <ChatPage navigator={navigator} route={route} />
         else if (id == 8)
@@ -82,7 +82,7 @@ class Kick extends Component {
         else if (id == 14)
             return <GroupInfoPage navigator={navigator} route={route} />
         else if (id == 15)
-            return <ConatctListPage navigator={navigator} route={route} />
+            return <ContactInfoPage navigator={navigator} route={route} />
         else if (id == 16)
             return <ChatInfoPage navigator={navigator} route={route} />
         else if (id == 17)

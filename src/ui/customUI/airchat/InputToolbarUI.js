@@ -12,12 +12,13 @@ const styles = StyleSheet.create({
   container: {
     borderTopWidth: 0.2,
     borderTopColor: '#111111',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#f7f7fa',
   },
   primary: {
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
+  
   accessory: {
     height: 51,
   },

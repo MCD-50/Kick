@@ -28,7 +28,7 @@ import TimeUI from './TimeUI.js';
 import InteractiveChatUI from './InteractiveChatUI.js';
 import InteractiveListUI from './InteractiveListUI.js';
 
-var backgroundImg = require('./images/bgimage.jpg');
+//var backgroundImg = require('./images/bgimage.jpg');
 
 // Min and max heights of ToolbarInput and Composer
 // Needed for Composer auto grow and ScrollView animation
@@ -105,16 +105,17 @@ const defaultProps = {
   isAlert: false,
   isGroupChat: false,
   info: {
-    buttonText: null,
-    isInteractiveChat: null,
-    isInteractiveList: null,
-    fields: null,
-    listItems: null,
+    button_text: null,
+    is_interactive_chat: null,
+    is_interactive_list: null
   },
   action: {
-    actionName: null,
-    actionOnButtonClick: null,
-    actionOnListItemClick: null
+    action_on_button_click: null,
+    action_on_list_item_click: null
+  },
+  listItems: {
+    action_on_internal_item_click: null,
+    items: null
   },
   bottomOffset: 0,
   isLoadingEarlier: false,
@@ -153,6 +154,7 @@ const propTypes = {
   isGroupChat: React.PropTypes.bool,
   info: React.PropTypes.object,
   action: React.PropTypes.object,
+  listItems : React.PropTypes.object,
   bottomOffset: React.PropTypes.number,
   isLoadingEarlier: React.PropTypes.bool,
   keyboardShouldPersistTaps: React.PropTypes.oneOf(['always', 'never', 'handled']),
@@ -421,6 +423,7 @@ class AirChatUI extends React.Component {
         user: this.props.user,
         info: this.props.info,
         action: this.props.action,
+        listItems : this.props.listItems,
         isAlert: this.props.isAlert,
         isGroupChat: this.props.isGroupChat,
         createdAt: new Date(),
@@ -539,55 +542,77 @@ class AirChatUI extends React.Component {
   render() {
     if (this.state.isInitialized === true) {
 
+      //  <ActionSheet ref={component => this._actionSheetRef = component}>
+      //           <Image style={styles.backgroundImage} source={backgroundImg}>
+      //             <View
+      //               style={styles.container}
+      //               onLayout={(e) => {
+      //                 if (Platform.OS === 'android') {
+      //                   // fix an issue when keyboard is dismissing during the initialization
+      //                   const layout = e.nativeEvent.layout;
+      //                   if (this.getMaxHeight() !== layout.height && this.getIsFirstLayout() === true) {
+      //                     this.setMaxHeight(layout.height);
+      //                     this.setState({
+      //                       messagesContainerHeight: this.prepareMessagesContainerHeight(this.getMaxHeight() - this.getMinInputToolbarHeight()),
+      //                     });
+      //                   }
+      //                 }
+      //                 if (this.getIsFirstLayout() === true) {
+      //                   this.setIsFirstLayout(false);
+      //                 }
+      //               }}
+      //             >
+      //               {this.renderMessages()}
+      //               {this.renderInputToolbar()}
+      //             </View>
+      //           </Image>
+      //         </ActionSheet>
+
       return (
         <ActionSheet ref={component => this._actionSheetRef = component}>
-          <Image style={styles.backgroundImage} source={backgroundImg}>
-            <View
-              style={styles.container}
-              onLayout={(e) => {
-                if (Platform.OS === 'android') {
-                  // fix an issue when keyboard is dismissing during the initialization
-                  const layout = e.nativeEvent.layout;
-                  if (this.getMaxHeight() !== layout.height && this.getIsFirstLayout() === true) {
-                    this.setMaxHeight(layout.height);
-                    this.setState({
-                      messagesContainerHeight: this.prepareMessagesContainerHeight(this.getMaxHeight() - this.getMinInputToolbarHeight()),
-                    });
-                  }
+          <View
+            style={[styles.container, { backgroundColor: '#fefefe' }]}
+            onLayout={(e) => {
+              if (Platform.OS === 'android') {
+                // fix an issue when keyboard is dismissing during the initialization
+                const layout = e.nativeEvent.layout;
+                if (this.getMaxHeight() !== layout.height && this.getIsFirstLayout() === true) {
+                  this.setMaxHeight(layout.height);
+                  this.setState({
+                    messagesContainerHeight: this.prepareMessagesContainerHeight(this.getMaxHeight() - this.getMinInputToolbarHeight()),
+                  });
                 }
-                if (this.getIsFirstLayout() === true) {
-                  this.setIsFirstLayout(false);
-                }
-              }}
-            >
-              {this.renderMessages()}
-              {this.renderInputToolbar()}
-            </View>
-          </Image>
+              }
+              if (this.getIsFirstLayout() === true) {
+                this.setIsFirstLayout(false);
+              }
+            }}
+          >
+            {this.renderMessages()}
+            {this.renderInputToolbar()}
+          </View>
         </ActionSheet>
       );
     }
 
     return (
-      <Image style={styles.backgroundImage} source={backgroundImg}>
-        <View
-          style={styles.container}
-          onLayout={(e) => {
-            const layout = e.nativeEvent.layout;
-            this.setMaxHeight(layout.height);
-            InteractionManager.runAfterInteractions(() => {
-              this.setState({
-                isInitialized: true,
-                text: '',
-                composerHeight: MIN_COMPOSER_HEIGHT,
-                messagesContainerHeight: this.prepareMessagesContainerHeight(this.getMaxHeight() - this.getMinInputToolbarHeight()),
-              });
+      <View
+        style={[styles.container, { backgroundColor: '#fefefe' }]}
+        onLayout={(e) => {
+          const layout = e.nativeEvent.layout;
+          this.setMaxHeight(layout.height);
+          InteractionManager.runAfterInteractions(() => {
+            this.setState({
+              isInitialized: true,
+              text: '',
+              composerHeight: MIN_COMPOSER_HEIGHT,
+              messagesContainerHeight: this.prepareMessagesContainerHeight(this.getMaxHeight() - this.getMinInputToolbarHeight()),
             });
-          }}
-        >
-          {this.renderLoading()}
-        </View>
-      </Image>
+          });
+        }}
+      >
+        {this.renderLoading()}
+      </View>
     );
   }
 }

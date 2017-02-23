@@ -56,26 +56,28 @@ class ChatPage extends Component {
     constructor(params) {
         super(params);
 
-        const data = this.props.route.data;
+        const chat = this.props.route.chat;
+        const owner = this.props.route.owner;
+
         this.state = {
-            doctype: data.chat.type == Type.BOT ? data.chat.title : null,
-            chatId: data.chat.id,
-            chatType: data.chat.type,
-            userId: data.owner.userId,
-            userName: data.owner.userName,
-            domain: data.owner.domain,
-            room: data.chat.room,
+            chat: chat,
+            doctype: chat.info.chatType == Type.BOT ? chat.title : null,
+            chatId: chat.id,
+            chatType: chat.info.chatType,
+            userId: owner.userId,
+            userName: owner.userName,
+            domain: owner.domain,
+            room: chat.info.room,
 
             isLoading: true,
             messages: [],
 
-            isGroupChat: data.chat.type == Type.GROUP ? true : false,
+            isGroupChat: chat.info.chatType == Type.GROUP ? true : false,
             recentAction: {
                 actionName: null,
                 actionOnButtonClick: null,
                 actionOnListItemClick: null
             },
-
         };
 
         this.addBackEvent = this.addBackEvent.bind(this);
@@ -91,7 +93,7 @@ class ChatPage extends Component {
         this.onViewMore = this.onViewMore.bind(this);
         this.onItemClicked = this.onItemClicked.bind(this);
         this.callback = this.callback.bind(this);
-        
+
 
 
         this.socket = SocketHelper(this.onMessageReceive);
@@ -106,17 +108,23 @@ class ChatPage extends Component {
     }
 
     componentDidMount() {
-        DatabaseHelper.getAllChatItemForChatByChatId([this.state.chatId], (results) => {
-            let messages = results.map((result) => {
-                return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
-            });
-            this.setStateData(messages.reverse());
-        })
+        DatabaseHelper.updateChat([this.state.chatId], [{ isAddedToChatList: true }], (results) => {
+
+            DatabaseHelper.getAllChatItemForChatByChatId([this.state.chatId], (results) => {
+                let messages = results.map((result) => {
+                    return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
+                });
+
+                this.setStateData(messages.reverse());
+            })
+        });
+
     }
 
     addBackEvent() {
         BackAndroid.addEventListener('hardwareBackPress', () => {
             if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                this.props.route.callback(Page.CHAT_PAGE);
                 this.props.navigator.pop();
                 return true;
             }
@@ -127,6 +135,7 @@ class ChatPage extends Component {
     removeBackEvent() {
         BackAndroid.removeEventListener('hardwareBackPress', () => {
             if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                this.props.route.callback(Page.CHAT_PAGE);
                 this.props.navigator.pop();
                 return true;
             }
@@ -153,14 +162,13 @@ class ChatPage extends Component {
             this.setState({ recentAction: message.action });
             chatItem = CollectionUtils.convertToChatItemFromBotMessage(this.state.userName, this.state.userId,
                 message, this.state.chatId, this.state.chatType)
-
         } else {
             chatItem = CollectionUtils.convertToChatItemFromSocketMessage(message, this.state.chatId, this.state.chatType);
         }
 
         let messages = CollectionUtils.convertToAirChatMessageObjectFromChatItem(chatItem, this.state.isGroupChat);
 
-        this.setStateData(messages);
+        this.setStateData([message]);
         this.storeChatItemInDatabase(null, chatItem);
     }
 
@@ -170,32 +178,30 @@ class ChatPage extends Component {
             DatabaseHelper.addNewChatItem([chatItem], (msg) => {
                 console.log(msg)
             });
-
         } else if (chatItemObject) {
             DatabaseHelper.addNewChatItem([chatItemObject], (msg) => {
                 console.log(msg)
             });
         }
-
     }
 
     onSend(messages = []) {
         this.setStateData(messages);
         this.storeChatItemInDatabase(messages[0], null);
 
-        // if (this.state.chatType == Type.BOT) {
-        //     this.onBotMessageSend(messages)
-        // } else {
-        //     let socketData = CollectionUtils.prepareQueryForSocketEmit(messages.text, this.state.userName, this.state.userId, this.state.room);
-        //     this.socket.sendMessage(socketData);
-        // }
-
+        if (this.state.chatType == Type.BOT) {
+            this.onBotMessageSend(messages)
+        } else {
+            let socketData = CollectionUtils.prepareQueryForSocketEmit(this.state.userName, this.state.userId, messages.text, this.state.room);
+            this.socket.sendMessage(socketData);
+        }
     }
 
     //bot realted functions;
     onBotMessageSend(messages = [], doctypeItemId = null, actionName = null, childActionName = null, pageCount = null) {
         let postData = CollectionUtils.prepareQueryForPostDataBotType(this.state.doctype.toLowerCase()
-            , messages.text, doctypeItemId, actionName, childActionName, pageCount, this.state.room);
+            , messages[0].text, doctypeItemId, actionName, childActionName, pageCount, this.state.room);
+        console.log(postData);
         InternetHelper.sendData(this.state.domain, postData);
     }
 
@@ -233,7 +239,6 @@ class ChatPage extends Component {
 
 
     callback(text, name, childActionName) {
-
         let message = CollectionUtils.createChatItem(this.state.userName, this.state.userId,
             text, new Date(), null, null, null, null, null, null, null, null, null, this.state.chatId, Type.BOT);
 
@@ -255,7 +260,6 @@ class ChatPage extends Component {
         )
     }
 
-    
 
     render() {
         return (
@@ -263,7 +267,10 @@ class ChatPage extends Component {
 
                 <Toolbar
                     leftElement="arrow-back"
-                    onLeftElementPress={() => this.props.navigator.pop()}
+                    onLeftElementPress={() => {
+                        this.props.route.callback(Page.CHAT_PAGE);
+                        this.props.navigator.pop();
+                    }}
                     centerElement={this.props.route.name}
                     rightElement={{
                         menu: { labels: menuItems },

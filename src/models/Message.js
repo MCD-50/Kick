@@ -1,22 +1,23 @@
 
 export class Message {
 
-    constructor(userName, userId, text, createdOn, isAlert, info, action) {
-        this.userName = userName;
-        this.userId = userId;
+    constructor(user_name, user_id, text, created_on, is_alert, info, action, list_items) {
+        this.user_name = user_name;
+        this.user_id = user_id;
         this.text = text;
-        this.createdOn = createdOn;
-        this.isAlert = isAlert;
+        this.created_on = created_on;
+        this.is_alert = is_alert;
         this.info = info;
         this.action = action;
+        this.list_items = list_items
     }
 
     getUserName() {
-        return this.userName;
+        return this.user_name;
     }
 
     getUserId() {
-        return this.userId;
+        return this.user_id;
     }
 
     getText() {
@@ -24,35 +25,43 @@ export class Message {
     }
 
     getCreatedOn() {
-        return this.createdOn;
+        return this.created_on;
     }
 
     getIsAlert() {
-        return this.isAlert;
+        return this.is_alert;
     }
 
     getInfo() {
         return this.info;
     }
 
-    setUserName(userName) {
-        this.userName = userName;
+    getAction(){
+        return this.action;
     }
 
-    setUserId(userId) {
-        this.userId = userId;
+    getListItems(){
+        return this.list_items;
+    }
+
+    setUserName(user_name) {
+        this.user_name = user_name;
+    }
+
+    setUserId(user_id) {
+        this.user_id = user_id;
     }
 
     setText(text) {
         this.text = text;
     }
 
-    setCreatedOn(createdOn) {
-        this.createdOn = createdOn;
+    setCreatedOn(created_on) {
+        this.created_on = created_on;
     }
 
-    setIsAlert(isAlert) {
-        this.isAlert = isAlert;
+    setIsAlert(is_alert) {
+        this.is_alert = is_alert;
     }
 
     setInfo(info) {
@@ -61,6 +70,10 @@ export class Message {
 
     setAction(action) {
         this.action = action;
+    }
+
+    setListItems(list_items){
+        this.list_items = list_items;
     }
 }
 

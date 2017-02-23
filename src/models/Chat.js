@@ -1,106 +1,70 @@
-//title, subTitle(Last Message Text), 
-//image, badge, type, room, isMute, email, 
-//lastActive, lastMessageTime, id
 
 export class Chat {
-    constructor(title, subTitle, image, badge, type, room, isMute, email) {
+    constructor(title, sub_title, info, person, group, bot) {
         this.title = title;
-        this.subTitle = subTitle;
-        this.image = image;
-        this.badge = badge;
-        this.type = type;
-        this.room = room;
-        this.isMute = isMute;
-        this.email = email;
+        this.sub_title = sub_title;
+        this.info = info;
+        this.person = person;
+        this.group = group;
+        this.bot = bot;
     }
 
-    getId(){
+    getId() {
         return this.id;
     }
 
-    getTitle(){
+    getTitle() {
         return this.title;
     }
 
-    getSubTitle(){
-        return this.subTitle;
+    getSubTitle() {
+        return this.sub_title;
     }
 
-    getImage(){
-        return this.image;
+    getInfo() {
+        return this.info;
     }
 
-    getBadge(){
-        return this.badge;
+    getPerson() {
+        return this.person;
     }
 
-    getType(){
-        return this.type;
+    getGroup() {
+        return this.group;
     }
 
-    getRoom(){
-        return this.room;
+    getBot() {
+        return this.bot;
     }
 
-    getIsMute(){
-        return this.isMute;
-    }
-
-    getLastActive(){
-        return this.lastActive;
-    }
-
-    getEmail(){
-        return this.email;
-    }
-
-    getLastMessageTime(){
-        return lastMessageTime;
-    }
-
-    setId(id){
+    setId(id) {
         this.id = id;
     }
 
-    setTitle(title){
+    setTitle(title) {
         this.title = title;
     }
 
-    setSubTitle(subTitle){
-        this.subTitle = subTitle;
+    setSubTitle(sub_title) {
+        this.sub_title = sub_title;
     }
 
-    setImage(image){
-        this.image = image;
+    setInfo(info) {
+        this.info = info;
     }
 
-    setBadge(badge){
-        this.badge = badge;
+    setPerson(person) {
+        this.person = person;
     }
 
-    setType(type){
-        this.type = type;
+    setBot(bot) {
+        this.bot = bot;
     }
 
-    setRoom(room){
-        this.room = room;
+    setGroup(group) {
+        this.group = group;
     }
 
-    setIsMute(isMute){
-        this.isMute = isMute;
-    }
-
-    setLastActive(lastActive){
-        this.lastActive = lastActive;
-    }
-
-    setEmail(email){
-        this.email = email;
-    }
-
-    setLastMessageTime(lastMessageTime){
-        this.lastMessageTime = lastMessageTime;
-    }
 }
 
 

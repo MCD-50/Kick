@@ -4,25 +4,22 @@ import {
     View,
     StyleSheet,
     Text,
-    TextInput,
     ScrollView,
-    Picker,
-    Alert
+    Alert,
+    TouchableOpacity,
+    Button,
 } from 'react-native'
 
 import { setData } from '../../../helpers/AppStore.js';
 import Container from '../../Container.js';
 import Toolbar from '../../customUI/ToolbarUI.js';
-import { UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN, FIRST_NAME, LAST_NAME, FIRST_RUN } from '../../../constants/AppConstant.js';
+import { UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN, FULL_NAME, MOBILE_NUMBER, FIRST_RUN } from '../../../constants/AppConstant.js';
 import { Page } from '../../../enums/Page.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
-
+import TextField from '../../customUI/TextField.js';
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        marginTop: UPMARGIN,
-        marginBottom: DOWNMARGIN,
         marginLeft: LEFTMARGIN,
         marginRight: RIGHTMARGIN,
     },
@@ -32,16 +29,17 @@ const styles = StyleSheet.create({
     },
 
     text: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#777777'
+        fontSize: 15,
+        fontWeight: '300',
+        color: '#b2b2b2'
     },
 
     textInput: {
         fontSize: 18,
         fontWeight: '300',
         color: 'black',
-    },
+    }
+
 });
 
 const propTypes = {
@@ -65,34 +63,28 @@ const defaultProps = {
 class FirstRunPage extends Component {
     constructor(params) {
         super(params);
-        this.state = {
-            firstName: '',
-            lastName: '',
+        this.input = {
+            fullName: '',
+            mobileNumber: '',
         }
 
-        this.onType = this.onType.bind(this);
+        this.onChageText = this.onChageText.bind(this);
         this.isAllowed = this.isAllowed.bind(this);
         this.showAlert = this.showAlert.bind(this);
         this.saveName = this.saveName.bind(this);
     }
 
-    onType(e, whichState) {
+    onChageText(text, whichState) {
         if (whichState == 1) {
-            this.setState({ firstName: e.nativeEvent.text });
+            this.input.fullName = text;
         } else if (whichState == 2) {
-            this.setState({ lastName: e.nativeEvent.text });
+            this.input.mobileNumber = text;
         }
     }
 
-
-
     isAllowed() {
-        let state = this.state;
-
-        let firstName = state.firstName;
-        let lastName = state.lastName;
-
-        if (firstName && lastName && firstName.trim().length > 0 && lastName.trim().length > 0)
+        let fullName = this.input.fullName;
+        if (fullName && fullName.trim().length > 0)
             return true;
         return false;
     }
@@ -109,8 +101,8 @@ class FirstRunPage extends Component {
 
     saveName() {
         if (this.isAllowed()) {
-            setData(FIRST_NAME, this.state.firstName);
-            setData(LAST_NAME, this.state.lastName);
+            setData(FULL_NAME, this.input.fullName);
+            setData(MOBILE_NUMBER, this.input.mobile);
             setData(FIRST_RUN, 'false');
             CollectionUtils.addDefaultBots(() => {
                 let page = Page.CHAT_LIST_PAGE;
@@ -126,35 +118,52 @@ class FirstRunPage extends Component {
     render() {
         return (
             <Container>
-                <Toolbar centerElement={this.props.route.name}
-                    rightElement='done'
-                    onRightElementPress={() => this.saveName()} />
+                <Toolbar centerElement={this.props.route.name} />
                 <ScrollView style={styles.container} keyboardDismissMode='interactive'>
 
-                    <View style={styles.innerContainer}>
-                        <TextInput style={styles.textInput}
-                            placeholder='First name (required)'
-                            onChange={(e) => this.onType(e, 1)}
-                            placeholderTextColor={this.props.placeholderTextColor}
-                            multiline={this.props.multiline}
-                            autoCapitalize='sentences'
-                            enablesReturnKeyAutomatically={true}
-                            underlineColorAndroid='#2e3c98' />
+                    <TextField
+                        label={'Full name'}
+                        labelColor='#9e9e9e'
+                        highlightColor='#2e3c98'
+                        onChangeText={(val) => this.onChageText(val, 1)}
+                    />
+
+
+                    <TextField
+                        label={'Mobile number'}
+                        labelColor='#9e9e9e'
+                        highlightColor='#2e3c98'
+                        keybo
+                        onChangeText={(val) => this.onChageText(val, 2)}
+                    />
+
+                    <View style={{
+                        marginTop: 10,
+                        alignItems: 'flex-end',
+
+                    }}>
+
+                        <TouchableOpacity style={{
+                            borderRadius: 3,
+                            backgroundColor: '#5E64FF',
+                            width: 100
+
+                        }}
+                            onPress={() => { this.saveName() }}
+                            accessibilityTraits="button">
+                            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                                <Text style={{
+                                    padding: 10,
+                                    paddingLeft: 10,
+                                    paddingRight: 10,
+                                    fontSize: 17,
+                                    color: 'white'
+                                }}>DONE</Text>
+                            </View>
+
+                        </TouchableOpacity>
 
                     </View>
-
-                    <View style={styles.innerContainer}>
-                        <TextInput style={styles.textInput}
-                            placeholder='Last name (required)'
-                            onChange={(e) => this.onType(e, 2)}
-                            placeholderTextColor={this.props.placeholderTextColor}
-                            multiline={this.props.multiline}
-                            autoCapitalize='sentences'
-                            enablesReturnKeyAutomatically={true}
-                            underlineColorAndroid='#2e3c98' />
-                    </View>
-
-
 
                 </ScrollView>
             </Container>

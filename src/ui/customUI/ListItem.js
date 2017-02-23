@@ -12,6 +12,7 @@ import Divider from './utils/divider.js';
 import Icon from './Icon.js';
 import IconToggle from './IconToggle.js';
 import RippleFeedback from './utils/ripplefeedback.js';
+import Avatar from './Avatar.js';
 
 const propTypes = {
     // generally
@@ -24,6 +25,7 @@ const propTypes = {
     style: PropTypes.object,
 
     // left side
+
     leftElement: PropTypes.oneOfType([
         PropTypes.element,
         PropTypes.string,
@@ -194,16 +196,18 @@ class ListItem extends PureComponent {
             numberOfLines: getNumberOfLines(props),
         };
     }
+
     componentWillReceiveProps(nextPros) {
         this.setState({ numberOfLines: getNumberOfLines(nextPros) });
     }
+
     onListItemPressed = () => {
         const { onPress, onPressValue } = this.props;
-
         if (onPress) {
             onPress(onPressValue);
         }
     };
+
     onLeftElementPressed = () => {
         const { onLeftElementPress, onPress, onPressValue } = this.props;
 
@@ -213,6 +217,7 @@ class ListItem extends PureComponent {
             onPress(onPressValue);
         }
     };
+
     onRightElementPressed = () => {
         const { onRightElementPress, onPressValue } = this.props;
 
@@ -220,6 +225,14 @@ class ListItem extends PureComponent {
             onRightElementPress(onPressValue);
         }
     };
+
+    // onLongPressed = () => {
+    //     const { onLongPress, onPressValue } = this.props;
+    //     if (onLongPress) {
+    //         console.log('on long press');
+    //         onLongPress(onPressValue);
+    //     }
+    // }
 
 
     renderLeftElement = (styles) => {
@@ -260,14 +273,26 @@ class ListItem extends PureComponent {
                     <Icon name={leftElement} color={flattenLeftElement.color} />
                 </TouchableWithoutFeedback>
             );
+
         } else {
-            content = (
-                <TouchableWithoutFeedback onPress={this.onLeftElementPressed}>
-                    <View>
-                        {leftElement}
-                    </View>
-                </TouchableWithoutFeedback>
-            );
+            
+            if (leftElement.props.text == '###icon') {
+                content = (
+                    <TouchableWithoutFeedback onPress={this.onLeftElementPressed}>
+                        <View>
+                            <Avatar bgcolor='#cbe3f5' icon='done' iconColor='#0078fd' />
+                        </View>
+                    </TouchableWithoutFeedback>
+                );
+            } else {
+                content = (
+                    <TouchableWithoutFeedback onPress={this.onLeftElementPressed}>
+                        <View>
+                            {leftElement}
+                        </View>
+                    </TouchableWithoutFeedback>
+                );
+            }
         }
 
         return (
@@ -422,8 +447,7 @@ class ListItem extends PureComponent {
 
             const flattenRightElement = StyleSheet.flatten(styles.rightElement);
 
-
-            if (upperElement && upperElement != '0' && lowerElement) {
+            if (upperElement && lowerElement && lowerElement != 0) {
                 content = (
                     <View>
                         <Text style={[styles.tertiaryText, { marginTop: margin, height: height - margin, fontSize: 12 }]}>
@@ -433,14 +457,14 @@ class ListItem extends PureComponent {
                             {lowerElement}
                         </View>
                     </View>);
-            } else if (upperElement && upperElement != '0') {
+            } else if (upperElement) {
                 content = (
                     <View style={{ marginTop: margin }}>
                         <Text style={[styles.tertiaryText, { fontSize: 12 }]}>
                             {upperElement}
                         </Text>
                     </View>);
-            } else if (lowerElement) {
+            } else if (lowerElement && lowerElement != 0) {
                 content = (
                     <View style={{ marginTop: height, alignItems: 'flex-end' }}>
                         {lowerElement}
@@ -507,7 +531,6 @@ class ListItem extends PureComponent {
     )
     render() {
         const { onPress } = this.props;
-
         const styles = getStyles(this.props, this.context, this.state);
 
         // renders left element, center element and right element
@@ -520,8 +543,6 @@ class ListItem extends PureComponent {
                 </RippleFeedback>
             );
         }
-
-
         return (
             <View>
                 <View style={styles.container}>

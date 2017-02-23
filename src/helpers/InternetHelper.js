@@ -1,6 +1,46 @@
-
+import { NetInfo } from 'react-native';
 
 class InternetHelper {
+
+    //     NetInfo.isConnected.fetch().then(isConnected => {
+    //         console.log('First, is ' + (isConnected ? 'online' : 'offline'));
+    //     });
+    // function handleFirstConnectivityChange(isConnected) {
+    //     console.log('Then, is ' + (isConnected ? 'online' : 'offline'));
+    //     NetInfo.isConnected.removeEventListener(
+    //         'change',
+    //         handleFirstConnectivityChange
+    //     );
+    // }
+    // NetInfo.isConnected.addEventListener(
+    //     'change',
+    //     handleFirstConnectivityChange
+    // );
+
+
+    checkIfNetworkAvailable(networkStatusCallback) {
+        NetInfo.isConnected.fetch().then(isConnected => {
+            networkStatusCallback(isConnected)
+        });
+    }
+
+    getAllUsers(full_url, callback) {
+        let index = full_url.lastIndexOf('api');
+        let ping_url = full_url.substring(0, index);
+        
+        fetch(ping_url + 'api/method/frappe.utils.kickapp.utils.get_all_users', {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json(), (reject) => callback(null, 'Something went wrong.'))
+            .then((responseData) => {
+                callback(responseData.message, null)
+            }, (reject) => callback(null, 'Something went wrong.'));
+    }
+
+
     login(full_url, alertCallback, successCallback) {
         let index = full_url.lastIndexOf('api');
         let ping_url = full_url.substring(0, index);
@@ -40,8 +80,8 @@ class InternetHelper {
 
     sendData(domain, data) {
         console.log(domain);
-        
-        let url = 'http://' + domain + '/api/method/frappe.utils.bot_reply.get_reply';
+
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bot_reply.get_reply';
         let method = {
             method: "POST",
             headers: {

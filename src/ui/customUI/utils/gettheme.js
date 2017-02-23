@@ -415,6 +415,7 @@ export default function getTheme(theme, ...more) {
                 ...typography.body2,
             },
         }, theme.subheader)),
+
         toolbar: StyleSheet.create(merge({
             container: {
                 backgroundColor: palette.primaryColor,
@@ -424,13 +425,14 @@ export default function getTheme(theme, ...more) {
                 paddingHorizontal: 2,
                 ...getPlatformElevation(4),
             },
-            leftElementContainer: {},
+            leftElementContainer: {
+            },
             leftElement: {
                 color: palette.alternateTextColor,
             },
             centerElementContainer: {
                 flex: 1,
-                marginLeft: 10,
+                marginLeft: 16,
             },
             titleText: {
                 color: palette.alternateTextColor,
@@ -453,7 +455,7 @@ export default function getTheme(theme, ...more) {
             centerElementContainer: {},
             titleText: {
                 flex: 1,
-                marginLeft: 16,
+                marginLeft: 10,
                 color: palette.primaryTextColor,
                 fontWeight: fontWeight.normal,
                 fontSize: 18

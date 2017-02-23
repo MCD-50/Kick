@@ -232,7 +232,7 @@ class LoginPage extends Component {
         if (this.state.showProgress) {
             return (
                 <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 }}>
-                    <Progress color={colors} size={50} duration={500} />
+                    <Progress color={['#3f51b5']} size={50} duration={300} />
                 </View>
             )
         }
@@ -245,7 +245,7 @@ class LoginPage extends Component {
             <Container color='black'>
                 <ScrollView style={styles.container} keyboardDismissMode='interactive'>
 
-                    <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 }}>
+                    <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: UPMARGIN, marginBottom: DOWNMARGIN }}>
                         <Image source={frappeIcon} style={styles.image} />
                     </View>
 
@@ -336,39 +336,6 @@ class LoginPage extends Component {
         );
     }
 }
-
-
-//  <TextField
-//                             label={'Domain'}
-//                             height={40}
-//                             highlightColor={'#333333'}
-//                             value={this.state.domain}
-//                             onChangeText={(text) => this.setState({ domain: text })} />
-
-//                         <TextField
-//                             label={'Email'}
-//                             height={40}
-//                             highlightColor={'#333333'}
-//                             value={this.state.email}
-//                             onChangeText={(text) => this.setState({ email: text })} />
-
-//                         <TextField
-//                             label={'Password'}
-//                             height={40}
-//                             highlightColor={'#333333'}
-//                             value={this.state.password}
-//                             secureTextEntry
-//                             onChangeText={(text) => this.setState({ password: text })} />
-
-//                         <TouchableOpacity activeOpacity={.7} onPress={this.login}>
-//                             <View style={styles.button} >
-//                                 <Text style={styles.buttonText}>Sign In</Text>
-//                             </View>
-//                         </TouchableOpacity>
-
-
-
-
 
 LoginPage.propTypes = propTypes;
 export default LoginPage;

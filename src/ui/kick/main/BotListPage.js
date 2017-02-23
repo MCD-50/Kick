@@ -1,161 +1,251 @@
-// import { View, StyleSheet, Image, BackAndroid, StatusBar, ToastAndroid, ListView, ScrollView, Platform, Animated, Easing } from 'react-native';
-// import React, { Component, PropTypes } from 'react';
-
-// import { Icon, Avatar, ListItem } from 'react-native-material-ui';
-
-// import Toolbar from './customUI/ToolbarUI.js';
-
-// import {Chat} from '../model/Chat.js';
-// import DatabaseHelper from '../helper/DatabaseHelper.js';
-
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//     },
-//     avatarImage: {
-//         width: 40,
-//         height: 40,
-//         borderRadius: 40
-//     }
-// });
-
-// const propTypes = {
-//     navigator: PropTypes.object.isRequired,
-//     route: PropTypes.object.isRequired,
-// };
-
-// const menuItems = [
-//     'Profile', 'Settings'
-// ]
-
-// const bots = [
-//     new Chat('Todo', 'Creates new todo', 'man_avatar', 0, 'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT'),
-//     new Chat('Customer', 'Creates new customer', 'man_avatar', 0, 'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT'),
-//     new Chat('Help', 'Helps user', 'man_avatar', 0,'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT'),
-//     new Chat('Assign', 'Assign task vjbfljv dkjjvbvbskfv dkjjvbfsjkvbfsv djvbjvbvsv kjvnkfvnfv', 'man_avatar', 0, 'hcvjdbvbdshvjbdvdvbjkvbvkdbvdvjvbvbdkvjdvbvkdsvbskvdvlbkjdvsjbkvds', 'BOT')
-//  ]
+import React, { Component, PropTypes } from 'react';
+import {
+    View,
+    StyleSheet,
+    Text,
+    ListView,
+    BackAndroid,
+} from 'react-native';
 
 
-// const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1.id !== r2.id });
 
-// class BotList extends Component {
+import Toolbar from '../../customUI/ToolbarUI.js';
+import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
+import Container from '../../Container.js';
+import { Page } from '../../../enums/Page.js';
+import { Type } from '../../../enums/Type.js';
+import Avatar from '../../customUI/Avatar.js';
+import Icon from '../../customUI/Icon.js';
 
-//     constructor(params) {
-//         super(params);
-
-//         this.state = {
-//             searchText: '',
-//             bottomHidden: false,
-//             dataSource: ds.cloneWithRows(bots),
-//         };
-
-//         this.renderListItem = this.renderListItem.bind(this);
-//         this.onChangeText = this.onChangeText.bind(this);
-//         this.addBackEvent();
-//     }
-
-//     addBackEvent() {
-//         BackAndroid.addEventListener('hardwareBackPress', () => {
-//             if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-//                 this.props.route.callback();
-//                 this.props.navigator.pop();
-//                 return true;
-//             }
-//             return false;
-//         });
-//     }
+import ListItem from '../../customUI/ListItem.js';
+import CollectionUtils from '../../../helpers/CollectionUtils.js';
+import Progress from '../../customUI/Progress.js';
 
 
-//     componentWillUnmount() {
-//         BackAndroid.removeEventListener('hardwareBackPress', () => {
-//             if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-//                 console.log(this.props.route);
-//                 this.props.route.callback();
-//                 this.props.navigator.pop();
-//                 return true;
-//             }
-//             return false;
-//         });
-//     }
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    progress: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
+});
+
+const propTypes = {
+    navigator: PropTypes.object.isRequired,
+    route: PropTypes.object.isRequired,
+    botList: PropTypes.array,
+};
 
 
-//     onChangeText(value) {
-//         console.log(this.state.searchText);
-//         this.setState({ searchText: value });
+const defaultProps = {
+    botList: [],
+}
 
-//     }
-
-//     renderListItem(chat) {
-//         const searchText = this.state.searchText.toLowerCase();
-
-//         if (searchText.length > 0 && chat.getName().toLowerCase().indexOf(searchText) < 0) {
-//             return null;
-//         }
-
-//         //onPress={() => this.props.navigator.push(route)}
-//         ///onLeftElementPress={() => this.onAvatarPressed(title)}
-//         //<Image style={styles.avatarImage} source={{uri: src}} />
-//         //const src =  chat.getImage();
-        
-
-//         return (
-//             <ListItem
-//                 divider
-//                 leftElement={<Avatar icon='person'/>}
-//                 centerElement={{
-//                     primaryText: chat.getName(),
-//                     secondaryText: chat.getLatestMsg()
-//                 }}
-
-//                 onPress={() => DatabaseHelper.addNewChat(
-//                     chat, function (results) {
-//                     console.log(results);
-//                 })}
-//                 />
-//         );
-//     }
-
-//     render() {
-//         return (
-//             <View style={styles.container}>
-//                 <Toolbar
-//                     leftElement="arrow-back"
-//                     onLeftElementPress={() => {
-//                         this.props.route.callback();
-//                         this.props.navigator.pop();
-//                     } }
-
-//                     centerElement='Bots'
-//                     searchable={{
-//                         autoFocus: true,
-//                         placeholder: 'Search',
-//                         onChangeText: value => this.onChangeText(value),
-//                         onSearchClosed: () => this.setState({ searchText: '' }),
-//                     }}
-//                     rightElement={{
-//                         menu: { labels: menuItems },
-//                     }}
-//                     onRightElementPress={(action) => {
-//                         if (Platform.OS === 'android') {
-
-//                             //ToastAndroid.show(menuItems[action.index], ToastAndroid.SHORT);
-//                         }
-//                     } } />
+const colors = [
+    '#e67e22', // carrot
+    '#3498db', // peter river
+    '#8e44ad', // wisteria
+    '#e74c3c', // alizarin
+    '#1abc9c', // turquoise
+    '#2c3e50', // midnight blue
+];
 
 
-//                 <ListView
-//                     dataSource={this.state.dataSource} //data source
-//                     keyboardShouldPersistTaps='always'
-//                     keyboardDismissMode='interactive'
-//                     enableEmptySections={true}
-//                     ref={'LISTVIEW'}
-//                     renderRow={(item) => this.renderListItem(item)}
-//                     />
-//             </View>
-//         )
-//     }
-// }
+const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1.id !== r2.id });
+class BotListPage extends Component {
 
-// BotList.propTypes = propTypes;
+    constructor(params) {
+        super(params);
+        let owner = this.props.route.owner;
+        this.state = {
+            searchText: '',
+            isLoading: true,
+            dataSource: ds.cloneWithRows([]),
+            isChanged: false,
+            userId: owner.userId,
+            userName: owner.userName,
+            domain: owner.domain,
+        };
 
-// export default BotList;
+
+        this.addBackEvent = this.addBackEvent.bind(this);
+        this.removeBackEvent = this.removeBackEvent.bind(this);
+        this.setStateData = this.setStateData.bind(this);
+        this.renderListItem = this.renderListItem.bind(this);
+
+
+        this.onChangeText = this.onChangeText.bind(this);
+        this.getColor = this.getColor.bind(this);
+        this.getIcon = this.getIcon.bind(this);
+        this.getString = this.getString.bind(this);
+
+        this.renderElement = this.renderElement.bind(this);
+        this.callback = this.callback.bind(this);
+    }
+
+    addBackEvent() {
+        BackAndroid.addEventListener('hardwareBackPress', () => {
+            if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                if (this.state.isChanged)
+                    this.props.route.callback(Page.BOT_LIST_PAGE);
+                this.props.navigator.pop();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    removeBackEvent() {
+        BackAndroid.removeEventListener('hardwareBackPress', () => {
+            if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+                if (this.state.isChanged)
+                    this.props.route.callback(Page.BOT_LIST_PAGE);
+                this.props.navigator.pop();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    componentWillMount() {
+        this.addBackEvent();
+    }
+
+    componentWillUnmount() {
+        this.removeBackEvent();
+    }
+
+    componentDidMount() {
+        this.setStateData();
+    }
+
+    setStateData() {
+        DatabaseHelper.getAllChatsByQuery({ chatType: Type.BOT }, (results) => {
+            console.log(results);
+            let bots = results.map((result) => {
+                return CollectionUtils.convertToChat(result, true);
+            })
+            this.setState({
+                dataSource: ds.cloneWithRows(bots),
+                isLoading: false
+            });
+        })
+    }
+
+    onChangeText(e) {
+        this.setState({ searchText: e });
+    }
+
+    callback() {
+        this.setState({ isChanged: true });
+        this.setStateData();
+    }
+
+    getColor(name) {
+        const length = name.length;
+        return colors[length % colors.length];
+    }
+
+
+    getIcon(added) {
+        if (added)
+            return <Icon name='done' />;
+        null;
+    }
+
+    getString(added) {
+        if (added)
+            return 'Added';
+        return 'Not Added';
+    }
+
+
+    renderListItem(bot) {
+        const searchText = this.state.searchText.toLowerCase();
+        if (searchText.length > 0 && bot.title.toLowerCase().indexOf(searchText) < 0) {
+            return null;
+        }
+
+        return (
+            <ListItem
+                divider
+
+                leftElement={<Avatar bgcolor={this.getColor(bot.title)} text={bot.title[0] + bot.title[1].toUpperCase()} />}
+
+                centerElement={{
+                    primaryText: bot.title,
+                    secondaryText: bot.subTitle,
+                    tertiaryText: 'toys'
+                }}
+
+                onPress={() => {
+                    let state = this.state;
+                    this.props.navigator.push({
+                        id: page.id,
+                        name: page.name,
+                        chat: bot,
+                        callback: this.callback,
+                        owner: {
+                            userName: state.userName,
+                            userId: state.userId,
+                            domain: state.domain
+                        }
+                    })
+                }} />
+        );
+    }
+
+
+    renderElement() {
+        if (this.state.isLoading) {
+            return (
+                <View style={styles.progress}>
+                    <Progress color={['#3f51b5']} size={50} duration={300} />
+                </View>)
+        }
+
+        return (
+            <ListView
+                dataSource={this.state.dataSource}
+                keyboardShouldPersistTaps='always'
+                keyboardDismissMode='interactive'
+                enableEmptySections={true}
+                ref={'LISTVIEW'}
+                renderRow={(item) => this.renderListItem(item)}
+            />
+        );
+    }
+
+
+    render() {
+        return (
+            <Container>
+                <Toolbar
+                    leftElement="arrow-back"
+                    onLeftElementPress={() => {
+                        if (this.state.isChanged) {
+                            this.props.route.callback(Page.BOT_LIST_PAGE);
+                        }
+                        this.props.navigator.pop();
+                    }}
+                    centerElement={this.props.route.name}
+                    searchable={{
+                        autoFocus: true,
+                        placeholder: 'Search bot...',
+                        onChangeText: e => this.onChangeText(e),
+                        onSearchClosed: () => this.setState({ searchText: '' }),
+                    }}
+                />
+                {this.renderElement()}
+
+            </Container>
+        )
+    }
+}
+
+BotListPage.propTypes = propTypes;
+
+export default BotListPage;
