@@ -14,7 +14,7 @@ import {
 
 
 import InternetHelper from '../../../helpers/InternetHelper.js';
-import { hasServerUrl, setData } from '../../../helpers/AppStore.js';
+import { hasServerUrl, setData, getStoredDataFromKey } from '../../../helpers/AppStore.js';
 import Progress from '../../customUI/Progress.js';
 import {
     FULL_URL, SERVER_URL, DOMAIN, EMAIL,
@@ -171,7 +171,7 @@ class LoginPage extends Component {
         hasServerUrl()
             .then((val) => {
                 if (!val) {
-                    fetch('http://' + domain + '/api/method/frappe.utils.bot_helper.get_dev_port')
+                    fetch('http://' + domain + '/api/method/frappe.utils.kickapp.helper.get_dev_port')
                         .then((res) => res.json())
                         .then((data) => {
                             if (data.message[0] == 1) {
@@ -196,6 +196,7 @@ class LoginPage extends Component {
         if (set) {
             setData(SERVER_URL, server_url);
         }
+
         let page;
         if (this.state.showFirstRunPage)
             page = Page.FIRST_RUN_PAGE;
@@ -204,7 +205,7 @@ class LoginPage extends Component {
 
         setTimeout(() => {
             this.setState({ showProgress: false, });
-            this.props.navigator.replace({ id: page.id, name: page.name })
+            this.props.navigator.replace({ id: page.id, name: page.name, info: { domain: this.state.domain, email: this.state.email } })
         }, 1000);
     }
 

@@ -147,13 +147,13 @@ class ContactListPage extends Component {
                             let people = array.map((item) => {
                                 let title = item.last_name ? item.first_name + ' ' + item.last_name : item.first_name;
                                 return CollectionUtils.createChat(title, 'No new message', false,
-                                    Type.PERSONAL, null, null, null, null, CollectionUtils.getLastActive(item.last_active),
-                                    CollectionUtils.createChatPersonalObject({
+                                    Type.PERSONAL, null, null, null, CollectionUtils.getLastActive(item.last_active),
+                                    CollectionUtils.createChatPersonObject({
+                                        title: title,
                                         email: item.email,
                                         number: null,
                                     }));
                             })
-
                             DatabaseHelper.addNewChat(people, (msg) => {
                                 this.loadChats();
                             }, true);
@@ -169,7 +169,7 @@ class ContactListPage extends Component {
 
 
     loadChats() {
-        DatabaseHelper.getAllChatsByQuery({ chatType: Type.PERSONAL }, (results) => {
+        DatabaseHelper.getAllChatsByQuery({ chat_type: Type.PERSONAL }, (results) => {
             let personals = results.map((result) => {
                 return CollectionUtils.convertToChat(result, true);
             })
@@ -178,10 +178,9 @@ class ContactListPage extends Component {
                 let _personals = personals.map((person) => {
                     return {
                         ...person,
-                        titleCopy: person.title,
+                        title_copy: person.title,
                     }
                 })
-
                 this.listOfData = _personals;
                 this.setState({
                     dataSource: ds.cloneWithRows(_personals),
@@ -230,7 +229,7 @@ class ContactListPage extends Component {
                 }}
                 centerElement={{
                     primaryText: contact.title,
-                    secondaryText: contact.info.lastActive,
+                    secondaryText: contact.info.last_active,
                     tertiaryText: 'person'
                 }}
 
@@ -261,10 +260,10 @@ class ContactListPage extends Component {
         let index = this.listOfContacts.indexOf(contact);
         if (index > -1) {
             this.listOfContacts.splice(index, 1);
-            contact.titleCopy = contact.title;
+            contact.title_copy = contact.title;
         } else {
             this.listOfContacts.push(contact);
-            contact.titleCopy = '###icon';
+            contact.title_copy = '###icon';
         }
 
         this.listOfData[this.listOfData.indexOf(contact)] = contact;
@@ -287,8 +286,8 @@ class ContactListPage extends Component {
     }
 
     getTitle(contact) {
-        if (contact.titleCopy == '###icon')
-            return contact.titleCopy;
+        if (contact.title_copy == '###icon')
+            return contact.title_copy;
         return (contact.title.length > 1) ? contact.title[0] + contact.title[1].toUpperCase() : ((contact.title.length > 0) ? contact.title[0] : 'UN');
     }
 

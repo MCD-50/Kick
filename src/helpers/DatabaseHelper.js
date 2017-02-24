@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     checkIfExists(data, callback) {
 
-        if (data.info.chatType == Type.BOT) {
+        if (data.info.chat_type == Type.BOT) {
             this.getChatByQuery({ title: data.title }, (results) => {
                 if (results.length > 0)
                     callback(true, { title: data.title });
@@ -28,7 +28,7 @@ class DatabaseHelper {
             })
         }
 
-        else if (data.info.chatType == Type.GROUP) {
+        else if (data.info.chat_type == Type.GROUP) {
             this.getChatByQuery({ title: data.title }, (results) => {
                 if (results.length > 0)
                     callback(true, { title: data.title });
@@ -37,12 +37,12 @@ class DatabaseHelper {
             })
         }
 
-        else if (data.info.chatType == Type.PERSONAL) {
-            this.getChatByQuery({ email: data.personal.email }, (results) => {
+        else if (data.info.chat_type == Type.PERSONAL) {
+            this.getChatByQuery({ email: data.person.email }, (results) => {
                 if (results.length > 0)
-                    callback(true, { email: data.personal.email });
+                    callback(true, { email: data.person.email });
                 else
-                    callback(false, { email: data.personal.email });
+                    callback(false, { email: data.person.email });
             })
         } else {
             callback(false, null);
@@ -113,7 +113,7 @@ class DatabaseHelper {
             return;
         }
 
-        DB.CHATITEMS.get({ chatId: chatIds[length - 1] }, (results) => {
+        DB.CHATITEMS.get({ chat_id: chatIds[length - 1] }, (results) => {
             results.map((item) => this.items.push(item));
             chatIds.pop();
             this.getAllChatItemForChatByChatIdInternal(chatIds, callback);
@@ -159,7 +159,7 @@ class DatabaseHelper {
             if (val) {
                 if (forceUpdate && query) {
                     let item = datas[length - 1];
-                    DB.CHATS.update(query, { lastActive: item.info.lastActive }, (results) => {
+                    DB.CHATS.update(query, { last_active: item.info.last_active }, (results) => {
                         datas.pop();
                         this.addNewChatInternal(datas, callback, forceUpdate);
                     })
@@ -189,7 +189,6 @@ class DatabaseHelper {
             return;
         }
         DB.CHATITEMS.add(datas[length - 1], (results) => {
-            console.log(results);
             datas.pop();
             this.addNewChatItemInternal(datas, callback);
         })
@@ -250,7 +249,7 @@ class DatabaseHelper {
 
         DB.CHATS.remove_id(chatIds[length - 1], (results) => {
             chatIds.pop();
-            this.removeChatItemsByQuery({ chatId: chatIds[length - 1] })
+            this.removeChatItemsByQuery({ chat_id: chatIds[length - 1] })
             this.removeChatByIdInternal(chatIds, callback);
         })
     }

@@ -154,7 +154,7 @@ const propTypes = {
   isGroupChat: React.PropTypes.bool,
   info: React.PropTypes.object,
   action: React.PropTypes.object,
-  listItems : React.PropTypes.object,
+  listItems: React.PropTypes.object,
   bottomOffset: React.PropTypes.number,
   isLoadingEarlier: React.PropTypes.bool,
   keyboardShouldPersistTaps: React.PropTypes.oneOf(['always', 'never', 'handled']),
@@ -412,6 +412,8 @@ class AirChatUI extends React.Component {
     );
   }
 
+
+  
   onSend(messages = [], shouldResetInputToolbar = false) {
     if (!Array.isArray(messages)) {
       messages = [messages];
@@ -423,13 +425,15 @@ class AirChatUI extends React.Component {
         user: this.props.user,
         info: this.props.info,
         action: this.props.action,
-        listItems : this.props.listItems,
+        listItems: this.props.listItems,
         isAlert: this.props.isAlert,
         isGroupChat: this.props.isGroupChat,
         createdAt: new Date(),
         _id: 'temp-' + Math.round(Math.random() * 1000000),
       };
     });
+
+
 
     if (shouldResetInputToolbar === true) {
       this.setIsTypingDisabled(true);

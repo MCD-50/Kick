@@ -44,7 +44,7 @@ reactNativeStore.saveTable = function (tableName, tableData) {
                 'autoinc': 1,
                 'rows': {}
             };
-            
+
             AsyncStorage.setItem(dbName, JSON.stringify(databaseData), function (err) {
                 if (err) {
                     reject(err)
@@ -127,6 +127,7 @@ function updateRecursive(o, key, value) {
     for (var i in o) {
         if (i == key) {
             o[i] = value;
+
             return true;
         } else if (typeof (o[i]) == "object" && o[i] != null) {
             return updateRecursive(o[i], key, value);
@@ -135,13 +136,17 @@ function updateRecursive(o, key, value) {
 }
 
 function updateValue(o, key, value) {
+
     var fullObj = o;
+
     for (var i in o) {
         if (i == key) {
             o[i] = value;
+
             return fullObj;
         } else if (typeof (o[i]) == "object" && o[i] != null) {
             if (updateRecursive(o[i], key, value)) {
+
                 return fullObj;
             }
         }
@@ -157,6 +162,7 @@ Model.prototype.update = function (data, callback) {
     if (this._where) {
         hasParams = true;
     }
+
     if (hasParams) {
         for (var row in rows) {
             for (var key in this._where) {

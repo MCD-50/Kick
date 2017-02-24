@@ -17,6 +17,7 @@ import { UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN, FULL_NAME, MOBILE_NUMBER
 import { Page } from '../../../enums/Page.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import TextField from '../../customUI/TextField.js';
+import InternetHelper from '../../../helpers/InternetHelper.js';
 
 const styles = StyleSheet.create({
     container: {
@@ -66,6 +67,7 @@ class FirstRunPage extends Component {
         this.input = {
             fullName: '',
             mobileNumber: '',
+            info: this.props.route.info,
         }
 
         this.onChageText = this.onChageText.bind(this);
@@ -102,8 +104,11 @@ class FirstRunPage extends Component {
     saveName() {
         if (this.isAllowed()) {
             setData(FULL_NAME, this.input.fullName);
-            setData(MOBILE_NUMBER, this.input.mobile);
+            setData(MOBILE_NUMBER, this.input.mobileNumber);
             setData(FIRST_RUN, 'false');
+
+            InternetHelper.setGlobalRoom(this.input.info.domain, this.input.info.email, this.input.mobileNumber, this.input.fullName)
+
             CollectionUtils.addDefaultBots(() => {
                 let page = Page.CHAT_LIST_PAGE;
                 this.props.navigator.replace({ id: page.id, name: page.name });

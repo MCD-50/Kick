@@ -1,5 +1,6 @@
 import { NetInfo } from 'react-native';
-
+import { getStoredDataFromKey } from './AppStore.js';
+import { DOMAIN } from '../constants/AppConstant.js';
 class InternetHelper {
 
     //     NetInfo.isConnected.fetch().then(isConnected => {
@@ -24,11 +25,28 @@ class InternetHelper {
         });
     }
 
+
+    getAllUsersInARoom(room, callback) {
+        getStoredDataFromKey(DOMAIN).then((domain) => {
+            let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.send_message_and_get_reply?room=' + room;
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            }).then((response) => response.json(), (reject) => callback(null, 'Something went wrong.'))
+                .then((responseData) => {
+                    callback(responseData.message, null)
+                }, (reject) => callback(null, 'Something went wrong.'));
+        })
+    }
+
     getAllUsers(full_url, callback) {
         let index = full_url.lastIndexOf('api');
         let ping_url = full_url.substring(0, index);
-        
-        fetch(ping_url + 'api/method/frappe.utils.kickapp.utils.get_all_users', {
+
+        fetch(ping_url + 'api/method/frappe.utils.kickapp.reply.get_all_users', {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -78,18 +96,22 @@ class InternetHelper {
     }
 
 
-    sendData(domain, data) {
-        console.log(domain);
 
-        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bot_reply.get_reply';
+    sendData(domain, data) {
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.send_message_and_get_reply';
+
+        const form = new FormData();
+        form.append('obj', JSON.stringify(data));
+
         let method = {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
+                'Content-Type': 'multipart/form-data',
             },
-            body: JSON.stringify(data)
+            body: form
         };
+
 
         fetch(url, method).then((succ) => {
             console.log(succ);
@@ -97,7 +119,40 @@ class InternetHelper {
             console.log(error);
         });
     }
+
+
+
+    setGlobalRoom(domain, email, number, title) {
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.set_user_in_global_chat_room';
+        let data = {
+            room: email,
+            user: {
+                title: title,
+                number: number,
+                email: email
+            }
+        }
+
+        const form = new FormData();
+        form.append('obj', JSON.stringify(data));
+
+        let method = {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'multipart/form-data',
+            },
+            body: form
+        };
+
+        fetch(url, method).then((succ) => {
+            console.log(succ);
+        }, (error) => {
+            console.log(error);
+        })
+    }
 }
+
 
 
 const internet = new InternetHelper();

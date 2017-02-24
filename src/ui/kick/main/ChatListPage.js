@@ -86,8 +86,8 @@ class ChatListPage extends Component {
         this.getIcon = this.getIcon.bind(this);
         this.callback = this.callback.bind(this);
         this.rightElementPress = this.rightElementPress.bind(this);
-        this.onNotification = this.onNotification.bind(this);
-        this.socket = SocketHelper(this.onNotification);
+        this.onMessageReceive = this.onMessageReceive.bind(this);
+        this.socket = SocketHelper(this.onMessageReceive);
         this.renderElement = this.renderElement.bind(this);
     }
 
@@ -104,7 +104,7 @@ class ChatListPage extends Component {
 
 
     setStateData() {
-        DatabaseHelper.getAllChatsByQuery({ isAddedToChatList: true }, (results) => {
+        DatabaseHelper.getAllChatsByQuery({ is_added_to_chat_list: true }, (results) => {
             let chats = results.map((result) => {
                 return CollectionUtils.convertToChat(result, true);
             })
@@ -141,8 +141,8 @@ class ChatListPage extends Component {
         }
     }
 
-    onNotification(noti) {
-        //some code here;
+    onMessageReceive(message) {
+        console.log(message);
     }
 
     renderListItem(chat) {
@@ -150,6 +150,7 @@ class ChatListPage extends Component {
         if (searchText.length > 0 && chat.title.toLowerCase().indexOf(searchText) < 0) {
             return null;
         }
+
         let title = (chat.title.length > 1) ? chat.title[0] + chat.title[1].toUpperCase() : ((chat.title.length > 0) ? chat.title[0] : 'UN');
         return (
             <ListItem
@@ -159,13 +160,13 @@ class ChatListPage extends Component {
 
                 centerElement={{
                     primaryText: chat.title,
-                    secondaryText: chat.subTitle,
-                    tertiaryText: this.getIcon(chat.info.chatType)
+                    secondaryText: chat.sub_title,
+                    tertiaryText: this.getIcon(chat.info.chat_type)
                 }}
 
                 rightElement={{
-                    upperElement: chat.info.lastMessageTime,
-                    lowerElement: this.renderBadge(chat.info.newMessageCount),
+                    upperElement: chat.info.last_message_time,
+                    lowerElement: this.renderBadge(chat.info.new_message_count),
                 }}
 
                 onPress={() => {

@@ -10,7 +10,7 @@ import { Type } from '../enums/Type.js';
 import { EMAIL, FULL_NAME, DOMAIN } from '../constants/AppConstant.js';
 import { getStoredDataFromKey } from './AppStore.js';
 import DatabaseHelper from './DatabaseHelper.js';
-
+import InternetHelper from './InternetHelper.js';
 
 
 class CollectionUtils {
@@ -136,26 +136,71 @@ class CollectionUtils {
 
 
     createChat = (title, sub_title, is_added_to_chat_list, chat_type, room, new_message_count, last_message_time, last_active, person = null, group = null, bot = null) => {
-
+        let info = {
+            is_added_to_chat_list: is_added_to_chat_list,
+            chat_type: chat_type,
+            room: room,
+            new_message_count: new_message_count,
+            last_message_time: last_message_time,
+            last_active: last_active
+        }
         return new Chat(title, sub_title,
-            this.createChatInfoObject(is_added_to_chat_list, chat_type, room, new_message_count, last_message_time, last_active),
-            this.createChatPersonObject(personal),
-            this.createGroupObject(group),
+            this.createChatInfoObject(info),
+            this.createChatPersonObject(person),
+            this.createChatGroupObject(group),
             this.createChatBotObject(bot));
     }
 
 
-    convertToChat = (item, hasId) => {
+    convertToChat = (item, has_id) => {
         let chat = new Chat(item.title, item.sub_title,
-            item.info,
-            this.createChatPersonObject(item.personal),
+            this.createChatInfoObject(item.info),
+            this.createChatPersonObject(item.person),
             this.createChatGroupObject(item.group),
             this.createChatBotObject(item.bot));
-
-        if (hasId)
+        if (has_id)
             chat.setId(item._id);
 
         return chat;
+    }
+
+    createChatFromResponse = (response) => {
+        if (response.is_bot == 'false') {
+            let info = {
+                is_added_to_chat_list: true,
+                chat_type: response.chat_type,
+                room: response.room,
+                new_message_count: 1,
+                last_message_time: null,
+                last_active: null,
+            }
+
+            if (response.chat_type == Type.GROUP) {
+                InternetHelper.getAllUsersInARoom(response.room, (users, msg) => {
+                    if (users && users.length > 0) {
+                        let _users = users.map((user) => {
+                            return this.createChatPersonObject(user);
+                        })
+                        let group = {
+                            people: _users,
+                            peopleCount: (_users != null) ? _users.length : null,
+                        }
+                        return new Chat(response.chat_title, text.substring(0, 20) + " ...", )
+                    }
+                })
+            } else {
+                let person = {
+                    title: response.user_name,
+                    email: response.user_id,
+                    number: null
+                }
+
+                return new Chat(response.chat_title, text.substring(0, 20) + " ...", info,
+                    person, this.createChatGroupObject(null), this.createChatBotObject(null))
+            }
+
+
+        }
     }
 
 
@@ -164,10 +209,14 @@ class CollectionUtils {
             this.createChatItemInfo(info),
             this.createChatItemAction(action),
             this.createChatItemListItems(list_items));
-        let chatItem = new ChatItem(message, chatId, type);
-        return chatItem;
+        return new ChatItem(message, chat_id, chat_type);
     }
 
+    convertToChatItem = (item, has_id) => {
+        let message = new Message(item.message.user_name, item.message.user_id, item.message.text, item.message.created_on,
+            item.message.is_alert, item.message.info, item.message.action, item.message.list_items);
+        return new ChatItem(message, item.chat_id, item.chat_type);
+    }
 
     convertToChatItemFromResponse = (response, chat_id, chat_type) => {
         if (response.is_bot == 'true') {
@@ -199,7 +248,7 @@ class CollectionUtils {
                 name: chat_item.message.user_name,
             },
 
-            isAlert: chat_item.message.isAlert,
+            isAlert: chat_item.message.is_alert,
             isGroupChat: is_group_chat,
             info: this.createChatItemInfo(chat_item.message.info),
             action: this.createChatItemAction(chat_item.message.action),
@@ -254,16 +303,14 @@ class CollectionUtils {
         }
     }
 
-
-
-    createChatInfoObject = (is_added_to_chat_list, chat_type, room, new_message_count, last_message_time, last_active) => {
+    createChatInfoObject = (info) => {
         return {
-            is_added_to_chat_list: is_added_to_chat_list,
-            chat_type: chat_type,
-            room: room,
-            new_message_count: new_message_count,
-            last_message_time: last_message_time,
-            last_active: last_active,
+            is_added_to_chat_list: info.is_added_to_chat_list,
+            chat_type: info.chat_type,
+            room: info.room,
+            new_message_count: info.new_message_count,
+            last_message_time: info.last_message_time,
+            last_active: info.last_active,
         }
     }
 
@@ -308,7 +355,7 @@ class CollectionUtils {
         }
     }
 
-    createBotCommandObject = (command) => {
+    createChatBotCommandObject = (command) => {
         if (command) {
             return {
                 syntax: command.syntax,
@@ -321,73 +368,65 @@ class CollectionUtils {
         }
     }
 
-    prepareQueryForSocketEmitPersonal = (userName, userId, text, room) => {
-        let query = {
-            isBotChat: false,
-            text: text,
-            room: room,
-            userName: userName,
-            userId: userId,
-        }
-        return query;
-    }
 
-    /*
-    incoming msg structure for bot message
-    item = {
-            "room": room,
-            "bot_name": chat.bot_name,
-            "text": chat.text,
-            "action": {
-                "action_on_button_click": action_on_button_click,
-                "action_on_list_item_click": action_on_list_item_click
-            },
-            "info": {
-                "button_text": button_text,
-                "is_interactive_chat": is_interactive_chat,
-                "is_interactive_list": is_interactive_list
-            },
-            "list_items": {
-                "action_on_internal_item_click": action_on_internal_item_click,
-                "items": [{
-                    {},
-                    {},
-                    {}
-                }]
+    prepareBeforeSending(chat_type, chat_title, room, page_count, airChatMessageObject, message) {
+        if (airChatMessageObject) {
+            if (chat_type == Type.BOT) {
+                return {
+                    "room": room,
+                    "is_bot": 'true',
+                    "bot_name": chat_title,
+                    "created_on": this.parseCreatedAt(airChatMessageObject.createdAt),
+                    "text": airChatMessageObject.text,
+                    "page_count": page_count,
+                    "action": this.createChatItemAction(airChatMessageObject.action),
+                    "info": this.createChatItemInfo(airChatMessageObject.info),
+                    "list_items": this.createChatItemListItems(airChatMessageObject.listItems)
+                }
+            } else {
+                return {
+                    "room": room,
+                    "is_bot": 'false',
+                    "created_on": this.parseCreatedAt(airChatMessageObject.createdAt),
+                    "user_name": airChatMessageObject.user.name,
+                    "user_id": airChatMessageObject.user._id,
+                    "text": airChatMessageObject.text,
+                    "is_alert": airChatMessageObject.isAlert,
+                    "chat_title": chat_title,
+                    "chat_type": chat_type
+                }
             }
+        } else {
+            return null;
         }
-
-        incoming and outgoing msg structure for other message
-         item = {
-            "room": room,
-            "user_name": chat.user_name,
-            "user_id": chat.user_id,
-            "text": chat.text,
-            "is_alert": chat.is_alert,
-            "chat_title" : chat.chat_title
-        }
-
-    */
-
-
-    prepareQueryForPostDataBotType = (doctype, text, doctypeItemId, actionName, childActionName, pageCount, room) => {
-        let query = {
-            isBotChat: true,
-            text: text,
-            room: room,
-            info: {
-                botName: doctype,
-                doctypeItemId: doctypeItemId,
-                pageCount: pageCount,
-            },
-            action: {
-                actionName: actionName,
-                childActionName: childActionName,
-            },
-        }
-        return query;
     }
 
+    getCreatedOn() {
+        let today = new Date();
+        var dd = today.getDate();
+        if (dd.toString().length < 2)
+            dd = '0' + dd.toString()
+        var mm = parseInt(today.getMonth()) + 1;
+        if (mm.toString().length < 2)
+            mm = '0' + mm.toString();
+        var yyyy = today.getFullYear();
+        return yyyy + '-' + mm + '-' + dd + ' ' +
+            today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds()
+    }
+
+    parseCreatedAt = (createdAt) => {
+        let date = createdAt.split(' ');
+        let mm = this.getMonth(null, date[1]);
+        if (mm.toString().length < 2)
+            mm = '0' + mm.toString();
+        let dd = date[2];
+        if (dd.toString().length < 2)
+            dd = '0' + dd.toString();
+        let yyyy = date[3];
+        let time = date[4];
+
+        return yyyy + '-' + mm + '-' + dd + ' ' + time;
+    }
 
     prepareCallbackData = (text, id, action) => {
         let item = {
@@ -400,7 +439,9 @@ class CollectionUtils {
     }
 
 
-    getMonth(index) {
+
+
+    getMonth = (index, month = null) => {
         const months = [
             'Jan',
             'Feb',
@@ -414,8 +455,15 @@ class CollectionUtils {
             'Oct',
             'Nov',
             'Dec'
-        ]
-        return months[index];
+        ];
+        if (index) {
+            return months[index];
+        } else {
+            for (i = 0; i < months.length; i++) {
+                if (months[i] == month)
+                    return i + 1;
+            }
+        }
     }
 
     getLastActive = (createdOn, getDateOnly = false) => {

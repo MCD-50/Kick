@@ -5,10 +5,6 @@ import {
     BackAndroid,
 } from 'react-native';
 
-
-
-
-
 import { AirChatUI } from '../../customUI/airchat/AirChatUI.js';
 import { Message } from '../../../models/Message.js';
 import SendUI from '../../customUI/SendUI.js';
@@ -55,28 +51,17 @@ const menuItems = [
 class ChatPage extends Component {
     constructor(params) {
         super(params);
-
         const chat = this.props.route.chat;
-        const owner = this.props.route.owner;
-
+        const owner = this.props.route.owner
         this.state = {
             chat: chat,
-            doctype: chat.info.chatType == Type.BOT ? chat.title : null,
-            chatId: chat.id,
-            chatType: chat.info.chatType,
-            userId: owner.userId,
-            userName: owner.userName,
-            domain: owner.domain,
-            room: chat.info.room,
-
             isLoading: true,
             messages: [],
-
-            isGroupChat: chat.info.chatType == Type.GROUP ? true : false,
+            owner: owner,
+            isGroupChat: chat.info.chat_type == Type.GROUP ? true : false,
             recentAction: {
-                actionName: null,
-                actionOnButtonClick: null,
-                actionOnListItemClick: null
+                action_on_button_click: null,
+                action_on_list_item_click: null
             },
         };
 
@@ -87,14 +72,11 @@ class ChatPage extends Component {
         this.storeChatItemInDatabase = this.storeChatItemInDatabase.bind(this);
         this.renderSend = this.renderSend.bind(this);
         this.setStateData = this.setStateData.bind(this);
-        this.onBotMessageSend = this.onBotMessageSend.bind(this);
 
-        this.onViewInfo = this.onViewInfo.bind(this);
-        this.onViewMore = this.onViewMore.bind(this);
-        this.onItemClicked = this.onItemClicked.bind(this);
-        this.callback = this.callback.bind(this);
-
-
+        // this.onViewInfo = this.onViewInfo.bind(this);
+        // this.onViewMore = this.onViewMore.bind(this);
+        // this.onItemClicked = this.onItemClicked.bind(this);
+        // this.callback = this.callback.bind(this);
 
         this.socket = SocketHelper(this.onMessageReceive);
     }
@@ -108,9 +90,8 @@ class ChatPage extends Component {
     }
 
     componentDidMount() {
-        DatabaseHelper.updateChat([this.state.chatId], [{ isAddedToChatList: true }], (results) => {
-
-            DatabaseHelper.getAllChatItemForChatByChatId([this.state.chatId], (results) => {
+        DatabaseHelper.updateChat([this.state.chat.id], [{ is_added_to_chat_list: true }], (results) => {
+            DatabaseHelper.getAllChatItemForChatByChatId([this.state.chat.id], (results) => {
                 let messages = results.map((result) => {
                     return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
                 });
@@ -153,31 +134,24 @@ class ChatPage extends Component {
         })
     }
 
-
     onMessageReceive(message) {
-        this.setState({ isLoading: true, });
-
-        let chatItem = null;
-        if (this.state.chatType == Type.BOT) {
-            this.setState({ recentAction: message.action });
-            chatItem = CollectionUtils.convertToChatItemFromBotMessage(this.state.userName, this.state.userId,
-                message, this.state.chatId, this.state.chatType)
-        } else {
-            chatItem = CollectionUtils.convertToChatItemFromSocketMessage(message, this.state.chatId, this.state.chatType);
-        }
-
-        let messages = CollectionUtils.convertToAirChatMessageObjectFromChatItem(chatItem, this.state.isGroupChat);
-
-        this.setStateData([message]);
-        this.storeChatItemInDatabase(null, chatItem);
+        console.log(message);
+        // this.setState({ isLoading: true, });
+        // if (this.state.chat.info.chat_type == Type.BOT)
+        //     this.setState({ recentAction: message.action });
+        // let chatItem = CollectionUtils.convertToChatItemFromResponse(message,
+        //     this.state.chat.id, this.state.chat.info.chat_type)
+        // this.setStateData([message]);
+        // this.storeChatItemInDatabase(null, chatItem);
     }
 
     storeChatItemInDatabase(airChatObject, chatItemObject) {
         if (airChatObject) {
-            let chatItem = CollectionUtils.convertToChatItemFromAirChatMessageObject(airChatObject, this.state.chatId, this.state.chatType);
-            DatabaseHelper.addNewChatItem([chatItem], (msg) => {
-                console.log(msg)
-            });
+            let chatItem = CollectionUtils.convertToChatItemFromAirChatMessageObject(airChatObject,
+                this.state.chat.id, this.state.chat.info.chat_type);
+            // DatabaseHelper.addNewChatItem([chatItem], (msg) => {
+            //     console.log(msg)
+            // });
         } else if (chatItemObject) {
             DatabaseHelper.addNewChatItem([chatItemObject], (msg) => {
                 console.log(msg)
@@ -185,74 +159,62 @@ class ChatPage extends Component {
         }
     }
 
-    onSend(messages = []) {
+
+    onSend(messages = [], page_count = 0) {
         this.setStateData(messages);
         this.storeChatItemInDatabase(messages[0], null);
-
-        if (this.state.chatType == Type.BOT) {
-            this.onBotMessageSend(messages)
-        } else {
-            let socketData = CollectionUtils.prepareQueryForSocketEmit(this.state.userName, this.state.userId, messages.text, this.state.room);
-            this.socket.sendMessage(socketData);
-        }
+        let obj = CollectionUtils.prepareBeforeSending(this.state.chat.info.chat_type,
+            this.state.chat.title, this.state.chat.info.room, page_count, messages[0], null);
+        console.log(obj);
+        //InternetHelper.sendData(this.state.owner.domain, obj)
     }
 
-    //bot realted functions;
-    onBotMessageSend(messages = [], doctypeItemId = null, actionName = null, childActionName = null, pageCount = null) {
-        let postData = CollectionUtils.prepareQueryForPostDataBotType(this.state.doctype.toLowerCase()
-            , messages[0].text, doctypeItemId, actionName, childActionName, pageCount, this.state.room);
-        console.log(postData);
-        InternetHelper.sendData(this.state.domain, postData);
-    }
+    // onViewInfo(message) {
+    //     let page = Page.VIEW_INFO_PAGE;
+    //     this.props.navigator.push({ id: page.id, name: page.name, data: message.info });
+    // }
 
-    onViewInfo(message) {
-        let page = Page.VIEW_INFO_PAGE;
-        this.props.navigator.push({ id: page.id, name: page.name, data: message.info });
-    }
+    // onViewMore(message) {
+    //     let page = Page.VIEW_MORE_PAGE;
+    //     this.props.navigator.push({ id: page.id, name: page.name, data: message.info });
+    // }
 
-    onViewMore(message) {
-        let page = Page.VIEW_MORE_PAGE;
-        this.props.navigator.push({ id: page.id, name: page.name, data: message.info });
-    }
+    // onItemClicked(message, index) {
+    //     let action = message.info.action;
+    //     let page, item = null;
+    //     switch (action.actionOnListItemClick) {
+    //         case ActionName.UPDATE:
+    //             page = Page.EDIT_INFO_PAGE;
+    //             let data = { message: message, index: index, callback: callback };
+    //             this.props.navigator.push({ id: page.id, name: page.name, data: data });
+    //             break;
 
-    onItemClicked(message, index) {
-        let action = message.info.action;
-        let page, item = null;
-        switch (action.actionOnListItemClick) {
-            case ActionName.UPDATE:
-                page = Page.EDIT_INFO_PAGE;
-                let data = { message: message, index: index, callback: callback };
-                this.props.navigator.push({ id: page.id, name: page.name, data: data });
-                break;
+    //         case ActionName.DELETE:
+    //             item = message.info.listItems[index]
+    //             this.callback('Alright, delete item', item.name, ActionName.DELETE_ITEM);
+    //             break;
 
-            case ActionName.DELETE:
-                item = message.info.listItems[index]
-                this.callback('Alright, delete item', item.name, ActionName.DELETE_ITEM);
-                break;
-
-            case ActionName.INFO:
-                page = Page.VIEW_INFO_PAGE;
-                this.props.navigator.push({ id: page.id, name: page.name, data: message });
-                break;
-        }
-    }
+    //         case ActionName.INFO:
+    //             page = Page.VIEW_INFO_PAGE;
+    //             this.props.navigator.push({ id: page.id, name: page.name, data: message });
+    //             break;
+    //     }
+    // }
 
 
-    callback(text, name, childActionName) {
-        let message = CollectionUtils.createChatItem(this.state.userName, this.state.userId,
-            text, new Date(), null, null, null, null, null, null, null, null, null, this.state.chatId, Type.BOT);
+    // callback(text, name, childActionName) {
+    //     let message = CollectionUtils.createChatItem(this.state.userName, this.state.userId,
+    //         text, new Date(), null, null, null, null, null, null, null, null, null, this.state.chatId, Type.BOT);
 
-        switch (childActionName) {
-            case ActionName.DELETE_ITEM:
-                this.onBotMessageSend([message], name, ActionName.DELETE, childActionName, 0);
-                break;
-            case ActionName.UPDATE_ITEM:
-                this.onBotMessageSend([message], name, ActionName.UPDATE, childActionName, 0);
-                break;
-        }
-    }
-
-    //end of bot related functions.
+    //     switch (childActionName) {
+    //         case ActionName.DELETE_ITEM:
+    //             this.onBotMessageSend([message], name, ActionName.DELETE, childActionName, 0);
+    //             break;
+    //         case ActionName.UPDATE_ITEM:
+    //             this.onBotMessageSend([message], name, ActionName.UPDATE, childActionName, 0);
+    //             break;
+    //     }
+    // }
 
     renderSend(props) {
         return (
@@ -283,16 +245,24 @@ class ChatPage extends Component {
                     onSend={this.onSend}
 
                     user={{
-                        _id: this.state.userId,
-                        name: this.state.userName,
+                        _id: this.state.owner.userId,
+                        name: this.state.owner.userName,
                     }}
 
                     info={{
-                        buttonText: null,
-                        isInteractiveChat: null,
-                        isInteractiveList: null,
-                        fields: null,
-                        listItems: null,
+                        button_text: null,
+                        is_interactive_chat: null,
+                        is_interactive_list: null
+                    }}
+
+                    action={{
+                        action_on_button_click: null,
+                        action_on_list_item_click: null
+                    }}
+
+                    listItems={{
+                        action_on_internal_item_click: null,
+                        items: null
                     }}
 
                     action={this.state.recentAction}
