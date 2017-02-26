@@ -18,7 +18,7 @@ const textStyle = {
 };
 
 const headerStyle = {
-  fontSize: 15,
+  fontSize: 14,
   marginTop: 3,
   marginLeft: 10,
   marginRight: 10,
@@ -38,8 +38,9 @@ const styles = {
       color: 'black',
       ...textStyle,
     },
+
     link: {
-      color: '#527DA3',
+      color: 'black',
       textDecorationLine: 'underline',
     },
   }),
@@ -52,12 +53,12 @@ const styles = {
       ...headerStyle
     },
     text: {
-      color: 'black',
+      color: 'white',
       ...textStyle,
     },
 
     link: {
-      color: '#527DA3',
+      color: 'white',
       textDecorationLine: 'underline',
     },
   }),
@@ -166,7 +167,7 @@ class MessageTextUI extends React.Component {
   }
 
   getHeader(props) {
-    if (props.currentMessage.isGroupChat) {
+    if (props.currentMessage.isGroupChat && props.position.toString() == 'left') {
       return (
         <Text style={[styles[props.position].header, props.headerStyle[props.position], {
           color: this.getHeaderColor(props.currentMessage.user.name)

@@ -11,14 +11,11 @@ function initializeSocket(callback) {
         });
 }
 
-//call is function which needs to be invoked;
-//query object contains infomation about message, user, room, callback
-
 export default (callback) => {
     socket.onConnect(() => console.log('Connected.'))
     socket.onOpen(() => console.log('Connection opened.'))
-    socket.onError((event) => console.log('Error occured.'))
-    socket.onClose((event) => console.log('Connection closed'))
+    socket.onError((event) => console.log('Error occured.', event))
+    socket.onClose((event) => console.log('Connection closed', event))
     socket.onMessage((msg) => callback(msg));
     socket.onNotification((noti) => callback(noti));
 
@@ -27,10 +24,12 @@ export default (callback) => {
     })
 
     const closeSocket = () => socket.disconnect()
+    const joinRoom = (room_name) => socket.join_room(room_name);
+    const leaveRoom = (room_name) => socket.leave_room(room_name);
     const sendMessage = (query) => {
         socket.sendMessage(query);
     }
 
-    return { closeSocket, sendMessage }
+    return { closeSocket, sendMessage, joinRoom, leaveRoom }
 }
 

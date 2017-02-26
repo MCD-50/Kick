@@ -10,7 +10,7 @@ export class Chat {
     }
 
     getId() {
-        return this.id;
+        return this._id;
     }
 
     getTitle() {
@@ -37,8 +37,8 @@ export class Chat {
         return this.bot;
     }
 
-    setId(id) {
-        this.id = id;
+    setId(_id) {
+        this._id = _id;
     }
 
     setTitle(title) {

@@ -10,10 +10,7 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 5,
-        marginLeft: 10,
-        marginRight: 10,
-        marginBottom: 5,
+        margin: 10,
     },
     wrapper: {
         backgroundColor: '#B1BEC6',
@@ -25,9 +22,9 @@ const styles = StyleSheet.create({
     },
     text: {
         backgroundColor: 'transparent',
-        color: '#FDFDFD',
-        fontSize: 11,
-        fontWeight: '400',
+        color: '#ababab',
+        fontSize: 12,
+        fontWeight: '300',
     },
 });
 
@@ -80,18 +77,22 @@ class NotificationUI extends React.Component {
     render() {
         if (this.props.currentMessage.isAlert) {
             return (<View style={[styles.container]}>
-                <View style={[styles.wrapper]}>
-                    <Text style={[styles.text]}>
-                        {this.capitalizeAndStrip(this.props.currentMessage.text)}
-                    </Text>
-                </View>
+                <Text style={[styles.text]}>
+                    {this.capitalizeAndStrip(this.props.currentMessage.text)}
+                </Text>
             </View>)
         } else {
             return null;
         }
-
-
     }
+
+    // return (<View style={[styles.container]}>
+    //     <View style={[styles.wrapper]}>
+    //         <Text style={[styles.text]}>
+    //             {this.capitalizeAndStrip(this.props.currentMessage.text)}
+    //         </Text>
+    //     </View>
+    // </View>)
 }
 
 NotificationUI.propTypes = propTypes;

@@ -11,7 +11,7 @@ import typography from './typography.js';
 
 const TEXTBOLDPRICOLOR = '#212121';
 const TEXTGRAYSECCOLOR = '#8F8F8F'
-const PRICOLOR = '#3f51b5';
+const PRICOLOR = '#0086ff';
 const ACCENTCOLOR = '#ff4500';
 
 export default {

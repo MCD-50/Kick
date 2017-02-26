@@ -121,7 +121,7 @@ class CollectionUtils {
                     return Object.assign({}, bot, {
                         info: {
                             ...bot.info,
-                            room: mail + bot.title,
+                            room: this.getRoom(mail, false, bot.title)
                         }
                     })
                 })
@@ -203,6 +203,21 @@ class CollectionUtils {
         }
     }
 
+    createChatItemFromResponse = (response, chat_id, bot_id) => {
+        if (response.is_bot == 'true') {
+            let message = new Message(response.bot_name, bot_id, response.text,
+                response.created_on, false, response.info, response.action, response.list_items);
+            return new ChatItem(message, chat_id, Type.BOT);
+        } else {
+            let alert = response.is_alert == 'true' ? true : false;
+            let message = new Message(response.user_name, response.user_id, response.text,
+                response.created_on, alert,
+                this.createChatItemInfo(null),
+                this.createChatItemAction(null),
+                this.createChatItemListItems(null));
+            return new ChatItem(message, chat_id, response.chat_type);
+        }
+    }
 
     createChatItem = (user_name, user_id, text, created_on, is_alert, chat_id, chat_type, info = null, action = null, list_items = null) => {
         let message = new Message(user_name, user_id, text, created_on, is_alert,
@@ -233,7 +248,7 @@ class CollectionUtils {
 
     convertToChatItemFromAirChatMessageObject = (airChatObject, chat_id, chat_type) => {
         return this.createChatItem(airChatObject.user.name, airChatObject.user._id, airChatObject.text,
-            new Date(), airChatObject.isAlert, chat_id, chat_type, airChatObject.info, airChatObject.action, airChatObject.listItems);
+            this.getCreatedOn(), airChatObject.isAlert, chat_id, chat_type, airChatObject.info, airChatObject.action, airChatObject.listItems);
     }
 
     convertToAirChatMessageObjectFromChatItem = (chat_item, is_group_chat) => {
@@ -376,7 +391,7 @@ class CollectionUtils {
                     "room": room,
                     "is_bot": 'true',
                     "bot_name": chat_title,
-                    "created_on": this.parseCreatedAt(airChatMessageObject.createdAt),
+                    "created_on": this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
                     "text": airChatMessageObject.text,
                     "page_count": page_count,
                     "action": this.createChatItemAction(airChatMessageObject.action),
@@ -387,11 +402,11 @@ class CollectionUtils {
                 return {
                     "room": room,
                     "is_bot": 'false',
-                    "created_on": this.parseCreatedAt(airChatMessageObject.createdAt),
+                    "created_on": this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
                     "user_name": airChatMessageObject.user.name,
                     "user_id": airChatMessageObject.user._id,
                     "text": airChatMessageObject.text,
-                    "is_alert": airChatMessageObject.isAlert,
+                    "is_alert": airChatMessageObject.isAlert.toString(),
                     "chat_title": chat_title,
                     "chat_type": chat_type
                 }
@@ -401,7 +416,16 @@ class CollectionUtils {
         }
     }
 
-    getCreatedOn() {
+    getRoom = (ownerEmail, is_personal, title = null, targetEmail = null) => {
+        if (is_personal) {
+            return ownerEmail.length > targetEmail ? ownerEmail + targetEmail : targetEmail + ownerEmail;
+        } else {
+            return ownerEmail + title;
+        }
+    }
+
+
+    getCreatedOn = () => {
         let today = new Date();
         var dd = today.getDate();
         if (dd.toString().length < 2)
@@ -410,22 +434,32 @@ class CollectionUtils {
         if (mm.toString().length < 2)
             mm = '0' + mm.toString();
         var yyyy = today.getFullYear();
-        return yyyy + '-' + mm + '-' + dd + ' ' +
-            today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds()
+        return yyyy + '-' + mm + '-' + dd + ' ' + this.parseTime(today.getHours(), today.getMinutes(), today.getSeconds())
     }
+
+
+    parseTime = (hh, mm, ss) => {
+        if (hh.toString().length < 2)
+            hh = '0' + hh;
+        if (mm.toString().length < 2)
+            mm = '0' + mm;
+        if (ss.toString().length < 2)
+            ss = '0' + ss;
+        return hh + ':' + mm + ':' + ss;
+    }
+
 
     parseCreatedAt = (createdAt) => {
         let date = createdAt.split(' ');
-        let mm = this.getMonth(null, date[1]);
+        let mm = this.getMonth(-1, date[1]);
         if (mm.toString().length < 2)
             mm = '0' + mm.toString();
         let dd = date[2];
         if (dd.toString().length < 2)
             dd = '0' + dd.toString();
         let yyyy = date[3];
-        let time = date[4];
-
-        return yyyy + '-' + mm + '-' + dd + ' ' + time;
+        let time = date[4].split(':');
+        return yyyy + '-' + mm + '-' + dd + ' ' + this.parseTime(time[0], time[1], time[2]);
     }
 
     prepareCallbackData = (text, id, action) => {
@@ -438,7 +472,28 @@ class CollectionUtils {
         return item;
     }
 
+    getTodayDate = () => {
+        let today = new Date();
+        var dd = today.getDate();
+        if (dd.toString().length < 2)
+            dd = '0' + dd.toString();
+        var mm = today.getMonth();
+        if (mm.toString().length < 2)
+            mm = '0' + (parseInt(mm) + 1).toString();
+        else
+            mm = (parseInt(mm) + 1).toString();
+        var yyyy = today.getFullYear();
+        return yyyy + '-' + mm + '-' + dd
+    }
 
+    getSortedArrayByDate = (results) => {
+        _results = results.filter(function (n) { return n.info.last_message_time != undefined });
+        results = results.filter(function (n) { return n.info.last_message_time == undefined })
+        _results = _results.sort((a, b) => {
+            return a.info.last_message_time > b.info.last_message_time ? -1 : (b.info.last_message_time > a.info.last_message_time ? 1 : 0);
+        })
+        return _results.concat(results);
+    }
 
 
     getMonth = (index, month = null) => {
@@ -456,7 +511,7 @@ class CollectionUtils {
             'Nov',
             'Dec'
         ];
-        if (index) {
+        if (index > -1) {
             return months[index];
         } else {
             for (i = 0; i < months.length; i++) {

@@ -47,17 +47,16 @@ const menuItems = [
     'View info', 'Clear chat', 'Mail chat'
 ]
 
-
+let count = 0;
 class ChatPage extends Component {
     constructor(params) {
         super(params);
         const chat = this.props.route.chat;
-        const owner = this.props.route.owner
         this.state = {
             chat: chat,
             isLoading: true,
             messages: [],
-            owner: owner,
+            owner: this.props.route.owner,
             isGroupChat: chat.info.chat_type == Type.GROUP ? true : false,
             recentAction: {
                 action_on_button_click: null,
@@ -72,7 +71,7 @@ class ChatPage extends Component {
         this.storeChatItemInDatabase = this.storeChatItemInDatabase.bind(this);
         this.renderSend = this.renderSend.bind(this);
         this.setStateData = this.setStateData.bind(this);
-
+        this.setUsers = this.setUsers.bind(this);
         // this.onViewInfo = this.onViewInfo.bind(this);
         // this.onViewMore = this.onViewMore.bind(this);
         // this.onItemClicked = this.onItemClicked.bind(this);
@@ -86,26 +85,55 @@ class ChatPage extends Component {
     }
 
     componentWillUnmount() {
+        DatabaseHelper.updateChat([this.state.chat._id], [this.state.chat], (msg) => {
+            console.log(msg);
+        });
+        this.socket.leaveRoom(this.state.chat.info.room);
         this.removeBackEvent();
     }
 
-    componentDidMount() {
-        DatabaseHelper.updateChat([this.state.chat.id], [{ is_added_to_chat_list: true }], (results) => {
-            DatabaseHelper.getAllChatItemForChatByChatId([this.state.chat.id], (results) => {
-                let messages = results.map((result) => {
-                    return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
-                });
+    setUsers() {
+        let users = [];
+        if (this.state.chat.info.chat_type == Type.GROUP) {
+            users = this.state.chat.group.people;
+        } else if (this.state.chat.info.chat_type == Type.PERSONAL) {
+            let owner = this.state.owner;
+            let currentUser = {
+                title: owner.userName,
+                email: owner.userId,
+                number: owner.number
+            };
+            users = [currentUser, this.state.chat.person];
+        }
 
-                this.setStateData(messages.reverse());
+        if (users.length > 0)
+            InternetHelper.setUsersInARoom(this.state.owner.domain, users, this.state.chat.info.room);
+    }
+
+    componentDidMount() {
+        this.setState({
+            chat: Object.assign({}, this.state.chat, {
+                info: {
+                    ...this.state.chat.info,
+                    new_message_count: null
+                }
             })
         });
+        this.socket.joinRoom(this.state.chat.info.room);
+        this.setUsers();
+        DatabaseHelper.getAllChatItemForChatByChatId([this.state.chat._id], (results) => {
+            let messages = results.map((result) => {
+                return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
+            });
 
+            this.setStateData(messages.reverse());
+        })
     }
 
     addBackEvent() {
         BackAndroid.addEventListener('hardwareBackPress', () => {
             if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-                this.props.route.callback(Page.CHAT_PAGE);
+                this.props.route.callback(Page.CHAT_PAGE, this.state.chat);
                 this.props.navigator.pop();
                 return true;
             }
@@ -116,7 +144,7 @@ class ChatPage extends Component {
     removeBackEvent() {
         BackAndroid.removeEventListener('hardwareBackPress', () => {
             if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-                this.props.route.callback(Page.CHAT_PAGE);
+                this.props.route.callback(Page.CHAT_PAGE, this.state.chat);
                 this.props.navigator.pop();
                 return true;
             }
@@ -140,7 +168,7 @@ class ChatPage extends Component {
         // if (this.state.chat.info.chat_type == Type.BOT)
         //     this.setState({ recentAction: message.action });
         // let chatItem = CollectionUtils.convertToChatItemFromResponse(message,
-        //     this.state.chat.id, this.state.chat.info.chat_type)
+        //     this.state.chat._id, this.state.chat.info.chat_type)
         // this.setStateData([message]);
         // this.storeChatItemInDatabase(null, chatItem);
     }
@@ -148,25 +176,56 @@ class ChatPage extends Component {
     storeChatItemInDatabase(airChatObject, chatItemObject) {
         if (airChatObject) {
             let chatItem = CollectionUtils.convertToChatItemFromAirChatMessageObject(airChatObject,
-                this.state.chat.id, this.state.chat.info.chat_type);
-            // DatabaseHelper.addNewChatItem([chatItem], (msg) => {
-            //     console.log(msg)
-            // });
+                this.state.chat._id, this.state.chat.info.chat_type);
+
+            this.setState({
+                chat: Object.assign({}, this.state.chat, {
+                    sub_title: airChatObject.text,
+                    info: {
+                        ...this.state.chat.info,
+                        is_added_to_chat_list: true,
+                        last_message_time: chatItem.message.created_on,
+                        last_active: CollectionUtils.getLastActive(chatItem.message.created_on)
+                    }
+                })
+            });
+
+
+            DatabaseHelper.addNewChatItem([chatItem], (msg) => {
+                //console.log(msg)
+            });
         } else if (chatItemObject) {
+            this.setState({
+                chat: Object.assign({}, this.state.chat, {
+                    sub_title: chatItemObject.message.text,
+                    info: {
+                        ...this.state.chat.info,
+                        is_added_to_chat_list: true,
+                        last_message_time: chatItemObject.message.created_on,
+                        last_active: CollectionUtils.getLastActive(chatItemObject.message.created_on)
+                    }
+                })
+            });
+
             DatabaseHelper.addNewChatItem([chatItemObject], (msg) => {
-                console.log(msg)
+                //console.log(msg)
             });
         }
     }
 
 
+
     onSend(messages = [], page_count = 0) {
-        this.setStateData(messages);
-        this.storeChatItemInDatabase(messages[0], null);
-        let obj = CollectionUtils.prepareBeforeSending(this.state.chat.info.chat_type,
-            this.state.chat.title, this.state.chat.info.room, page_count, messages[0], null);
-        console.log(obj);
-        //InternetHelper.sendData(this.state.owner.domain, obj)
+        InternetHelper.checkIfNetworkAvailable((isConnected) => {
+            if (isConnected) {
+                this.setStateData(messages);
+                this.storeChatItemInDatabase(messages[0], null);
+                let chat_title = this.state.isGroupChat ? this.state.chat.title : this.state.owner.userName
+                let obj = CollectionUtils.prepareBeforeSending(this.state.chat.info.chat_type,
+                    chat_title, this.state.chat.info.room, page_count, messages[0], null);
+                InternetHelper.sendData(this.state.owner.domain, obj)
+            }
+        })
     }
 
     // onViewInfo(message) {
@@ -222,7 +281,6 @@ class ChatPage extends Component {
         )
     }
 
-
     render() {
         return (
             <View style={styles.container}>
@@ -230,10 +288,10 @@ class ChatPage extends Component {
                 <Toolbar
                     leftElement="arrow-back"
                     onLeftElementPress={() => {
-                        this.props.route.callback(Page.CHAT_PAGE);
+                        this.props.route.callback(Page.CHAT_PAGE, this.state.chat);
                         this.props.navigator.pop();
                     }}
-                    centerElement={this.props.route.name}
+                    centerElement={this.state.chat.title}
                     rightElement={{
                         menu: { labels: menuItems },
                     }}

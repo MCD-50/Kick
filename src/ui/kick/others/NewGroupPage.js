@@ -30,7 +30,7 @@ import TextField from '../../customUI/TextField.js';
 import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
 import Avatar from '../../customUI/Avatar.js';
 import { getStoredDataFromKey } from '../../../helpers/AppStore.js';
-
+import InternerHelper from '../../../helpers/InternetHelper.js';
 
 const styles = StyleSheet.create({
     container: {
@@ -94,9 +94,7 @@ class NewGroupPage extends Component {
         let owner = this.props.route.owner;
         this.input = {
             contacts: this.props.route.contacts,
-            userId: owner.userId,
-            userName: owner.userName,
-            domain: owner.domain,
+            owner: this.props.route.owner,
             groupName: '',
         }
 
@@ -166,38 +164,34 @@ class NewGroupPage extends Component {
     saveGroup() {
         if (this.isAllowed()) {
             let title = this.input.groupName;
-            let room = 'GROUP' + title.replace(/\s/g, '') + this.input.userId;
-            getStoredDataFromKey(MOBILE_NUMBER)
-                .then((number) => {
-                    let _number = number ? number : null;
+            let room = this.input.owner.userId + title.replace(/\s/g, '').toLowerCase();
+            let contact = CollectionUtils.createChatPersonObject({
+                title: this.input.owner.userName,
+                email: this.input.owner.userId,
+                number: this.input.owner.number,
+            });
 
-                    let contact = CollectionUtils.createGroupPeopleObject({
-                        title: this.input.userName,
-                        email: this.input.userId,
-                        number: _number,
-                    });
+            let _contacts = this.input.contacts.map((con) => {
+                return {
+                    title: con.title,
+                    email: con.person.email,
+                    number: con.person.number,
+                }
+            })
 
-                    let _contacts = this.input.contacts.map((con) => {
-                        return {
-                            title: con.title,
-                            email: con.personal.email,
-                            number: con.personal.number,
-                        }
-                    })
+            let group = CollectionUtils.createChatGroupObject({
+                people: _contacts.concat(contact),
+            });
 
-                    let group = CollectionUtils.createGroupObject({
-                        isMute: false,
-                        people: _contacts.concat(contact),
-                    });
+            let chat = CollectionUtils.createChat(title.trim(), 'No new message', true, Type.GROUP,
+                room, null, null, null, null, group);
 
-                    let chat = CollectionUtils.createChat(title.trim(), 'No new message', true,
-                        Type.GROUP, room, null, null, null, null, null, group);
+            InternerHelper.setUsersInARoom(this.input.owner.domain, group.people, room);
 
-                    DatabaseHelper.addNewChat([chat], () => {
-                        this.props.route.callback(Page.NEW_GROUP_PAGE);
-                        this.props.navigator.pop();
-                    })
-                })
+            DatabaseHelper.addNewChat([chat], () => {
+                this.props.route.callback(Page.NEW_GROUP_PAGE, chat);
+                this.props.navigator.pop();
+            })
         } else {
             this.showAlert('Info...', 'Please fill in all the fields');
         }

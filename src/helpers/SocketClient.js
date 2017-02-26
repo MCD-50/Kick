@@ -37,6 +37,8 @@ class SocketClient {
         this.socket.on('close', (e) => this.onCloseInternal(e));
         this.socket.on('message_from_server', (msg) => this.onMessageInternal(msg));
         this.socket.on('notification_from_server', (noti) => this.onNotificationInternal(noti));
+        this.socket.on('joined_room', (msg) => console.log(msg));
+        this.socket.on('left_room', (msg) => console.log(msg));
     }
 
     onConnectInternal() {
@@ -80,6 +82,14 @@ class SocketClient {
     sendMessage(query) {
         //emit message to server directly.
         this.socket.emit('message_from_client', query);
+    }
+
+    join_room(room_name) {
+        this.socket.emit('join_room', room_name);
+    }
+
+    leave_room(room_name) {
+        this.socket.emit('leave_room', room_name);
     }
 
 }

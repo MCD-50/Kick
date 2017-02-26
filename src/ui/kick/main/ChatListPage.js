@@ -17,8 +17,8 @@ import Badge from '../../customUI/Badge.js';
 import ListItem from '../../customUI/ListItem.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import { Type } from '../../../enums/Type.js';
-import { EMAIL, FULL_NAME, DOMAIN } from '../../../constants/AppConstant.js';
-import { getStoredDataFromKey } from '../../../helpers/AppStore.js';
+import { EMAIL, FULL_NAME, DOMAIN, MOBILE_NUMBER, LAST_ACTIVE } from '../../../constants/AppConstant.js';
+import { getStoredDataFromKey, setData } from '../../../helpers/AppStore.js';
 import Progress from '../../customUI/Progress.js';
 
 window.navigator.userAgent = "react-native"
@@ -71,13 +71,17 @@ class ChatListPage extends Component {
         this.state = {
             searchText: '',
             isLoading: true,
+            listOfChats: [],
             dataSource: ds.cloneWithRows([]),
+            isOnChatListPage: true,
+            title: 'Updating...',
             userId: '',
             userName: '',
             domain: '',
+            number: '',
         };
 
-        this.setStateData = this.setStateData.bind(this);
+
         this.renderListItem = this.renderListItem.bind(this);
         this.renderBadge = this.renderBadge.bind(this);
         this.onChangeText = this.onChangeText.bind(this);
@@ -89,31 +93,43 @@ class ChatListPage extends Component {
         this.onMessageReceive = this.onMessageReceive.bind(this);
         this.socket = SocketHelper(this.onMessageReceive);
         this.renderElement = this.renderElement.bind(this);
+        this.getAllMessages = this.getAllMessages.bind(this);
+        this.setStateData = this.setStateData.bind(this);
+        this.renderLastMessageTime = this.renderLastMessageTime.bind(this);
+        this.getIndex = this.getIndex.bind(this);
+        this.updateChatAndChatItem = this.updateChatAndChatItem.bind(this);
+        this.createChatAndChatItem = this.createChatAndChatItem.bind(this);
+        this.updateData = this.updateData.bind(this);
     }
 
     componentWillMount() {
         getStoredDataFromKey(EMAIL).then((mail) => this.setState({ userId: mail }));
+        getStoredDataFromKey(MOBILE_NUMBER).then((number) => this.setState({ number: number }));
         getStoredDataFromKey(FULL_NAME).then((name) => this.setState({ userName: name }));
         getStoredDataFromKey(DOMAIN).then((dom) => this.setState({ domain: dom }));
     }
 
 
     componentDidMount() {
-        this.setStateData();
-    }
-
-
-    setStateData() {
-        DatabaseHelper.getAllChatsByQuery({ is_added_to_chat_list: true }, (results) => {
-            let chats = results.map((result) => {
-                return CollectionUtils.convertToChat(result, true);
+        getStoredDataFromKey(EMAIL).then((mail) => {
+            this.socket.joinRoom(mail);
+            DatabaseHelper.getAllChatsByQuery({ is_added_to_chat_list: true }, (results) => {
+                results = CollectionUtils.getSortedArrayByDate(results);
+                this.setStateData(results);
+                this.getAllMessages(this.state.userId);
             })
-            this.setState({
-                dataSource: ds.cloneWithRows(chats.reverse()),
-                isLoading: false
-            });
-        })
+        });
     }
+
+
+    setStateData(chats) {
+        this.setState({
+            listOfChats: chats,
+            dataSource: ds.cloneWithRows(chats),
+            isLoading: false
+        });
+    }
+
 
     onChangeText(e) {
         this.setState({ searchText: e });
@@ -125,8 +141,8 @@ class ChatListPage extends Component {
     }
 
     renderBadge(count) {
-        if (count > 0)
-            return <Badge text={count} />
+        if (count && count > 0)
+            return <Badge text={count.toString()} />
         return null
     }
 
@@ -141,8 +157,128 @@ class ChatListPage extends Component {
         }
     }
 
+
+    getAllMessages(chats) {
+        InternetHelper.checkIfNetworkAvailable((isConnected) => {
+            if (isConnected) {
+                getStoredDataFromKey(LAST_ACTIVE)
+                    .then((last_active) => {
+                        console.log(last_active);
+                        if (last_active) {
+                            InternetHelper.getAllMessages(this.state.domain, this.state.userId, last_active);
+                        } else {
+                            InternetHelper.getLastActive(this.state.domain, this.state.userId, (last_time, msg) => {
+                                if (last_time && last_time.length > 0) {
+                                    let last_active = last_time[0].last_active.toString();
+                                    setData(LAST_ACTIVE, last_active);
+                                    InternetHelper.getAllMessages(this.state.domain, this.state.userId, last_active);
+                                } else {
+                                    this.setState({ title: 'Kick' });
+                                }
+                            })
+                        }
+                    })
+
+            } else {
+                this.setState({ title: 'Kick' });
+            }
+        })
+    }
+
     onMessageReceive(message) {
-        console.log(message);
+        if (this.state.title == 'Updating...') {
+            this.setState({ title: 'Kick' });
+        }
+        if (this.state.isOnChatListPage) {
+            let newChats = [];
+            for (chat of this.state.listOfChats) {
+                if (message.length > 0) {
+                    newChats = message.filter((n) => n.room != chat.info.room)
+                    let x = message.filter((n) => n.room == chat.info.room);
+                    message = newChats;
+                    this.updateChatAndChatItem(x, chat);
+                } else {
+                    break;
+                }
+            }
+
+            if (newChats && newChats.length > 0) {
+                console.log(newChats);
+            }
+        }
+    }
+
+    createChatAndChatItem(newChats) {
+
+    }
+
+    updateChatAndChatItem(elements, chat) {
+        let botChatItems = [];
+        let otherChatItems = [];
+        for (let x of elements) {
+            if (x.is_bot == 'true' && x.bot_name != this.state.userName) {
+                botChatItems.push(CollectionUtils.createChatItemFromResponse(x, chat._id, chat.title))
+            } else if (x.is_bot == 'false' && x.user_id != this.state.userId) {
+                otherChatItems.push(CollectionUtils.createChatItemFromResponse(x, chat._id, null))
+            }
+        }
+        if (botChatItems.length > 0) {
+            const lastChatItem = botChatItems[(botChatItems.length - 1)];
+            chat = Object.assign({}, chat, {
+                sub_title: lastChatItem.message.text,
+                info: {
+                    ...chat.info,
+                    last_message_time: lastChatItem.message.created_on,
+                    new_message_count: botChatItems.length
+                }
+            });
+
+            DatabaseHelper.updateChat([chat._id], [chat], (msg) => {
+                //console.log(msg);
+                DatabaseHelper.addNewChatItem(botChatItems, (msg) => {
+                    //console.log(msg);
+                })
+            });
+
+            this.setStateData(this.updateData(this.state.listOfChats, chat));
+        }
+
+        if (otherChatItems.length > 0) {
+            const lastChatItem = otherChatItems[(otherChatItems.length - 1)];
+            chat = Object.assign({}, chat, {
+                sub_title: lastChatItem.message.text,
+                info: {
+                    ...chat.info,
+                    last_message_time: lastChatItem.message.created_on,
+                    new_message_count: otherChatItems.length
+                }
+            });
+
+            DatabaseHelper.updateChat([chat._id], [chat], (msg) => {
+                //console.log(msg);
+                DatabaseHelper.addNewChatItem(otherChatItems, (msg) => {
+                    //console.log(msg);
+                })
+            });
+
+            this.setStateData(this.updateData(this.state.listOfChats, chat));
+        }
+    }
+
+    renderLastMessageTime(last_message_time) {
+        if (last_message_time) {
+            last_message_time = last_message_time.split(' ');
+            if (last_message_time.length > 1) {
+                let today = CollectionUtils.getTodayDate();
+                if (today == last_message_time[0]) {
+                    last_message_time = last_message_time[1].split(':');
+                    return last_message_time[0] + ':' + last_message_time[1];
+                } else {
+                    return last_message_time[0];
+                }
+            }
+        }
+        return null;
     }
 
     renderListItem(chat) {
@@ -165,13 +301,14 @@ class ChatListPage extends Component {
                 }}
 
                 rightElement={{
-                    upperElement: chat.info.last_message_time,
+                    upperElement: this.renderLastMessageTime(chat.info.last_message_time),
                     lowerElement: this.renderBadge(chat.info.new_message_count),
                 }}
 
                 onPress={() => {
                     let page = Page.CHAT_PAGE;
                     let state = this.state;
+                    this.setState({ isOnChatListPage: false })
                     this.props.navigator.push({
                         id: page.id,
                         name: page.name,
@@ -187,25 +324,41 @@ class ChatListPage extends Component {
         );
     }
 
+    getIndex(chatList, room) {
+        for (let i = 0; i < chatList.length; i++) {
+            if (chatList[i].info.room == room)
+                return i;
+        }
+        return -1;
+    }
 
-    callback(fromWhichPage) {
-        switch (fromWhichPage) {
-            case Page.BOT_LIST_PAGE.name:
+    callback(fromWhichPage, chat) {
+        switch (fromWhichPage.id) {
+            case Page.BOT_LIST_PAGE.id:
                 break;
-            case Page.CHAT_PAGE.name:
+            case Page.CHAT_PAGE.id:
                 break;
-            case Page.CONTACT_LIST_PAGE.name:
+            case Page.CONTACT_LIST_PAGE.id:
                 break;
-            case Page.NEW_CONTACT_PAGE.name:
-                break;
-            case Page.NEW_GROUP_PAGE.name:
+            case Page.NEW_GROUP_PAGE.id:
                 break;
             default:
                 break;
         }
-        this.setStateData();
+        if (chat)
+            this.setStateData(this.updateData(this.state.listOfChats, chat));
     }
 
+
+    updateData(listOfChats, chat) {
+        index = this.getIndex(listOfChats, chat.info.room);
+        if (index > -1) {
+            listOfChats[index] = chat;
+        } else {
+            listOfChats.push(chat);
+        }
+        return CollectionUtils.getSortedArrayByDate(listOfChats);
+    }
 
     rightElementPress(action) {
         let page = null;
@@ -231,6 +384,7 @@ class ChatListPage extends Component {
         }
 
         if (page) {
+            this.setState({ isOnChatListPage: false })
             this.props.navigator.push({
                 id: page.id,
                 name: page.name,
@@ -271,7 +425,7 @@ class ChatListPage extends Component {
         return (
             <Container>
                 <Toolbar
-                    centerElement={this.props.route.name}
+                    centerElement={this.state.title}
                     searchable={{
                         autoFocus: true,
                         placeholder: 'Search chat...',

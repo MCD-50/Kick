@@ -9,7 +9,7 @@ export const SERVER_URL = 'SERVER_URL';
 export const BOTS = 'BOTS';
 export const CHATS = 'CHATS';
 export const CHATITEMS = 'CHATITEMS';
-
+export const LAST_ACTIVE = 'LAST_ACTIVE'
 export const FULL_NAME = 'FULL_NAME';
 export const FIRST_NAME = 'FIRST_NAME';
 export const LAST_NAME = 'LAST_NAME';

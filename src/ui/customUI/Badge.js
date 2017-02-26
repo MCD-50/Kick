@@ -48,8 +48,6 @@ function getStyles(props, context) {
         local.container.backgroundColor = palette.accentColor;
     }
 
-    console.log(badge);
-
     return {
         container: [
             badge.container,
@@ -95,7 +93,6 @@ class Badge extends PureComponent {
             const iconProps = mapIconProps(this.props);
             content = <Icon {...iconProps} />;
         } else if (text) {
-            console.log(text);
             content = <Text style={styles.content}>{text}</Text>;
         }
 

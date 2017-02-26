@@ -157,7 +157,6 @@ Model.prototype.update = function (data, callback) {
     var me = this;
     var results = [];
     var rows = this.databaseData[this.tableName]["rows"];
-
     var hasParams = false;
     if (this._where) {
         hasParams = true;
@@ -168,15 +167,26 @@ Model.prototype.update = function (data, callback) {
             for (var key in this._where) {
                 var val = this.traverse(rows[row], key, this._where[key]);
                 if (val == true) {
-                    results.push(this.databaseData[this.tableName]["rows"][row]["_id"]);
-                    for (var i in data) {
-                        var updatedObj = updateValue(rows[row], i, data[i]);
-                        if (updatedObj)
-                            this.databaseData[this.tableName]["rows"][row] = updatedObj;
+                    if (key == '_id') {
+                        this.databaseData[this.tableName]["rows"][row] = data;
+                    } else {
+                        if (data._id) {
+                            this.databaseData[this.tableName]["rows"][row] = data;
+                        } else {
+                            new_data = Object.assign({}, rows[row], {
+                                info: {
+                                    ...rows[row].info,
+                                    last_active: data.info.last_active
+                                }
+                            });
+                            this.databaseData[this.tableName]["rows"][row] = new_data;
+                        }
                     }
+                    results.push(this.databaseData[this.tableName]["rows"][row]["_id"]);
                 }
             }
         }
+
         reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (data) {
             if (callback) {
                 callback(data)
@@ -187,8 +197,8 @@ Model.prototype.update = function (data, callback) {
             }
         });
         this.init();
-
-    } else {
+    }
+    else {
         if (callback) {
             callback(null)
         }
@@ -343,19 +353,6 @@ Model.prototype.traverse = function (o, key, value) {
             }
         }
     }
-
-    // for (var i in o) {
-    //     console.log(i);
-    //     console.log(o[i]);
-    //     if (i == key && o[i] == value) {
-    //         console.log('match');
-    //         //return true;
-    //     }
-
-    //     if (o[i] !== null && typeof (o[i]) == "object") {
-    //         return this.traverse(o[i], key, value);
-    //     }
-    // }
 }
 
 

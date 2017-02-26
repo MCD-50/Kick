@@ -141,7 +141,7 @@ class LoginPage extends Component {
                 this.showAlert(title, body);
             }, () => {
                 setData(DOMAIN, domain);
-                setData(EMAIL, email);
+                setData(EMAIL, email.toLowerCase());
                 setData(FULL_URL, full_url);
                 this.resolveServerUrl();
             })
@@ -243,7 +243,7 @@ class LoginPage extends Component {
 
     render() {
         return (
-            <Container color='black'>
+            <Container color='#0086ff'>
                 <ScrollView style={styles.container} keyboardDismissMode='interactive'>
 
                     <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: UPMARGIN, marginBottom: DOWNMARGIN }}>

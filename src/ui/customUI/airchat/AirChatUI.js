@@ -232,6 +232,7 @@ class AirChatUI extends React.Component {
     this.setIsMounted(false);
   }
 
+
   componentWillReceiveProps(nextProps = {}) {
     this.initMessages(nextProps.messages);
   }
@@ -413,7 +414,7 @@ class AirChatUI extends React.Component {
   }
 
 
-  
+
   onSend(messages = [], shouldResetInputToolbar = false) {
     if (!Array.isArray(messages)) {
       messages = [messages];
@@ -429,7 +430,7 @@ class AirChatUI extends React.Component {
         isAlert: this.props.isAlert,
         isGroupChat: this.props.isGroupChat,
         createdAt: new Date(),
-        _id: 'temp-' + Math.round(Math.random() * 1000000),
+        _id: Math.round(Math.random() * 1000000),
       };
     });
 

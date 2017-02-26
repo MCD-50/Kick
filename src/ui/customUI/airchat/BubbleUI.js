@@ -15,10 +15,11 @@ import TimeUI from './TimeUI.js';
 
 import { isSameDay, isSameUser, warnDeprecated } from './UtilsUI.js';
 
-let oldleft = '#FFFFFF';
+
 let oldright = '#E1FFC1';
 
-let newleft = '#f7f8fa';
+let newright =  '#0086ff';
+let newleft = '#f0f0f0';
 
 
 const styles = {
@@ -28,17 +29,18 @@ const styles = {
             alignItems: 'flex-start',
         },
         wrapper: {
-            borderRadius: 4,
+            borderRadius: 16,
             backgroundColor: newleft,
             marginRight: 60,
             minHeight: 20,
             justifyContent: 'flex-end',
         },
         containerToNext: {
-            borderBottomLeftRadius: 8,
+            borderBottomLeftRadius: 16,
         },
+
         containerToPrevious: {
-            borderTopLeftRadius: 8,
+            borderTopLeftRadius: 0,
         },
     }),
     right: StyleSheet.create({
@@ -47,17 +49,17 @@ const styles = {
             alignItems: 'flex-end',
         },
         wrapper: {
-            borderRadius: 4,
-            backgroundColor: oldright,
+            borderRadius: 16,
+            backgroundColor: newright,
             marginLeft: 60,
             minHeight: 20,
             justifyContent: 'flex-end',
         },
         containerToNext: {
-            borderBottomRightRadius: 8,
+            borderBottomRightRadius: 16,
         },
         containerToPrevious: {
-            borderTopRightRadius: 8,
+            borderTopRightRadius: 0,
         },
     }),
     bottom: {

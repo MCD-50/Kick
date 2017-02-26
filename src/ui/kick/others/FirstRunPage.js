@@ -107,7 +107,7 @@ class FirstRunPage extends Component {
             setData(MOBILE_NUMBER, this.input.mobileNumber);
             setData(FIRST_RUN, 'false');
 
-            InternetHelper.setGlobalRoom(this.input.info.domain, this.input.info.email, this.input.mobileNumber, this.input.fullName)
+            InternetHelper.setGlobalRoom(this.input.info.domain, this.input.info.email.toLowerCase(), this.input.mobileNumber, this.input.fullName)
 
             CollectionUtils.addDefaultBots(() => {
                 let page = Page.CHAT_LIST_PAGE;
@@ -138,7 +138,7 @@ class FirstRunPage extends Component {
                         label={'Mobile number'}
                         labelColor='#9e9e9e'
                         highlightColor='#2e3c98'
-                        keybo
+                        keyboardType={'numeric'}
                         onChangeText={(val) => this.onChageText(val, 2)}
                     />
 

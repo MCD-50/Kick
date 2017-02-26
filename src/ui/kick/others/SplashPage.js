@@ -66,7 +66,6 @@ class SplashPage extends Component {
 
     componentDidMount() {
         InternetHelper.checkIfNetworkAvailable((isConnected) => {
-            console.log(isConnected);
             if (isConnected) {
                 isFirstRun(false)
                     .then((value) => {
@@ -151,7 +150,7 @@ class SplashPage extends Component {
         setTimeout(() => {
             this.setState({ showProgress: false });
             this.props.navigator.replace({ id: page.id, name: page.name});
-        }, 3000);
+        }, 1000);
 
     }
 

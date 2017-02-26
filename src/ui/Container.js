@@ -20,7 +20,7 @@ class Container extends Component {
         if(this.props.color){
             return this.props.color;
         }
-        return '#2e3c98';
+        return '#0086ff';
     }
 
     render() {

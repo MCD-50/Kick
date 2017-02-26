@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 const textStyle = {
-    fontSize: 14,
+    fontSize: 15,
     marginTop: 3,
     marginLeft: 10,
     marginRight: 10,
@@ -84,7 +84,7 @@ const styles = {
             ...headerStyle
         },
         text: {
-            color: 'black',
+            color: 'white',
             ...textStyle,
         },
     })
@@ -160,7 +160,7 @@ class InteractiveListUI extends React.Component {
     }
 
     getHeader(props) {
-        if (props.currentMessage.isGroupChat) {
+        if (props.currentMessage.isGroupChat && props.position.toString() == 'left') {
             return (
                 <Text style={[styles[props.position].header, props.headerStyle[props.position], {
                     color: this.getHeaderColor(props.currentMessage.user.name)

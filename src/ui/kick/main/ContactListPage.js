@@ -72,17 +72,15 @@ class ContactListPage extends Component {
 
     constructor(params) {
         super(params);
-        let owner = this.props.route.owner;
+
         this.listOfContacts = [];
         this.listOfData = [];
         this.state = {
             searchText: '',
+            owner: this.props.route.owner,
             isLoading: true,
             dataSource: ds.cloneWithRows([]),
             personals: [],
-            userId: owner.userId,
-            userName: owner.userName,
-            domain: owner.domain,
             selectedContacts: [],
         };
 
@@ -138,6 +136,7 @@ class ContactListPage extends Component {
         this.setStateData();
     }
 
+
     setStateData() {
         InternetHelper.checkIfNetworkAvailable((isAvailable) => {
             if (isAvailable) {
@@ -145,17 +144,23 @@ class ContactListPage extends Component {
                     .then((url) => InternetHelper.getAllUsers(url, (array, msg) => {
                         if (array && array.length > 0) {
                             let people = array.map((item) => {
-                                let title = item.last_name ? item.first_name + ' ' + item.last_name : item.first_name;
-                                return CollectionUtils.createChat(title, 'No new message', false,
-                                    Type.PERSONAL, null, null, null, CollectionUtils.getLastActive(item.last_active),
-                                    CollectionUtils.createChatPersonObject({
-                                        title: title,
-                                        email: item.email,
-                                        number: null,
-                                    }));
-                            })
+                                if (item.email.toLowerCase() != this.state.owner.userId) {
+                                    let title = item.last_name ? item.first_name + ' ' + item.last_name : item.first_name;
+                                    let number = item.number ? item.number : null;
+                                    return CollectionUtils.createChat(title, 'No new message', false,
+                                        Type.PERSONAL, CollectionUtils.getRoom(this.state.owner.userId, true, null, item.email),
+                                        null, null, CollectionUtils.getLastActive(item.last_active),
+                                        CollectionUtils.createChatPersonObject({
+                                            title: title,
+                                            email: item.email,
+                                            number: number,
+                                        }));
+                                }
+                                return null;
+                            });
+                            people.splice(people.indexOf(null), 1)
                             DatabaseHelper.addNewChat(people, (msg) => {
-                                this.loadChats();
+                                this.loadChats()
                             }, true);
                         } else {
                             this.loadChats();
@@ -174,7 +179,6 @@ class ContactListPage extends Component {
                 return CollectionUtils.convertToChat(result, true);
             })
             if (this.props.route.isForGroupChat) {
-
                 let _personals = personals.map((person) => {
                     return {
                         ...person,
@@ -196,6 +200,8 @@ class ContactListPage extends Component {
     }
 
 
+
+
     onChangeText(e) {
         this.setState({ searchText: e });
     }
@@ -208,7 +214,6 @@ class ContactListPage extends Component {
         const length = name.length;
         return colors[length % colors.length];
     }
-
 
     //<Avatar bgcolor='#cbe3f5' icon='done' iconColor='#0078fd' />
 
@@ -239,16 +244,12 @@ class ContactListPage extends Component {
                     } else {
                         let page = Page.CHAT_PAGE;
                         let state = this.state;
-                        this.props.navigator.push({
+                        this.props.navigator.replace({
                             id: page.id,
                             name: page.name,
                             chat: contact,
-                            callback: this.callback,
-                            owner: {
-                                userName: state.userName,
-                                userId: state.userId,
-                                domain: state.domain
-                            }
+                            callback: this.props.route.callback,
+                            owner: state.owner,
                         })
                     }
 

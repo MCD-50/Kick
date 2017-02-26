@@ -2,23 +2,6 @@ import { NetInfo } from 'react-native';
 import { getStoredDataFromKey } from './AppStore.js';
 import { DOMAIN } from '../constants/AppConstant.js';
 class InternetHelper {
-
-    //     NetInfo.isConnected.fetch().then(isConnected => {
-    //         console.log('First, is ' + (isConnected ? 'online' : 'offline'));
-    //     });
-    // function handleFirstConnectivityChange(isConnected) {
-    //     console.log('Then, is ' + (isConnected ? 'online' : 'offline'));
-    //     NetInfo.isConnected.removeEventListener(
-    //         'change',
-    //         handleFirstConnectivityChange
-    //     );
-    // }
-    // NetInfo.isConnected.addEventListener(
-    //     'change',
-    //     handleFirstConnectivityChange
-    // );
-
-
     checkIfNetworkAvailable(networkStatusCallback) {
         NetInfo.isConnected.fetch().then(isConnected => {
             networkStatusCallback(isConnected)
@@ -28,7 +11,7 @@ class InternetHelper {
 
     getAllUsersInARoom(room, callback) {
         getStoredDataFromKey(DOMAIN).then((domain) => {
-            let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.send_message_and_get_reply?room=' + room;
+            let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.get_users_in_group?room=' + room;
             fetch(url, {
                 method: "POST",
                 headers: {
@@ -96,10 +79,8 @@ class InternetHelper {
     }
 
 
-
     sendData(domain, data) {
         let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.send_message_and_get_reply';
-
         const form = new FormData();
         form.append('obj', JSON.stringify(data));
 
@@ -112,15 +93,43 @@ class InternetHelper {
             body: form
         };
 
-
-        fetch(url, method).then((succ) => {
-            console.log(succ);
-        }, (error) => {
-            console.log(error);
-        });
+        this.fetch(url, method);
     }
 
+    getLastActive(domain, email, callback) {
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.get_last_active_by_email?email=' + email;
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json(), (reject) => callback(null, 'Something went wrong.'))
+            .then((responseData) => {
+                callback(responseData.message, null)
+            }, (reject) => callback(null, 'Something went wrong.'));
+    }
 
+    getAllMessages(domain, mail_id, last_time) {
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.get_message_for_first_time';
+        let data = {
+            mail_id: mail_id,
+            last_time: last_time
+        }
+
+        const form = new FormData();
+        form.append('obj', JSON.stringify(data));
+
+        let method = {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'multipart/form-data',
+            },
+            body: form
+        };
+        this.fetch(url, method)
+    }
 
     setGlobalRoom(domain, email, number, title) {
         let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.set_user_in_global_chat_room';
@@ -145,15 +154,42 @@ class InternetHelper {
             body: form
         };
 
+        this.fetch(url, method);
+    }
+
+
+    setUsersInARoom(domain, users, room) {
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.set_users_in_room';
+        let data = {
+            room: room,
+            users: users
+        }
+
+        const form = new FormData();
+        form.append('obj', JSON.stringify(data));
+
+        let method = {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'multipart/form-data',
+            },
+            body: form
+        };
+
+        this.fetch(url, method);
+    }
+
+    fetch(url, method, callback = null) {
         fetch(url, method).then((succ) => {
-            console.log(succ);
+            //console.log(succ);
+            if (callback)
+                callback(succ);
         }, (error) => {
             console.log(error);
         })
     }
 }
-
-
 
 const internet = new InternetHelper();
 export default internet;

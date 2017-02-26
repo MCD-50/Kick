@@ -5,7 +5,7 @@ var Events = require('eventemitter3')
 var RNDBModel = {};
 RNDBModel.DBEvents = new Events()
 
-RNDBModel.create_db = function(db){
+RNDBModel.create_db = function (db) {
     var me = this;
     me.db_name = db;
     /**
@@ -13,10 +13,10 @@ RNDBModel.create_db = function(db){
      * @param query_data
      * @param callback
      */
-    me.get = function(query_data, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
+    me.get = function (query_data, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
             var results = collection.where(query_data).find();
-            if(callback){
+            if (callback) {
                 callback(results)
             }
         });
@@ -27,10 +27,10 @@ RNDBModel.create_db = function(db){
      * @param id
      * @param callback
      */
-    me.get_id = function(id, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
+    me.get_id = function (id, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
             var results = collection.get(id);
-            if(callback){
+            if (callback) {
                 callback(results)
             }
         });
@@ -40,10 +40,10 @@ RNDBModel.create_db = function(db){
      * @description Gets all the data of the table
      * @param callback
      */
-    me.get_all = function( callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
+    me.get_all = function (callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
             var results = collection.databaseData[me.db_name];
-            if(callback){
+            if (callback) {
                 callback(results)
             }
         });
@@ -54,11 +54,11 @@ RNDBModel.create_db = function(db){
      * @param data_to_add
      * @param callback
      */
-    me.add = function(data_to_add, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
+    me.add = function (data_to_add, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
             // Add Data
-            collection.add(data_to_add, function(added_data_id){
-                if(callback){
+            collection.add(data_to_add, function (added_data_id) {
+                if (callback) {
                     callback(added_data_id)
                 }
                 RNDBModel.DBEvents.emit("all")
@@ -71,13 +71,13 @@ RNDBModel.create_db = function(db){
      * @param data_to_add
      * @param callback
      */
-    me.add_all = function(data_to_add, callback){
+    me.add_all = function (data_to_add, callback) {
         var self = this;
 
-        ReactNativeStore.table(me.db_name).then(function(collection){
+        ReactNativeStore.table(me.db_name).then(function (collection) {
             // Add Data
-            collection.multiAdd(data_to_add, function(added_data){
-                if(callback){
+            collection.multiAdd(data_to_add, function (added_data) {
+                if (callback) {
                     callback(added_data)
                 }
                 RNDBModel.DBEvents.emit("all")
@@ -90,10 +90,10 @@ RNDBModel.create_db = function(db){
      * @param query_data
      * @param callback
      */
-    me.remove = function(query_data, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
-            collection.where(query_data).remove(function(data_removed){
-                if(callback){
+    me.remove = function (query_data, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
+            collection.where(query_data).remove(function (data_removed) {
+                if (callback) {
                     callback(data_removed);
                 }
             });
@@ -105,10 +105,10 @@ RNDBModel.create_db = function(db){
      * @param id
      * @param callback
      */
-    me.remove_id = function(id, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
-            collection.removeById(id, function(data_removed){
-                if(callback){
+    me.remove_id = function (id, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
+            collection.removeById(id, function (data_removed) {
+                if (callback) {
                     callback(data_removed);
                 }
                 RNDBModel.DBEvents.emit("all")
@@ -120,10 +120,10 @@ RNDBModel.create_db = function(db){
      * @description Erases the complete DB
      * @param callback
      */
-    me.erase_db = function(callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
-            collection.remove(function(data_removed){
-                if(callback){
+    me.erase_db = function (callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
+            collection.remove(function (data_removed) {
+                if (callback) {
                     callback(data_removed);
                 }
                 RNDBModel.DBEvents.emit("all")
@@ -136,10 +136,10 @@ RNDBModel.create_db = function(db){
      * @param replace_data
      * @param callback
      */
-    me.update = function(query_data, replace_data, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
-            collection.where(query_data).update(replace_data, function(data){
-                if(callback){
+    me.update = function (query_data, replace_data, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
+            collection.where(query_data).update(replace_data, function (data) {
+                if (callback) {
                     callback(data);
                 }
                 RNDBModel.DBEvents.emit("all")
@@ -153,10 +153,10 @@ RNDBModel.create_db = function(db){
      * @param replace_data
      * @param callback
      */
-    me.update_id = function(id, replace_data, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
-            collection.updateById(id, replace_data, function(data){
-                if(callback){
+    me.update_id = function (id, replace_data, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
+            collection.updateById(id, replace_data, function (data) {
+                if (callback) {
                     callback(data);
                 }
                 RNDBModel.DBEvents.emit("all")
@@ -169,10 +169,10 @@ RNDBModel.create_db = function(db){
      * @param id
      * @param callback
      */
-    me.remove_id = function(id, callback){
-        ReactNativeStore.table(me.db_name).then(function(collection){
-            collection.removeById(id, function(data_removed){
-                if(callback){
+    me.remove_id = function (id, callback) {
+        ReactNativeStore.table(me.db_name).then(function (collection) {
+            collection.removeById(id, function (data_removed) {
+                if (callback) {
                     callback(data_removed);
                 }
                 RNDBModel.DBEvents.emit("all")

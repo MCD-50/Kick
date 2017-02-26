@@ -159,7 +159,7 @@ class DatabaseHelper {
             if (val) {
                 if (forceUpdate && query) {
                     let item = datas[length - 1];
-                    DB.CHATS.update(query, { last_active: item.info.last_active }, (results) => {
+                    DB.CHATS.update(query, item, (results) => {
                         datas.pop();
                         this.addNewChatInternal(datas, callback, forceUpdate);
                     })

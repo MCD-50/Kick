@@ -8,7 +8,7 @@ export class ChatItem {
     }
 
     getId() {
-        return this.id;
+        return this._id;
     }
 
     getChatId() {
@@ -23,8 +23,8 @@ export class ChatItem {
         return this.message;
     }
 
-    setId(id) {
-        this.id = id;
+    setId(_id) {
+        this._id = _id;
     }
 
     setMessage(message) {
