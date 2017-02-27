@@ -73,7 +73,8 @@ class OwnerInfoPage extends Component {
         this.isAllowed = this.isAllowed.bind(this);
         this.showAlert = this.showAlert.bind(this);
         this.saveName = this.saveName.bind(this);
-
+        this.saveNumber = this.saveNumber.bind(this);
+        
         this.addBackEvent = this.addBackEvent.bind(this);
         this.removeBackEvent = this.removeBackEvent.bind(this);
     }
@@ -116,11 +117,18 @@ class OwnerInfoPage extends Component {
         }
     }
 
-    isAllowed() {
-        let fullName = this.input.fullName;
-        if (fullName && fullName.trim().length > 0)
-            return true;
-        return false;
+    isAllowed(isFullName) {
+        if (isFullName) {
+            let fullName = this.input.fullName;
+            if (fullName && fullName.trim().length > 0)
+                return true;
+            return false;
+        } else {
+            let number = this.input.mobileNumber;
+            if (number && fullName.trim().length >= 10)
+                return true;
+            return false;
+        }
     }
 
 
@@ -134,20 +142,20 @@ class OwnerInfoPage extends Component {
 
 
     saveName() {
-        if (this.isAllowed()) {
+        if (this.isAllowed(true)) {
             setData(FULL_NAME, this.input.fullName);
-            setData(MOBILE_NUMBER, this.input.mobile);
-            setData(FIRST_RUN, 'false');
-            CollectionUtils.addDefaultBots(() => {
-                let page = Page.CHAT_LIST_PAGE;
-                this.props.navigator.replace({ id: page.id, name: page.name });
-            })
-
         } else {
-            this.showAlert('Info...', 'Please fill in all the fields');
+            this.showAlert('Info...', 'Please enter your full name');
         }
     }
 
+    saveNumber() {
+        if (this.isAllowed(false)) {
+            setData(MOBILE_NUMBER, this.input.mobileNumber);
+        } else {
+            this.showAlert('Info...', 'Please enter valid phone number');
+        }
+    }
 
     render() {
         return (
@@ -155,25 +163,6 @@ class OwnerInfoPage extends Component {
                 <Toolbar centerElement={this.props.route.name}
                     rightElement='done'
                     onRightElementPress={() => this.saveName()} />
-                <ScrollView style={styles.container} keyboardDismissMode='interactive'>
-
-                    <TextField
-                        label={'Full name'}
-                        labelColor='#9e9e9e'
-                        highlightColor='#2e3c98'
-                        onChangeText={(val) => this.onChageText(val, 1)}
-                    />
-
-
-                    <TextField
-                        label={'Mobile number'}
-                        labelColor='#9e9e9e'
-                        highlightColor='#2e3c98'
-                        keybo
-                        onChangeText={(val) => this.onChageText(val, 2)}
-                    />
-
-                </ScrollView>
             </Container>
 
         )

@@ -52,6 +52,7 @@ class ChatPage extends Component {
     constructor(params) {
         super(params);
         const chat = this.props.route.chat;
+        this.socket = {};
         this.state = {
             chat: chat,
             isLoading: true,
@@ -64,10 +65,15 @@ class ChatPage extends Component {
             },
         };
 
+        this.onMessageReceive = this.onMessageReceive.bind(this);
+        this.onSocketConnectCallback = this.onSocketConnectCallback.bind(this);
+        //this.socket = SocketHelper(this.onMessageReceive, onSocketConnectCallback);
+
+
         this.addBackEvent = this.addBackEvent.bind(this);
         this.removeBackEvent = this.removeBackEvent.bind(this);
         this.onSend = this.onSend.bind(this);
-        this.onMessageReceive = this.onMessageReceive.bind(this);
+
         this.storeChatItemInDatabase = this.storeChatItemInDatabase.bind(this);
         this.renderSend = this.renderSend.bind(this);
         this.setStateData = this.setStateData.bind(this);
@@ -77,7 +83,7 @@ class ChatPage extends Component {
         // this.onItemClicked = this.onItemClicked.bind(this);
         // this.callback = this.callback.bind(this);
 
-        this.socket = SocketHelper(this.onMessageReceive);
+
     }
 
     componentWillMount() {
@@ -85,10 +91,10 @@ class ChatPage extends Component {
     }
 
     componentWillUnmount() {
+        this.socket.leaveRoom(this.state.chat.info.room);
         DatabaseHelper.updateChat([this.state.chat._id], [this.state.chat], (msg) => {
             console.log(msg);
         });
-        this.socket.leaveRoom(this.state.chat.info.room);
         this.removeBackEvent();
     }
 
@@ -111,6 +117,11 @@ class ChatPage extends Component {
     }
 
     componentDidMount() {
+        this.socket = SocketHelper(this.onMessageReceive, this.onSocketConnectCallback);
+    }
+
+    onSocketConnectCallback() {
+        this.socket.joinRoom(this.state.chat.info.room);
         this.setState({
             chat: Object.assign({}, this.state.chat, {
                 info: {
@@ -119,15 +130,14 @@ class ChatPage extends Component {
                 }
             })
         });
-        this.socket.joinRoom(this.state.chat.info.room);
         this.setUsers();
         DatabaseHelper.getAllChatItemForChatByChatId([this.state.chat._id], (results) => {
             let messages = results.map((result) => {
                 return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
             });
-
             this.setStateData(messages.reverse());
         })
+
     }
 
     addBackEvent() {
@@ -163,15 +173,60 @@ class ChatPage extends Component {
     }
 
     onMessageReceive(message) {
-        console.log(message);
-        // this.setState({ isLoading: true, });
-        // if (this.state.chat.info.chat_type == Type.BOT)
-        //     this.setState({ recentAction: message.action });
-        // let chatItem = CollectionUtils.convertToChatItemFromResponse(message,
-        //     this.state.chat._id, this.state.chat.info.chat_type)
-        // this.setStateData([message]);
-        // this.storeChatItemInDatabase(null, chatItem);
+        let botChatItems = [];
+        let otherChatItems = [];
+        let chat = this.state.chat;
+        for (x of message) {
+            if (x.is_bot == 'true' && x.bot_name != this.state.owner.userName) {
+                botChatItems.push(CollectionUtils.createChatItemFromResponse(x, chat._id, chat.title))
+            } else if (x.is_bot == 'false' && x.user_id != this.state.owner.userId) {
+                otherChatItems.push(CollectionUtils.createChatItemFromResponse(x, chat._id, null))
+            }
+        }
+
+        if (botChatItems.length > 0) {
+            const lastChatItem = botChatItems[(botChatItems.length - 1)];
+
+            chat = Object.assign({}, chat, {
+                sub_title: lastChatItem.message.text,
+                info: {
+                    ...chat.info,
+                    last_message_time: lastChatItem.message.created_on,
+                }
+            });
+
+            let botAirchatObject = botChatItems.map((item) => {
+                return CollectionUtils.convertToAirChatMessageObjectFromChatItem(item, false)
+            });
+            this.setState({ recentAction: lastChatItem.action });
+            this.setStateData(botAirchatObject);
+            DatabaseHelper.addNewChatItem(botChatItems, (msg) => {
+                //console.log(msg);
+            });
+        }
+
+        if (otherChatItems.length > 0) {
+            const lastChatItem = otherChatItems[(otherChatItems.length - 1)];
+            chat = Object.assign({}, chat, {
+                sub_title: lastChatItem.message.text,
+                info: {
+                    ...chat.info,
+                    last_message_time: lastChatItem.message.created_on,
+                }
+            });
+            let otherAirchatObject = otherChatItems.map((item) => {
+                return CollectionUtils.convertToAirChatMessageObjectFromChatItem(item, this.state.isGroupChat)
+            });
+            this.setStateData(otherAirchatObject);
+            DatabaseHelper.addNewChatItem(otherChatItems, (msg) => {
+                //console.log(msg);
+            })
+        }
+        this.setState({ chat: chat });
     }
+
+
+
 
     storeChatItemInDatabase(airChatObject, chatItemObject) {
         if (airChatObject) {
@@ -223,7 +278,7 @@ class ChatPage extends Component {
                 let chat_title = this.state.isGroupChat ? this.state.chat.title : this.state.owner.userName
                 let obj = CollectionUtils.prepareBeforeSending(this.state.chat.info.chat_type,
                     chat_title, this.state.chat.info.room, page_count, messages[0], null);
-                InternetHelper.sendData(this.state.owner.domain, obj)
+                InternetHelper.sendData(this.state.owner.domain, obj);
             }
         })
     }
@@ -262,7 +317,7 @@ class ChatPage extends Component {
 
 
     // callback(text, name, childActionName) {
-    //     let message = CollectionUtils.createChatItem(this.state.userName, this.state.userId,
+    //     let message = CollectionUtils.createChatItem(this.state.owner.userName, this.state.owner.userId,
     //         text, new Date(), null, null, null, null, null, null, null, null, null, this.state.chatId, Type.BOT);
 
     //     switch (childActionName) {

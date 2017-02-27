@@ -18,7 +18,7 @@ import { isSameDay, isSameUser, warnDeprecated } from './UtilsUI.js';
 
 let oldright = '#E1FFC1';
 
-let newright =  '#0086ff';
+let newright = '#0086ff';
 let newleft = '#f0f0f0';
 
 
@@ -275,9 +275,9 @@ class BubbleUI extends React.Component {
     }
 
     renderExtra(info) {
-        if (info.isInteractiveChat) {
+        if (info && info.is_interactive_chat) {
             return this.renderInteractiveChat();
-        } else if (info.isInteractiveList) {
+        } else if (info && info.is_interactive_list) {
             return this.renderInteractiveList();
         }
         else {

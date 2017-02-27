@@ -67,7 +67,7 @@ class ChatListPage extends Component {
 
     constructor(params) {
         super(params);
-
+        this.socket = {};
         this.state = {
             searchText: '',
             isLoading: true,
@@ -79,8 +79,12 @@ class ChatListPage extends Component {
             userName: '',
             domain: '',
             number: '',
+            test : '',
         };
 
+        this.onMessageReceive = this.onMessageReceive.bind(this);
+        this.onSocketConnectCallback = this.onSocketConnectCallback.bind(this);
+        //this.socket = SocketHelper(this.onMessageReceive, onSocketConnectCallback);
 
         this.renderListItem = this.renderListItem.bind(this);
         this.renderBadge = this.renderBadge.bind(this);
@@ -90,8 +94,8 @@ class ChatListPage extends Component {
         this.getIcon = this.getIcon.bind(this);
         this.callback = this.callback.bind(this);
         this.rightElementPress = this.rightElementPress.bind(this);
-        this.onMessageReceive = this.onMessageReceive.bind(this);
-        this.socket = SocketHelper(this.onMessageReceive);
+
+
         this.renderElement = this.renderElement.bind(this);
         this.getAllMessages = this.getAllMessages.bind(this);
         this.setStateData = this.setStateData.bind(this);
@@ -111,6 +115,10 @@ class ChatListPage extends Component {
 
 
     componentDidMount() {
+        this.socket = SocketHelper(this.onMessageReceive, this.onSocketConnectCallback);
+    }
+
+    onSocketConnectCallback() {
         getStoredDataFromKey(EMAIL).then((mail) => {
             this.socket.joinRoom(mail);
             DatabaseHelper.getAllChatsByQuery({ is_added_to_chat_list: true }, (results) => {
@@ -121,7 +129,6 @@ class ChatListPage extends Component {
         });
     }
 
-
     setStateData(chats) {
         this.setState({
             listOfChats: chats,
@@ -129,7 +136,6 @@ class ChatListPage extends Component {
             isLoading: false
         });
     }
-
 
     onChangeText(e) {
         this.setState({ searchText: e });
@@ -161,34 +167,21 @@ class ChatListPage extends Component {
     getAllMessages(chats) {
         InternetHelper.checkIfNetworkAvailable((isConnected) => {
             if (isConnected) {
-                getStoredDataFromKey(LAST_ACTIVE)
-                    .then((last_active) => {
-                        console.log(last_active);
-                        if (last_active) {
-                            InternetHelper.getAllMessages(this.state.domain, this.state.userId, last_active);
-                        } else {
-                            InternetHelper.getLastActive(this.state.domain, this.state.userId, (last_time, msg) => {
-                                if (last_time && last_time.length > 0) {
-                                    let last_active = last_time[0].last_active.toString();
-                                    setData(LAST_ACTIVE, last_active);
-                                    InternetHelper.getAllMessages(this.state.domain, this.state.userId, last_active);
-                                } else {
-                                    this.setState({ title: 'Kick' });
-                                }
-                            })
-                        }
-                    })
-
+                InternetHelper.getAllMessages(this.state.domain, this.state.userId);
             } else {
                 this.setState({ title: 'Kick' });
             }
         })
     }
 
+
     onMessageReceive(message) {
         if (this.state.title == 'Updating...') {
             this.setState({ title: 'Kick' });
         }
+
+        console.log(message);
+
         if (this.state.isOnChatListPage) {
             let newChats = [];
             for (chat of this.state.listOfChats) {
@@ -209,7 +202,7 @@ class ChatListPage extends Component {
     }
 
     createChatAndChatItem(newChats) {
-
+        this.setState({test : newChats});
     }
 
     updateChatAndChatItem(elements, chat) {
@@ -345,6 +338,7 @@ class ChatListPage extends Component {
             default:
                 break;
         }
+        console.log(this.state.text);
         if (chat)
             this.setStateData(this.updateData(this.state.listOfChats, chat));
     }

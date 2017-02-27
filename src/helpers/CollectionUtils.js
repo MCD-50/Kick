@@ -164,45 +164,6 @@ class CollectionUtils {
         return chat;
     }
 
-    createChatFromResponse = (response) => {
-        if (response.is_bot == 'false') {
-            let info = {
-                is_added_to_chat_list: true,
-                chat_type: response.chat_type,
-                room: response.room,
-                new_message_count: 1,
-                last_message_time: null,
-                last_active: null,
-            }
-
-            if (response.chat_type == Type.GROUP) {
-                InternetHelper.getAllUsersInARoom(response.room, (users, msg) => {
-                    if (users && users.length > 0) {
-                        let _users = users.map((user) => {
-                            return this.createChatPersonObject(user);
-                        })
-                        let group = {
-                            people: _users,
-                            peopleCount: (_users != null) ? _users.length : null,
-                        }
-                        return new Chat(response.chat_title, text.substring(0, 20) + " ...", )
-                    }
-                })
-            } else {
-                let person = {
-                    title: response.user_name,
-                    email: response.user_id,
-                    number: null
-                }
-
-                return new Chat(response.chat_title, text.substring(0, 20) + " ...", info,
-                    person, this.createChatGroupObject(null), this.createChatBotObject(null))
-            }
-
-
-        }
-    }
-
     createChatItemFromResponse = (response, chat_id, bot_id) => {
         if (response.is_bot == 'true') {
             let message = new Message(response.bot_name, bot_id, response.text,
@@ -231,18 +192,6 @@ class CollectionUtils {
         let message = new Message(item.message.user_name, item.message.user_id, item.message.text, item.message.created_on,
             item.message.is_alert, item.message.info, item.message.action, item.message.list_items);
         return new ChatItem(message, item.chat_id, item.chat_type);
-    }
-
-    convertToChatItemFromResponse = (response, chat_id, chat_type) => {
-        if (response.is_bot == 'true') {
-            return new ChatItem(new Message(response.bot_name, response.bot_name,
-                response.text, response.created_on, false, response.info, response.action,
-                response.list_items), chat_id, chat_type)
-        } else {
-            return new ChatItem(new Message(response.user_name, response.user_id,
-                response.text, response.created_on, response.is_alert, null, null, null),
-                chat_id, chat_type);
-        }
     }
 
 
@@ -382,7 +331,6 @@ class CollectionUtils {
             command_description: null,
         }
     }
-
 
     prepareBeforeSending(chat_type, chat_title, room, page_count, airChatMessageObject, message) {
         if (airChatMessageObject) {

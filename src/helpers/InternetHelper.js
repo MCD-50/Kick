@@ -110,23 +110,15 @@ class InternetHelper {
             }, (reject) => callback(null, 'Something went wrong.'));
     }
 
-    getAllMessages(domain, mail_id, last_time) {
-        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.get_message_for_first_time';
-        let data = {
-            mail_id: mail_id,
-            last_time: last_time
-        }
-
-        const form = new FormData();
-        form.append('obj', JSON.stringify(data));
-
+    getAllMessages(domain, mail_id) {
+        let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.reply.get_message_for_first_time?mail_id=' + mail_id;
         let method = {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'multipart/form-data',
+                'Content-Type': 'application/json',
             },
-            body: form
+
         };
         this.fetch(url, method)
     }
