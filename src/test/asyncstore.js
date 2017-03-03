@@ -167,29 +167,23 @@ Model.prototype.update = function (data, callback) {
             for (var key in this._where) {
                 var val = this.traverse(rows[row], key, this._where[key]);
                 if (val == true) {
+                    //console.log(data);
                     if (key == '_id') {
                         this.databaseData[this.tableName]["rows"][row] = data;
                     } else {
-                        if (data._id) {
-                            this.databaseData[this.tableName]["rows"][row] = data;
-                        } else {
-                            new_data = Object.assign({}, rows[row], {
-                                info: {
-                                    ...rows[row].info,
-                                    last_active: data.info.last_active
-                                }
-                            });
-                            this.databaseData[this.tableName]["rows"][row] = new_data;
-                        }
+                        new_data = Object.assign({}, data, {
+                            _id: rows[row]._id ? rows[row]._id : null,
+                        });
+                        //console.log(new_data);
+                        this.databaseData[this.tableName]["rows"][row] = new_data;
                     }
-                    results.push(this.databaseData[this.tableName]["rows"][row]["_id"]);
+                    results.push(this.databaseData[this.tableName]["rows"][row]);
                 }
             }
         }
-
         reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (data) {
             if (callback) {
-                callback(data)
+                callback(results)
             }
         }, function (err) {
             if (callback) {

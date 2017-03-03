@@ -105,9 +105,10 @@ class FirstRunPage extends Component {
         if (this.isAllowed()) {
             setData(FULL_NAME, this.input.fullName);
             setData(MOBILE_NUMBER, this.input.mobileNumber);
+
             setData(FIRST_RUN, 'false');
 
-            InternetHelper.setGlobalRoom(this.input.info.domain, this.input.info.email.toLowerCase(), this.input.mobileNumber, this.input.fullName)
+            //InternetHelper.setGlobalRoom(this.input.info.domain, this.input.info.email.toLowerCase(), this.input.mobileNumber, this.input.fullName)
 
             CollectionUtils.addDefaultBots(() => {
                 let page = Page.CHAT_LIST_PAGE;

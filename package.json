@@ -12,6 +12,8 @@
   "dependencies": {
     "@exponent/react-native-action-sheet": "git+https://github.com/FaridSafi/react-native-action-sheet.git",
     "color": "^1.0.3",
+    "fluxify": "^0.2.3",
+    "lodash.groupby": "^4.6.0",
     "lodash.merge": "^4.0.0",
     "md5": "^2.1.0",
     "moment": "^2.17.1",

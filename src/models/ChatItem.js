@@ -1,18 +1,14 @@
 
 export class ChatItem {
 
-    constructor(message, chat_id, chat_type) {
+    constructor(message, chat_room, chat_type) {
         this.message = message;
-        this.chat_id = chat_id;
+        this.chat_room = chat_room;
         this.chat_type = chat_type;
     }
 
-    getId() {
-        return this._id;
-    }
-
-    getChatId() {
-        return this.chat_id;
+    getChatItemRoom() {
+        return this.chat_room;
     }
 
     getChatType() {
@@ -23,16 +19,12 @@ export class ChatItem {
         return this.message;
     }
 
-    setId(_id) {
-        this._id = _id;
-    }
-
     setMessage(message) {
         this.message = message;
     }
 
-    setChatId(chatId) {
-        this.chat_id = chat_id;
+    setChatItemRoom(chat_room) {
+        this.chat_room = chat_room;
     }
 
     setChatType(chat_type) {

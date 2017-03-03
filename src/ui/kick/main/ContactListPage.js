@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 
 
-
 import Toolbar from '../../customUI/ToolbarUI.js';
 import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
 import Container from '../../Container.js';
@@ -77,10 +76,11 @@ class ContactListPage extends Component {
         this.listOfData = [];
         this.state = {
             searchText: '',
+            title: 'Syncing...',
             owner: this.props.route.owner,
             isLoading: true,
+            contacts: [],
             dataSource: ds.cloneWithRows([]),
-            personals: [],
             selectedContacts: [],
         };
 
@@ -99,7 +99,8 @@ class ContactListPage extends Component {
         this.renderElement = this.renderElement.bind(this);
         this.callback = this.callback.bind(this);
         this.loadChats = this.loadChats.bind(this);
-
+        this.addAndUpdateContactList = this.addAndUpdateContactList.bind(this);
+        this.syncUsers = this.syncUsers.bind(this);
     }
 
     addBackEvent() {
@@ -133,73 +134,94 @@ class ContactListPage extends Component {
     }
 
     componentDidMount() {
-        this.setStateData();
+        this.loadChats();
     }
-
-
-    setStateData() {
-        InternetHelper.checkIfNetworkAvailable((isAvailable) => {
-            if (isAvailable) {
-                getStoredDataFromKey(FULL_URL)
-                    .then((url) => InternetHelper.getAllUsers(url, (array, msg) => {
-                        if (array && array.length > 0) {
-                            let people = array.map((item) => {
-                                if (item.email.toLowerCase() != this.state.owner.userId) {
-                                    let title = item.last_name ? item.first_name + ' ' + item.last_name : item.first_name;
-                                    let number = item.number ? item.number : null;
-                                    return CollectionUtils.createChat(title, 'No new message', false,
-                                        Type.PERSONAL, CollectionUtils.getRoom(this.state.owner.userId, true, null, item.email),
-                                        null, null, CollectionUtils.getLastActive(item.last_active),
-                                        CollectionUtils.createChatPersonObject({
-                                            title: title,
-                                            email: item.email,
-                                            number: number,
-                                        }));
-                                }
-                                return null;
-                            });
-                            people.splice(people.indexOf(null), 1)
-                            DatabaseHelper.addNewChat(people, (msg) => {
-                                this.loadChats()
-                            }, true);
-                        } else {
-                            this.loadChats();
-                        }
-                    }));
-            } else {
-                this.loadChats();
-            }
-        })
-    }
-
 
     loadChats() {
         DatabaseHelper.getAllChatsByQuery({ chat_type: Type.PERSONAL }, (results) => {
-            let personals = results.map((result) => {
-                return CollectionUtils.convertToChat(result, true);
-            })
-            if (this.props.route.isForGroupChat) {
-                let _personals = personals.map((person) => {
-                    return {
-                        ...person,
-                        title_copy: person.title,
+            console.log(results);
+            this.syncUsers(results.filter((n) => n.person.email != this.state.owner.userId));
+        })
+    }
+
+    syncUsers(userList) {
+        InternetHelper.checkIfNetworkAvailable((isAvailable) => {
+            const x = this.props.route.isForGroupChat ? 'Select contact' : this.props.route.name
+            if (isAvailable) {
+                InternetHelper.getAllUsers(this.state.owner.domain, this.state.owner.userId, (array, msg) => {
+                    if (array && array.length > 0) {
+                        this.addAndUpdateContactList(userList, array, x);
+                    } else {
+                        this.setStateData(userList, x)
                     }
-                })
-                this.listOfData = _personals;
-                this.setState({
-                    dataSource: ds.cloneWithRows(_personals),
-                    isLoading: false
                 });
             } else {
-                this.setState({
-                    dataSource: ds.cloneWithRows(personals),
-                    isLoading: false
-                });
+                this.setStateData(userList, x);
             }
         })
     }
 
+    addAndUpdateContactList(userList, userFetched, title) {
+        let newListOfUsers = [];
+        for (user of userFetched) {
+            const last_active = CollectionUtils.getLastActive(user.last_active);
+            const x = userList.filter((n) => n.person.email == user.email);
 
+            const title = user.last_name ? user.first_name + ' ' + user.last_name : user.first_name;
+            const number = user.number ? user.number : null;
+            const email = user.email;
+
+            if (x && x.length > 0) {
+                newListOfUsers.push(Object.assign({}, x[0], {
+                    title: title,
+                    info: {
+                        ...x[0].info,
+                        last_active: last_active
+                    },
+                    person: {
+                        ...x[0].person,
+                        title: title,
+                        number: number
+                    }
+                }));
+            } else {
+                const personal = CollectionUtils.createChatPersonObject({
+                    title: title,
+                    email: user.email,
+                    number: number,
+                });
+
+                const chat = CollectionUtils.createChat(title, 'No new message', false,
+                    Type.PERSONAL, CollectionUtils.getRoom(this.state.owner.userId, true, null, user.email),
+                    null, null, last_active, personal);
+
+                newListOfUsers.push(chat);
+            }
+        }
+
+        //newListOfUsers = CollectionUtils.getSortedArrayByDate(newListOfUsers);
+        newListOfUsers = CollectionUtils.getUniqueItemsByChatRoom(newListOfUsers);
+        newListOfUsers = newListOfUsers.filter((y) => y.person.email != this.state.owner.userId);
+        DatabaseHelper.addNewChat(newListOfUsers, (msg) => {
+            console.log(msg)
+        }, true);
+        this.setStateData(newListOfUsers, title);
+    }
+
+    setStateData(listOfData, title) {
+        listOfData = listOfData.map((person) => {
+            return {
+                ...person,
+                is_selected: false,
+            }
+        })
+        this.setState({
+            title: title,
+            isLoading: false,
+            dataSource: ds.cloneWithRows(listOfData),
+            contacts: listOfData
+        });
+    }
 
 
     onChangeText(e) {
@@ -215,14 +237,11 @@ class ContactListPage extends Component {
         return colors[length % colors.length];
     }
 
-    //<Avatar bgcolor='#cbe3f5' icon='done' iconColor='#0078fd' />
-
     renderListItem(contact) {
         const searchText = this.state.searchText.toLowerCase();
         if (searchText.length > 0 && contact.title.toLowerCase().indexOf(searchText) < 0) {
             return null;
         }
-
         return (
             <ListItem
                 divider
@@ -244,6 +263,8 @@ class ContactListPage extends Component {
                     } else {
                         let page = Page.CHAT_PAGE;
                         let state = this.state;
+                        const chat = contact;
+                        delete chat.is_selected;
                         this.props.navigator.replace({
                             id: page.id,
                             name: page.name,
@@ -258,20 +279,22 @@ class ContactListPage extends Component {
     }
 
     onItemSelected(contact) {
-        let index = this.listOfContacts.indexOf(contact);
+        const selectedContacts = this.state.selectedContacts;
+        let index = selectedContacts.indexOf(contact);
         if (index > -1) {
-            this.listOfContacts.splice(index, 1);
-            contact.title_copy = contact.title;
+            contact.is_selected = false;
+            selectedContacts.splice(index, 1);
         } else {
-            this.listOfContacts.push(contact);
-            contact.title_copy = '###icon';
+            contact.is_selected = true;
+            selectedContacts.push(contact);
         }
-
-        this.listOfData[this.listOfData.indexOf(contact)] = contact;
+        const contacts = this.state.contacts;
+        contacts[contacts.indexOf(contact)] = contact;
 
         this.setState({
-            dataSource: ds.cloneWithRows(this.listOfData),
-            selectedContacts: this.listOfContacts,
+            contacts: contacts,
+            dataSource: ds.cloneWithRows(contacts),
+            selectedContacts: selectedContacts,
         });
     }
 
@@ -287,8 +310,8 @@ class ContactListPage extends Component {
     }
 
     getTitle(contact) {
-        if (contact.title_copy == '###icon')
-            return contact.title_copy;
+        if (contact.is_selected == true)
+            return '###icon';
         return (contact.title.length > 1) ? contact.title[0] + contact.title[1].toUpperCase() : ((contact.title.length > 0) ? contact.title[0] : 'UN');
     }
 
@@ -340,7 +363,7 @@ class ContactListPage extends Component {
                         this.props.route.callback(Page.CONTACT_LIST_PAGE);
                         this.props.navigator.pop();
                     }}
-                    centerElement={this.props.route.isForGroupChat ? 'Select contact' : this.props.route.name}
+                    centerElement={this.state.title}
                     rightElement={this.renderToolbarRightElement()}
                     onRightElementPress={(action) => this.rightElementPress(action)}
                 />

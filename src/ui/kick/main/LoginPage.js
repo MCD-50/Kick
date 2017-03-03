@@ -168,28 +168,21 @@ class LoginPage extends Component {
 
     resolveServerUrl() {
         let domain = this.state.domain;
-        hasServerUrl()
-            .then((val) => {
-                if (!val) {
-                    fetch('http://' + domain + '/api/method/frappe.utils.kickapp.helper.get_dev_port')
-                        .then((res) => res.json())
-                        .then((data) => {
-                            if (data.message[0] == 1) {
-                                domain = domain.split(':');
-                                let url = 'http://' + domain[0] + ':' + data.message[1];
-                                this.setServerUrl(url, true);
-                            } else {
-                                domain = domain.split(':');
-                                let url = 'http://' + domain[0];
-                                this.setServerUrl(url, true);
-                            }
-                        }, (reject) => {
-                            this.showAlert('Error...', 'Something went wrong.');
-                        })
+        fetch('http://' + domain + '/api/method/frappe.utils.kickapp.helper.get_dev_port')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.message[0] == 1) {
+                    domain = domain.split(':');
+                    let url = 'http://' + domain[0] + ':' + data.message[1];
+                    this.setServerUrl(url, true);
                 } else {
-                    this.setServerUrl('', false);
+                    domain = domain.split(':');
+                    let url = 'http://' + domain[0];
+                    this.setServerUrl(url, true);
                 }
-            })
+            }, (reject) => {
+                this.showAlert('Error...', 'Something went wrong.');
+            });
     }
 
     setServerUrl(server_url, set) {
@@ -197,12 +190,7 @@ class LoginPage extends Component {
             setData(SERVER_URL, server_url);
         }
 
-        let page;
-        if (this.state.showFirstRunPage)
-            page = Page.FIRST_RUN_PAGE;
-        else
-            page = Page.CHAT_LIST_PAGE;
-
+        let page = Page.FIRST_RUN_PAGE;
         setTimeout(() => {
             this.setState({ showProgress: false, });
             this.props.navigator.replace({ id: page.id, name: page.name, info: { domain: this.state.domain, email: this.state.email } })

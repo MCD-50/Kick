@@ -15,7 +15,9 @@ class SocketClient {
             close: [],
             error: [],
             message: [],
-            notification: []
+            notification: [],
+            join: [],
+            left: []
         }
     }
 
@@ -25,8 +27,9 @@ class SocketClient {
     onError(callback) { this.stateChangeCallbacks.error.push(callback) }
     onMessage(callback) { this.stateChangeCallbacks.message.push(callback) }
     onNotification(callback) { this.stateChangeCallbacks.notification.push(callback) }
-
-    initSocket(socket_url, callback) {
+    onJoin(callback) { this.stateChangeCallbacks.join.push(callback) }
+    onLeft(callback) { this.stateChangeCallbacks.left.push(callback) }
+    initSocket(socket_url) {
         this.socket = io(socket_url, {
             transports: ['websocket'],
         });
@@ -37,9 +40,20 @@ class SocketClient {
         this.socket.on('close', (e) => this.onCloseInternal(e));
         this.socket.on('message_from_server', (msg) => this.onMessageInternal(msg));
         this.socket.on('notification_from_server', (noti) => this.onNotificationInternal(noti));
-        this.socket.on('joined_room', (msg) => console.log(msg));
-        this.socket.on('left_room', (msg) => console.log(msg));
-        callback();
+        this.socket.on('joined_room', (msg) => this.onJoinedRoom(msg));
+        this.socket.on('left_room', (msg) => this.onLeftRoom(msg));
+    }
+
+    onJoinedRoom(msg) {
+        console.log('joined_room')
+        let callbacks = this.stateChangeCallbacks.join;
+        callbacks.forEach(callback => callback());
+    }
+
+    onLeftRoom(msg) {
+        console.log('left_room')
+        let callbacks = this.stateChangeCallbacks.left;
+        callbacks.forEach(callback => callback());
     }
 
     onConnectInternal() {
@@ -48,21 +62,25 @@ class SocketClient {
     }
 
     onOpenInternal() {
+        console.log('Open', e);
         let callbacks = this.stateChangeCallbacks.open;
         callbacks.forEach(callback => callback());
     }
 
     onErrorInternal(e) {
+        console.log('Error', e);
         let callbacks = this.stateChangeCallbacks.error;
         callbacks.forEach(callback => callback(e));
     }
 
     onCloseInternal(e) {
+        console.log('Closed', e)
         let callbacks = this.stateChangeCallbacks.close;
         callbacks.forEach(callback => callback(e));
     }
 
     onMessageInternal(msg) {
+        console.log(msg);
         let callbacks = this.stateChangeCallbacks.message;
         callbacks.forEach(callback => callback(msg));
     }
@@ -81,13 +99,13 @@ class SocketClient {
 
     joinRoom(room_name) {
         //console.log(room_name)
-        console.log(this.stateChangeCallbacks);
+        //console.log(this.stateChangeCallbacks);
         this.socket.emit('join_room', room_name);
     }
 
     leaveRoom(room_name) {
         //console.log(room_name);
-        console.log(this.stateChangeCallbacks);
+        //console.log(this.stateChangeCallbacks);
         this.removeDummyCallbacks();
         this.socket.emit('leave_room', room_name);
     }
@@ -116,6 +134,14 @@ class SocketClient {
         if (this.stateChangeCallbacks.notification.length > 1) {
             let index = this.stateChangeCallbacks.notification.length - 1;
             this.stateChangeCallbacks.notification = this.stateChangeCallbacks.notification.splice(index, 1);
+        }
+        if (this.stateChangeCallbacks.join.length > 1) {
+            let index = this.stateChangeCallbacks.join.length - 1;
+            this.stateChangeCallbacks.join = this.stateChangeCallbacks.join.splice(index, 1);
+        }
+        if (this.stateChangeCallbacks.left.length > 1) {
+            let index = this.stateChangeCallbacks.left.length - 1;
+            this.stateChangeCallbacks.left = this.stateChangeCallbacks.left.splice(index, 1);
         }
     }
 }

@@ -17,41 +17,16 @@ class DatabaseHelper {
         return this.isLocked;
     }
 
-    checkIfExists(data, callback) {
-
-        if (data.info.chat_type == Type.BOT) {
-            this.getChatByQuery({ title: data.title }, (results) => {
-                if (results.length > 0)
-                    callback(true, { title: data.title });
-                else
-                    callback(false, { title: data.title });
-            })
-        }
-
-        else if (data.info.chat_type == Type.GROUP) {
-            this.getChatByQuery({ title: data.title }, (results) => {
-                if (results.length > 0)
-                    callback(true, { title: data.title });
-                else
-                    callback(false, { title: data.title });
-            })
-        }
-
-        else if (data.info.chat_type == Type.PERSONAL) {
-            this.getChatByQuery({ email: data.person.email }, (results) => {
-                if (results.length > 0)
-                    callback(true, { email: data.person.email });
-                else
-                    callback(false, { email: data.person.email });
-            })
-        } else {
-            callback(false, null);
-        }
+    checkIfChatExists(data, callback) {
+        this.getChatByQuery({ room: data.info.room }, (results) => {
+            if (results && results.length > 0)
+                callback(true);
+            else
+                callback(false);
+        })
     }
 
-
     // Read operation on chats and chatItems;
-
     getAllChats(callback) {
         this.setLock(true);
         return DB.CHATS.get_all((results) => {
@@ -99,13 +74,13 @@ class DatabaseHelper {
         })
     }
 
-    getAllChatItemForChatByChatId(chatIds, callback) {
+    getAllChatItemForChatByChatRoom(chatIds, callback) {
         this.items = [];
         this.setLock(true);
-        this.getAllChatItemForChatByChatIdInternal(chatIds, callback);
+        this.getAllChatItemForChatByChatRoomInternal(chatIds, callback);
     }
 
-    getAllChatItemForChatByChatIdInternal(chatIds, callback) {
+    getAllChatItemForChatByChatRoomInternal(chatIds, callback) {
         let length = chatIds.length;
         if (length == 0) {
             this.setLock(false);
@@ -113,10 +88,10 @@ class DatabaseHelper {
             return;
         }
 
-        DB.CHATITEMS.get({ chat_id: chatIds[length - 1] }, (results) => {
+        DB.CHATITEMS.get({ chat_room: chatIds[length - 1] }, (results) => {
             results.map((item) => this.items.push(item));
             chatIds.pop();
-            this.getAllChatItemForChatByChatIdInternal(chatIds, callback);
+            this.getAllChatItemForChatByChatRoomInternal(chatIds, callback);
         })
     }
 
@@ -151,15 +126,13 @@ class DatabaseHelper {
         let length = datas.length;
         if (length == 0) {
             this.setLock(false);
-            callback('Added chats');
+            callback('Added Chats');
             return;
         }
-
-        this.checkIfExists(datas[length - 1], (val, query) => {
+        this.checkIfChatExists(datas[length - 1], (val, query) => {
             if (val) {
-                if (forceUpdate && query) {
-                    let item = datas[length - 1];
-                    DB.CHATS.update(query, item, (results) => {
+                if (forceUpdate) {
+                    DB.CHATS.update(query, datas[length - 1], (results) => {
                         datas.pop();
                         this.addNewChatInternal(datas, callback, forceUpdate);
                     })
@@ -185,13 +158,15 @@ class DatabaseHelper {
         let length = datas.length;
         if (length == 0) {
             this.setLock(false);
-            callback('Added chats');
+            callback('Added Chat items')
             return;
         }
+
         DB.CHATITEMS.add(datas[length - 1], (results) => {
             datas.pop();
             this.addNewChatItemInternal(datas, callback);
         })
+
     }
 
 
@@ -221,7 +196,6 @@ class DatabaseHelper {
         this.setLock(true);
         this.updateChatByQueryInternal(query, data, callback);
     }
-
 
     updateChatByQueryInternal(query, data, callback) {
         DB.CHATS.update(query, data, (results) => {

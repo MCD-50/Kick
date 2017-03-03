@@ -16,6 +16,8 @@ export const LAST_NAME = 'LAST_NAME';
 
 export const MOBILE_NUMBER = 'MOBILE_NUMBER';
 
+export const APP_DATA = 'APP_DATA';
+
 export const LEFTMARGIN = 16;
 export const RIGHTMARGIN = 16;
 export const UPMARGIN = 5;

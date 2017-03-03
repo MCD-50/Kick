@@ -7,7 +7,7 @@ import {
 var UIManager = require('UIManager');
 import ThemeProvider from './src/ui/customUI/utils/themeprovider.js';
 import { Page } from './src/enums/Page.js';
-
+import Fluxify from 'fluxify';
 
 import ChatPage from './src/ui/kick/chat/ChatPage.js';
 import EditInfoPage from './src/ui/kick/chat/EditInfoPage.js';
@@ -53,6 +53,7 @@ class Kick extends Component {
 
     renderNavigation(route, navigator) {
         let id = route.id;
+        Fluxify.doAction('updateCurrentPageId', id);
         if (id == 1)
             return <SplashPage navigator={navigator} route={route} />
         else if (id == 2)

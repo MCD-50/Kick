@@ -2,10 +2,10 @@
 import { Chat } from '../models/Chat.js';
 import { ChatItem } from '../models/ChatItem.js';
 import { Message } from '../models/Message.js';
-
-
 import { ActionName } from '../enums/ActionName.js';
 import { Type } from '../enums/Type.js';
+
+import Fluxify from 'fluxify';
 
 import { EMAIL, FULL_NAME, DOMAIN } from '../constants/AppConstant.js';
 import { getStoredDataFromKey } from './AppStore.js';
@@ -78,37 +78,6 @@ class CollectionUtils {
                             command_description: 'Some random command with some random description'
                         }]
                 }
-            },
-            {
-                title: 'Event',
-                sub_title: 'Make a event',
-                info: {
-                    is_added_to_chat_list: true,
-                    chat_type: Type.BOT,
-                    room: null,
-                    new_message_count: null,
-                    last_message_time: null,
-                    last_active: null,
-                },
-                person: null,
-                group: null,
-                bot: {
-                    description: 'Some random bot with some random description',
-                    commands: [
-                        {
-                            syntax: '/bot add todo',
-                            command_description: 'Some random command with some random description'
-                        }, {
-                            syntax: '/bot get todo',
-                            command_description: 'Some random command with some random description'
-                        }, {
-                            syntax: '/bot update todo',
-                            command_description: 'Some random command with some random description'
-                        }, {
-                            syntax: '/bot delete todo',
-                            command_description: 'Some random command with some random description'
-                        }]
-                }
             }];
     }
 
@@ -124,16 +93,15 @@ class CollectionUtils {
                             room: this.getRoom(mail, false, bot.title)
                         }
                     })
-                })
+                });
 
                 let items = _array.map((item) => {
                     return this.convertToChat(item, false);
-                })
+                });
 
-                DatabaseHelper.addNewChat(items, (msg) => callback());
+                DatabaseHelper.addNewChat(items, (msg) => callback(), true);
             })
     }
-
 
     createChat = (title, sub_title, is_added_to_chat_list, chat_type, room, new_message_count, last_message_time, last_active, person = null, group = null, bot = null) => {
         let info = {
@@ -151,6 +119,47 @@ class CollectionUtils {
             this.createChatBotObject(bot));
     }
 
+    createChatFromResponse = (response) => {
+        if (response.is_bot == 'true') {
+            const info = {
+                is_added_to_chat_list: true,
+                chat_type: Type.BOT,
+                room: response.room,
+                new_message_count: 1,
+                last_message_time: response.created_on,
+                last_active: this.getLastActive(response.created_on)
+            }
+            return new Chat(response.bot_name, response.text,
+                info,
+                this.createChatPersonObject(null),
+                this.createChatGroupObject(null),
+                this.createChatBotObject(null));
+        } else {
+            const info = {
+                is_added_to_chat_list: true,
+                chat_type: response.chat_type,
+                room: response.room,
+                new_message_count: 1,
+                last_message_time: response.created_on,
+                last_active: this.getLastActive(response.created_on)
+            }
+
+            const person = response.chat_type == Type.PERSONAL ? {
+                title: response.user_name,
+                email: response.user_id,
+                number: null
+            } : {
+                    title: null,
+                    email: null,
+                    number: null
+                };
+            return new Chat(response.chat_title, response.text,
+                info,
+                person,
+                this.createChatGroupObject(null),
+                this.createChatBotObject(null));
+        }
+    }
 
     convertToChat = (item, has_id) => {
         let chat = new Chat(item.title, item.sub_title,
@@ -164,11 +173,16 @@ class CollectionUtils {
         return chat;
     }
 
-    createChatItemFromResponse = (response, chat_id, bot_id) => {
+    createChatItemFromResponse = (response, chat_room, bot_id) => {
         if (response.is_bot == 'true') {
+            console.log(response);
             let message = new Message(response.bot_name, bot_id, response.text,
-                response.created_on, false, response.info, response.action, response.list_items);
-            return new ChatItem(message, chat_id, Type.BOT);
+                response.created_on, false,
+                this.createChatItemInfo(response.info),
+                this.createChatItemAction(response.action),
+                this.createChatItemListItems(response.list_items));
+
+            return new ChatItem(message, chat_room, Type.BOT);
         } else {
             let alert = response.is_alert == 'true' ? true : false;
             let message = new Message(response.user_name, response.user_id, response.text,
@@ -176,28 +190,25 @@ class CollectionUtils {
                 this.createChatItemInfo(null),
                 this.createChatItemAction(null),
                 this.createChatItemListItems(null));
-            return new ChatItem(message, chat_id, response.chat_type);
+            return new ChatItem(message, chat_room, response.chat_type);
         }
     }
 
-    createChatItem = (user_name, user_id, text, created_on, is_alert, chat_id, chat_type, info = null, action = null, list_items = null) => {
+
+
+    createChatItem = (user_name, user_id, text, created_on, is_alert, chat_room, chat_type, info = null, action = null, list_items = null) => {
         let message = new Message(user_name, user_id, text, created_on, is_alert,
             this.createChatItemInfo(info),
             this.createChatItemAction(action),
             this.createChatItemListItems(list_items));
-        return new ChatItem(message, chat_id, chat_type);
-    }
-
-    convertToChatItem = (item, has_id) => {
-        let message = new Message(item.message.user_name, item.message.user_id, item.message.text, item.message.created_on,
-            item.message.is_alert, item.message.info, item.message.action, item.message.list_items);
-        return new ChatItem(message, item.chat_id, item.chat_type);
+        const chat_item = new ChatItem(message, chat_room, chat_type);
+        return chat_item;
     }
 
 
-    convertToChatItemFromAirChatMessageObject = (airChatObject, chat_id, chat_type) => {
+    convertToChatItemFromAirChatMessageObject = (airChatObject, chat_room, chat_type) => {
         return this.createChatItem(airChatObject.user.name, airChatObject.user._id, airChatObject.text,
-            this.getCreatedOn(), airChatObject.isAlert, chat_id, chat_type, airChatObject.info, airChatObject.action, airChatObject.listItems);
+            this.getCreatedOn(), airChatObject.isAlert, chat_room, chat_type, airChatObject.info, airChatObject.action, airChatObject.listItems);
     }
 
     convertToAirChatMessageObjectFromChatItem = (chat_item, is_group_chat) => {
@@ -223,7 +234,6 @@ class CollectionUtils {
     }
 
 
-
     createChatItemInfo = (info) => {
         if (info) {
             return {
@@ -247,21 +257,22 @@ class CollectionUtils {
                 items: list_items.items
             }
         }
-
         return {
             action_on_internal_item_click: null,
-            items: null
+            items: []
         }
     }
 
     createChatItemAction = (action) => {
         if (action) {
             return {
+                base_action: action.base_action,
                 action_on_button_click: action.action_on_button_click,
                 action_on_list_item_click: action.action_on_list_item_click
             }
         }
         return {
+            base_action: null,
             action_on_button_click: null,
             action_on_list_item_click: null
         }
@@ -332,16 +343,18 @@ class CollectionUtils {
         }
     }
 
-    prepareBeforeSending(chat_type, chat_title, room, page_count, airChatMessageObject, message) {
+    prepareBeforeSending(chat_type, chat_title, room, page_count, item_id, airChatMessageObject, chatItem) {
         if (airChatMessageObject) {
             if (chat_type == Type.BOT) {
                 return {
                     "room": room,
+                    "user_id": airChatMessageObject.user._id,
                     "is_bot": 'true',
                     "bot_name": chat_title,
                     "created_on": this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
                     "text": airChatMessageObject.text,
                     "page_count": page_count,
+                    "item_id": item_id,
                     "action": this.createChatItemAction(airChatMessageObject.action),
                     "info": this.createChatItemInfo(airChatMessageObject.info),
                     "list_items": this.createChatItemListItems(airChatMessageObject.listItems)
@@ -354,7 +367,34 @@ class CollectionUtils {
                     "user_name": airChatMessageObject.user.name,
                     "user_id": airChatMessageObject.user._id,
                     "text": airChatMessageObject.text,
-                    "is_alert": airChatMessageObject.isAlert.toString(),
+                    "is_alert": airChatMessageObject.isAlert ? "true" : "false",
+                    "chat_title": chat_title,
+                    "chat_type": chat_type
+                }
+            }
+        } else if (chatItem) {
+            if (chat_type == Type.BOT) {
+                return {
+                    "room": room,
+                    "user_id": chatItem.message.user_id,
+                    "is_bot": 'true',
+                    "bot_name": chat_title,
+                    "created_on": chatItem.message.created_on,
+                    "text": chatItem.message.text,
+                    "page_count": page_count,
+                    "action": this.createChatItemAction(chatItem.message.action),
+                    "info": this.createChatItemInfo(chatItem.message.info),
+                    "list_items": this.createChatItemListItems(chatItem.message.listItems)
+                }
+            } else {
+                return {
+                    "room": room,
+                    "is_bot": 'false',
+                    "created_on": chatItem.message.created_on,
+                    "user_name": chatItem.message.user_name,
+                    "user_id": chatItem.message.user_id,
+                    "text": chatItem.message.text,
+                    "is_alert": chatItem.message.is_alert ? "true" : "false",
                     "chat_title": chat_title,
                     "chat_type": chat_type
                 }
@@ -365,11 +405,20 @@ class CollectionUtils {
     }
 
     getRoom = (ownerEmail, is_personal, title = null, targetEmail = null) => {
+        ownerEmail = ownerEmail.toLowerCase().trim();
         if (is_personal) {
-            return ownerEmail.length > targetEmail ? ownerEmail + targetEmail : targetEmail + ownerEmail;
+            targetEmail = targetEmail.toLowerCase().trim();
+            return ownerEmail.length > targetEmail.length ? ownerEmail + targetEmail
+                : (ownerEmail.length < targetEmail.length ? targetEmail + ownerEmail
+                    : this.resolveRoom(ownerEmail, targetEmail));
         } else {
-            return ownerEmail + title;
+            title = title.trim();
+            return ownerEmail + 'bot@' + title;
         }
+    }
+
+    resolveRoom = (ownerEmail, targetEmail) => {
+        return ownerEmail > targetEmail ? ownerEmail + targetEmail : targetEmail + ownerEmail;
     }
 
 
@@ -410,16 +459,6 @@ class CollectionUtils {
         return yyyy + '-' + mm + '-' + dd + ' ' + this.parseTime(time[0], time[1], time[2]);
     }
 
-    prepareCallbackData = (text, id, action) => {
-        let item = {
-            text: text,
-            id: id,
-            action: action
-        };
-
-        return item;
-    }
-
     getTodayDate = () => {
         let today = new Date();
         var dd = today.getDate();
@@ -433,16 +472,6 @@ class CollectionUtils {
         var yyyy = today.getFullYear();
         return yyyy + '-' + mm + '-' + dd
     }
-
-    getSortedArrayByDate = (results) => {
-        _results = results.filter(function (n) { return n.info.last_message_time != undefined });
-        results = results.filter(function (n) { return n.info.last_message_time == undefined })
-        _results = _results.sort((a, b) => {
-            return a.info.last_message_time > b.info.last_message_time ? -1 : (b.info.last_message_time > a.info.last_message_time ? 1 : 0);
-        })
-        return _results.concat(results);
-    }
-
 
     getMonth = (index, month = null) => {
         const months = [
@@ -462,7 +491,7 @@ class CollectionUtils {
         if (index > -1) {
             return months[index];
         } else {
-            for (i = 0; i < months.length; i++) {
+            for (let i = 0; i < months.length; i++) {
                 if (months[i] == month)
                     return i + 1;
             }
@@ -496,9 +525,90 @@ class CollectionUtils {
         } else {
             return 'Last seen recently';
         }
+    }
+
+
+    getSortedArrayByDate = (results) => {
+        _results = results.filter(function (n) { return n.info.last_message_time != undefined });
+        results = results.filter(function (n) { return n.info.last_message_time == undefined })
+        _results = _results.sort((a, b) => {
+            return a.info.last_message_time > b.info.last_message_time ? -1 : (b.info.last_message_time > a.info.last_message_time ? 1 : 0);
+        })
+        return _results.concat(results);
+    }
+
+    getSortedChatItems = (results) => {
+        _results = results.filter(function (n) { return n.message.created_on != undefined });
+        results = results.filter(function (n) { return n.message.created_on == undefined })
+        _results = _results.sort((a, b) => {
+            return a.message.created_on > b.message.created_on ? -1 : (b.message.created_on > a.message.created_on ? 1 : 0);
+        })
+        return _results.concat(results);
+    }
+
+    getUniqueItems = (listItems) => {
+        var room = [];
+        var arr = [];
+        for (var i = 0; i < listItems.length; i++) {
+            if (room.indexOf(listItems[i].room) < 0) {
+                room.push(listItems[i].room);
+                arr.push(listItems[i]);
+            }
+        }
+        return arr;
+    }
+
+    getUniqueItemsByChatRoom = (listItems) => {
+        var room = [];
+        var arr = [];
+        for (var i = 0; i < listItems.length; i++) {
+            if (room.indexOf(listItems[i].info.room) < 0) {
+                room.push(listItems[i].info.room);
+                arr.push(listItems[i]);
+            }
+        }
+        return arr;
+    }
+
+    getSortedArrayByRoom = (listItems) => {
+        listItems = listItems.map((n) => {
+            if (typeof n.room == "object" && n.room != null) {
+                return {
+                    ...n,
+                    room: n.room.room_name
+                }
+            } else {
+                return {
+                    ...n,
+                    room: n.room
+                }
+            }
+        })
+        return listItems.sort((a, b) => {
+            return a.room > b.room ? -1 : (b.room > a.room ? 1 : 0);
+        })
 
     }
 
+    getIndexOfChatInChatListByRoom = (chatList, room) => {
+        for (let i = 0; i < chatList.length; i++) {
+            if (chatList[i].info.room == room)
+                return i;
+        }
+        return -1;
+    }
+
+    pushNewDataAndSortArray = (listOfChats, chats) => {
+        for (const x of chats) {
+            let index = this.getIndexOfChatInChatListByRoom(listOfChats, x.info.room);
+            if (index > -1) {
+                listOfChats[index] = x;
+            } else {
+                listOfChats.push(x);
+            }
+        }
+        return this.getSortedArrayByDate(listOfChats);
+    }
 }
 
 const collection = new CollectionUtils();

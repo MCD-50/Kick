@@ -8,12 +8,14 @@ import {
 } from 'react-native';
 
 
+
 import InternetHelper from '../../../helpers/InternetHelper.js';
 import { isFirstRun, getStoredDataFromKey, hasServerUrl, setData } from '../../../helpers/AppStore.js';
-import { FULL_URL, SERVER_URL, SID, DOMAIN, EMAIL, FIRST_RUN } from '../../../constants/AppConstant.js';
+import { FULL_URL, SERVER_URL, SID, DOMAIN, EMAIL, FIRST_RUN, APP_DATA } from '../../../constants/AppConstant.js';
 import { Page } from '../../../enums/Page.js';
 import Progress from '../../customUI/Progress.js';
 var frappeIcon = require('../../../res/images/frappe.png');
+
 
 
 const styles = StyleSheet.create({

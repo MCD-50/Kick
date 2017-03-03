@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
         margin: 10,
     },
     wrapper: {
-        backgroundColor: '#B1BEC6',
+        backgroundColor: '#f0f0f0',
         borderRadius: 4,
         paddingLeft: 10,
         paddingRight: 10,
@@ -71,15 +71,17 @@ class NotificationUI extends React.Component {
             var j = pieces[i].charAt(0).toUpperCase();
             pieces[i] = j + pieces[i].substr(1);
         }
-        return pieces.join(" ") + ' ...';
+        return pieces.join(" ")
     }
 
     render() {
         if (this.props.currentMessage.isAlert) {
             return (<View style={[styles.container]}>
-                <Text style={[styles.text]}>
-                    {this.capitalizeAndStrip(this.props.currentMessage.text)}
-                </Text>
+                <View style={[styles.wrapper]}>
+                    <Text style={[styles.text]}>
+                        {this.capitalizeAndStrip(this.props.currentMessage.text)}
+                    </Text>
+                </View>
             </View>)
         } else {
             return null;

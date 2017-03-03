@@ -110,12 +110,13 @@ const defaultProps = {
     is_interactive_list: null
   },
   action: {
+    base_action: null,
     action_on_button_click: null,
     action_on_list_item_click: null
   },
   listItems: {
     action_on_internal_item_click: null,
-    items: null
+    items: []
   },
   bottomOffset: 0,
   isLoadingEarlier: false,
