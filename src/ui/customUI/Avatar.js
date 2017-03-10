@@ -92,7 +92,7 @@ class Avatar extends PureComponent {
             else
                 content = <Text style={styles.content}>{text}</Text>;
         } else if (image) {
-            console.log('in image')
+            //console.log('in image')
             content = image;
         }
 

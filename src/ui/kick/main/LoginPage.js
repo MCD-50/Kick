@@ -168,7 +168,7 @@ class LoginPage extends Component {
 
     resolveServerUrl() {
         let domain = this.state.domain;
-        fetch('http://' + domain + '/api/method/frappe.utils.kickapp.helper.get_dev_port')
+        fetch('http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_dev_port')
             .then((res) => res.json())
             .then((data) => {
                 if (data.message[0] == 1) {

@@ -109,7 +109,6 @@ class OwnerInfoPage extends Component {
 
 
     onChageText(text, whichState) {
-        console.log(text);
         if (whichState == 1) {
             this.input.fullName = text;
         } else if (whichState == 2) {
