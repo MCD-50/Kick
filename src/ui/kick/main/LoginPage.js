@@ -1,330 +1,354 @@
 
 import React, { Component, PropTypes } from 'react';
 import {
-    StyleSheet,
-    View,
-    Text,
-    Image,
-    TextInput,
-    TouchableOpacity,
-    Linking,
-    Alert,
-    ScrollView,
+	StyleSheet,
+	View,
+	Text,
+	Image,
+	TextInput,
+	TouchableOpacity,
+	Linking,
+	Alert,
+	ScrollView,
 } from 'react-native';
 
-
+import Fluxify from 'fluxify';
 import InternetHelper from '../../../helpers/InternetHelper.js';
+import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
 import { hasServerUrl, setData, getStoredDataFromKey } from '../../../helpers/AppStore.js';
 import Progress from '../../customUI/Progress.js';
 import {
-    FULL_URL, SERVER_URL, DOMAIN, EMAIL,
-    UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN, COLOR,
-    USERNAME, STATUS
+	FULL_URL, SERVER_URL, DOMAIN, EMAIL,
+	UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN,
+	COLOR, USERNAME, STATUS, FULL_NAME, FIRST_RUN
 } from '../../../constants/AppConstant.js';
-
-import Container from '../../Container.js';
+import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import { Page } from '../../../enums/Page.js';
+import { Type } from '../../../enums/Type.js';
 
 var frappeIcon = require('../../../res/images/frappe.png');
 
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-
-    view: {
-        flex: 1,
-        marginLeft: LEFTMARGIN,
-        marginRight: RIGHTMARGIN,
-        marginTop: UPMARGIN,
-        marginBottom: DOWNMARGIN,
-    },
-
-    text: {
-        flex: 1,
-        color: 'white',
-        fontSize: 17,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
-    textInput: {
-        color: 'black',
-        fontSize: 17,
-        borderWidth: 1.2,
-        borderColor: '#b2b2b2',
-        borderRadius: 3,
-        padding: 5,
-        paddingLeft: 10,
-        paddingRight: 10
-    },
-    image: {
-        width: 80,
-        height: 80,
-    }
+	base: {
+		flex: 1
+	},
+	container: {
+		flex: 1,
+	},
+	view: {
+		flex: 1,
+		marginLeft: LEFTMARGIN,
+		marginRight: RIGHTMARGIN,
+		marginTop: UPMARGIN,
+		marginBottom: DOWNMARGIN,
+	},
+	text: {
+		flex: 1,
+		color: 'white',
+		fontSize: 17,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	textInput: {
+		color: 'black',
+		fontSize: 17,
+		borderWidth: 1.2,
+		borderColor: '#b2b2b2',
+		borderRadius: 3,
+		padding: 5,
+		paddingLeft: 10,
+		paddingRight: 10
+	},
+	image: {
+		width: 80,
+		height: 80,
+	}
 });
 
 
 const propTypes = {
-    navigator: PropTypes.object.isRequired,
-    route: PropTypes.object.isRequired,
-    text: React.PropTypes.string,
-    placeholder: React.PropTypes.string,
-    placeholderTextColor: React.PropTypes.string,
-    multiline: React.PropTypes.bool,
-    autoFocus: React.PropTypes.bool,
+	navigator: PropTypes.object.isRequired,
+	route: PropTypes.object.isRequired,
+	text: React.PropTypes.string,
+	placeholder: React.PropTypes.string,
+	placeholderTextColor: React.PropTypes.string,
+	multiline: React.PropTypes.bool,
+	autoFocus: React.PropTypes.bool,
+};
+
+const defaultProps = {
+	text: '',
+	placeholder: 'Text...',
+	placeholderTextColor: '#b2b2b2',
+	multiline: false,
+	autoFocus: false,
 };
 
 
 const colors = [
-    '#e67e22', // carrot
-    '#3498db', // peter river
-    '#8e44ad', // wisteria
-    '#e74c3c', // alizarin
-    '#1abc9c', // turquoise
-    '#2c3e50', // midnight blue
+	'#e67e22', // carrot
+	'#3498db', // peter river
+	'#8e44ad', // wisteria
+	'#e74c3c', // alizarin
+	'#1abc9c', // turquoise
+	'#2c3e50', // midnight blue
 ];
 
-const defaultProps = {
-    text: '',
-    placeholder: 'Text...',
-    placeholderTextColor: '#b2b2b2',
-    multiline: false,
-    autoFocus: false,
-};
+
 
 
 class LoginPage extends Component {
 
-    constructor(params) {
-        super(params);
-        this.state = {
-            domain: '',
-            email: '',
-            password: '',
-            showProgress: false,
-            showFirstRunPage: this.props.route.showFirstRunPage,
-        };
+	constructor(params) {
+		super(params);
+		this.state = {
+			domain: '',
+			email: '',
+			password: '',
+			showProgress: false,
+			showFirstRunPage: this.props.route.showFirstRunPage,
+		};
 
-        this.login = this.login.bind(this);
-        this.forgotPassword = this.forgotPassword.bind(this);
-        this.signUp = this.signUp.bind(this);
-        this.isAllowed = this.isAllowed.bind(this);
-        this.showAlert = this.showAlert.bind(this);
-        this.cleanDomain = this.cleanDomain.bind(this);
-        this.setServerUrl = this.setServerUrl.bind(this);
-        this.resolveServerUrl = this.resolveServerUrl.bind(this);
-        this.onType = this.onType.bind(this);
-        this.renderSignIn = this.renderSignIn.bind(this);
-    }
-
-
-    signUp() {
-        Linking.openURL('https://erpnext.com/login#signup');
-    }
-
-    forgotPassword() {
-        Linking.openURL('https://erpnext.com/login#forgot');
-    }
-
-    login() {
-        this.setState({ showProgress: true, });
-        if (this.isAllowed()) {
-
-            let domain = this.state.domain;
-            let email = this.state.email;
-            let password = this.state.password;
-
-            let full_url = 'http://' + domain + '/api/method/login?' + 'usr=' + email + '&pwd=' + password;
-            InternetHelper.login(full_url, (title, body) => {
-                this.showAlert(title, body);
-            }, () => {
-                setData(DOMAIN, domain);
-                setData(EMAIL, email.toLowerCase());
-                setData(FULL_URL, full_url);
-                this.resolveServerUrl();
-            })
-        } else {
-            this.showAlert('Info...', 'Please fill in all the details');
-        }
-    }
-
-    cleanDomain(domain) {
-        let array = domain.split("/");
-        length = array.length;
-        return array[length - 1];
-    }
-
-    isAllowed() {
-        let state = this.state;
-        let domain = state.domain;
-        let email = state.email;
-        let password = state.password;
-        if (domain && email && password && domain.trim().length > 0 && email.trim().length > 0 && password.trim().length > 0)
-            return true;
-        return false;
-    }
-
-    resolveServerUrl() {
-        let domain = this.state.domain;
-        fetch('http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_dev_port')
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.message[0] == 1) {
-                    domain = domain.split(':');
-                    let url = 'http://' + domain[0] + ':' + data.message[1];
-                    this.setServerUrl(url, true);
-                } else {
-                    domain = domain.split(':');
-                    let url = 'http://' + domain[0];
-                    this.setServerUrl(url, true);
-                }
-            }, (reject) => {
-                this.showAlert('Error...', 'Something went wrong.');
-            });
-    }
-
-    setServerUrl(server_url, set) {
-        if (set) {
-            setData(SERVER_URL, server_url);
-        }
-
-        let page = Page.FIRST_RUN_PAGE;
-        setTimeout(() => {
-            this.setState({ showProgress: false, });
-            this.props.navigator.replace({ id: page.id, name: page.name, info: { domain: this.state.domain, email: this.state.email } })
-        }, 1000);
-    }
-
-    showAlert(title, body) {
-        this.setState({ showProgress: false, });
-        Alert.alert(
-            title,
-            body,
-            [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
-        );
-    }
-
-    onType(e, whichState) {
-        if (whichState == 1) {
-            this.setState({ domain: this.cleanDomain(e.nativeEvent.text) });
-        } else if (whichState == 2) {
-            this.setState({ email: e.nativeEvent.text });
-        } else if (whichState == 3) {
-            this.setState({ password: e.nativeEvent.text });
-        }
-    }
+		this.login = this.login.bind(this);
+		this.forgotPassword = this.forgotPassword.bind(this);
+		this.signUp = this.signUp.bind(this);
+		this.isAllowed = this.isAllowed.bind(this);
+		this.showAlert = this.showAlert.bind(this);
+		this.cleanDomain = this.cleanDomain.bind(this);
+		this.setServerUrl = this.setServerUrl.bind(this);
+		this.resolveServerUrl = this.resolveServerUrl.bind(this);
+		this.onType = this.onType.bind(this);
+		this.renderSignIn = this.renderSignIn.bind(this);
+		this.addAllUsers = this.addAllUsers.bind(this);
+	}
 
 
-    renderSignIn() {
-        if (this.state.showProgress) {
-            return (
-                <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 }}>
-                    <Progress color={['#3f51b5']} size={50} duration={300} />
-                </View>
-            )
-        }
-        return null;
-    }
+	signUp() {
+		Linking.openURL('https://erpnext.com/login#signup');
+	}
+
+	forgotPassword() {
+		Linking.openURL('https://erpnext.com/login#forgot');
+	}
+
+	login() {
+		this.setState({ showProgress: true, });
+		if (this.isAllowed()) {
+
+			let domain = this.state.domain.trim().toLowerCase();
+			let email = this.state.email.trim().toLowerCase();
+			let password = this.state.password;
+
+			let full_url = 'http://' + domain + '/api/method/login?' + 'usr=' + email + '&pwd=' + password;
+			InternetHelper.login(full_url, (title, body) => {
+				this.showAlert(title, body);
+			}, (msg) => {
+				setData(DOMAIN, domain);
+				setData(EMAIL, email);
+				setData(FULL_URL, full_url);
+				setData(FULL_NAME, msg.full_name)
+				this.resolveServerUrl();
+			})
+		} else {
+			this.showAlert('Info...', 'Please fill in all the details');
+		}
+	}
+
+	cleanDomain(domain) {
+		let array = domain.split("/");
+		length = array.length;
+		return array[length - 1];
+	}
+
+	isAllowed() {
+		let state = this.state;
+		let domain = state.domain;
+		let email = state.email;
+		let password = state.password;
+		if (domain && email && password && domain.trim().length > 0 && email.trim().length > 0 && password.trim().length > 0)
+			return true;
+		return false;
+	}
+
+	resolveServerUrl() {
+		let domain = this.state.domain;
+		fetch('http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_dev_port')
+			.then((res) => res.json())
+			.then((data) => {
+				if (data.message[0] == 1) {
+					domain = domain.split(':');
+					let url = 'http://' + domain[0] + ':' + data.message[1];
+					this.setServerUrl(url);
+				} else {
+					domain = domain.split(':');
+					let url = 'http://' + domain[0];
+					this.setServerUrl(url);
+				}
+			}, (reject) => {
+				this.showAlert('Error...', 'Something went wrong.');
+			});
+	}
+
+	setServerUrl(server_url, set) {
+		setData(SERVER_URL, server_url);
+		DatabaseHelper.getAllChatsByQuery({ chat_type: Type.PERSONAL }, (results) => {
+			this.addAllUsers(results.filter((n) => n.info.email != this.state.email));
+		})
+	}
+
+	addAllUsers(users) {
+		const domain = this.state.domain.toLowerCase().trim();
+		const email = this.state.email.toLowerCase().trim();
+		InternetHelper.getAllUsers(domain, email,
+			(array, msg) => {
+				if (array && array.length > 0) {
+					users = CollectionUtils.addAndUpdateContactList(users,
+						array.filter((nn) => nn.email != email), {
+							userName: array.filter((nn) => nn.email == email)[0].full_name,
+							userId: email
+						});
+				}
+				DatabaseHelper.addNewChat(users, (msg) => {
+					//console.log(msg)
+					setData(FIRST_RUN, 'false');
+					CollectionUtils.addDefaultBots(() => {
+						let page = Page.CHAT_LIST_PAGE;
+						this.props.navigator.replace({ id: page.id, name: page.name });
+					});
+				}, true);
+			});
+
+	}
+
+	showAlert(title, body) {
+		this.setState({ showProgress: false, });
+		Alert.alert(
+			title,
+			body,
+			[{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+		);
+	}
+
+	onType(e, whichState) {
+		if (whichState == 1) {
+			this.setState({ domain: this.cleanDomain(e.nativeEvent.text) });
+		} else if (whichState == 2) {
+			this.setState({ email: e.nativeEvent.text });
+		} else if (whichState == 3) {
+			this.setState({ password: e.nativeEvent.text });
+		}
+	}
 
 
-    render() {
-        return (
-            <Container color='#0086ff'>
-                <ScrollView style={styles.container} keyboardDismissMode='interactive'>
-
-                    <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: UPMARGIN, marginBottom: DOWNMARGIN }}>
-                        <Image source={frappeIcon} style={styles.image} />
-                    </View>
-
-                    <View style={styles.view}>
-                        <TextInput style={styles.textInput}
-                            placeholder='Domain...'
-                            editable={!this.state.showProgress}
-                            onChange={(e) => this.onType(e, 1)}
-                            placeholderTextColor={this.props.placeholderTextColor}
-                            multiline={this.props.multiline}
-                            autoCapitalize='sentences'
-                            enablesReturnKeyAutomatically={true}
-                            underlineColorAndroid="transparent" />
-                    </View>
-
-                    <View style={styles.view}>
-                        <TextInput style={styles.textInput}
-                            placeholder='Email...'
-                            editable={!this.state.showProgress}
-                            onChange={(e) => this.onType(e, 2)}
-                            placeholderTextColor={this.props.placeholderTextColor}
-                            multiline={this.props.multiline}
-                            autoCapitalize='sentences'
-                            enablesReturnKeyAutomatically={true}
-                            underlineColorAndroid="transparent"
-                        />
-                    </View>
-
-                    <View style={styles.view}>
-                        <TextInput style={styles.textInput}
-                            placeholder='Password...'
-                            editable={!this.state.showProgress}
-                            onChange={(e) => this.onType(e, 3)}
-                            placeholderTextColor={this.props.placeholderTextColor}
-                            multiline={this.props.multiline}
-                            autoCapitalize='sentences'
-                            secureTextEntry={true}
-                            enablesReturnKeyAutomatically={true}
-                            underlineColorAndroid="transparent"
-                        />
-                    </View>
-
-                    <TouchableOpacity style={{
-                        alignItems: 'flex-end', justifyContent: 'flex-end', marginLeft: LEFTMARGIN,
-                        marginRight: RIGHTMARGIN,
-                        marginTop: RIGHTMARGIN,
-                        marginBottom: RIGHTMARGIN,
-                    }}
-                        disabled={this.state.showProgress}
-                        onPress={() => { this.forgotPassword() }}
-                        accessibilityTraits="button">
-                        <Text style={[styles.text, { color: '#5E64FF', fontSize: 14 }]}>Forgot Password?</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={[styles.view, {
-                        borderRadius: 3,
-                        backgroundColor: '#5E64FF',
-                    }]}
-                        disabled={this.state.showProgress}
-                        onPress={() => { this.login() }}
-                        accessibilityTraits="button">
-                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                            <Text style={[styles.text, {
-                                padding: 10,
-                                paddingLeft: 10,
-                                paddingRight: 10
-                            }]}>Sign In</Text>
-                        </View>
-
-                    </TouchableOpacity>
+	renderSignIn() {
+		if (this.state.showProgress) {
+			return (
+				<View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 }}>
+					<Progress />
+				</View>
+			)
+		}
+		return null;
+	}
 
 
-                    <TouchableOpacity style={{
-                        alignItems: 'center', justifyContent: 'center', marginLeft: LEFTMARGIN,
-                        marginRight: RIGHTMARGIN,
-                        marginTop: RIGHTMARGIN,
-                        marginBottom: RIGHTMARGIN
-                    }}
-                        disabled={this.state.showProgress}
-                        onPress={() => { this.signUp() }}
-                        accessibilityTraits="button">
-                        <Text style={[styles.text, { color: '#5E64FF', fontSize: 14 }]}>Don't have an account? Sign Up</Text>
-                    </TouchableOpacity>
+	render() {
+		return (
+			<View style={styles.base}>
+				<ScrollView style={styles.container} keyboardDismissMode='interactive'>
 
-                    {this.renderSignIn()}
-                </ScrollView>
-            </Container>
-        );
-    }
+					<View style={{ alignItems: 'center', justifyContent: 'center', marginTop: UPMARGIN, marginBottom: DOWNMARGIN }}>
+						<Image source={frappeIcon} style={styles.image} />
+					</View>
+
+					<View style={styles.view}>
+						<TextInput style={styles.textInput}
+							placeholder='Domain...'
+							editable={!this.state.showProgress}
+							onChange={(e) => this.onType(e, 1)}
+							placeholderTextColor={this.props.placeholderTextColor}
+							multiline={false}
+							autoCapitalize='sentences'
+							enablesReturnKeyAutomatically={true}
+							underlineColorAndroid="transparent" />
+					</View>
+
+					<View style={styles.view}>
+						<TextInput style={styles.textInput}
+							placeholder='Email...'
+							editable={!this.state.showProgress}
+							onChange={(e) => this.onType(e, 2)}
+							placeholderTextColor={this.props.placeholderTextColor}
+							multiline={false}
+							autoCapitalize='sentences'
+							enablesReturnKeyAutomatically={true}
+							underlineColorAndroid="transparent"
+						/>
+					</View>
+
+					<View style={styles.view}>
+						<TextInput style={styles.textInput}
+							placeholder='Password...'
+							editable={!this.state.showProgress}
+							onChange={(e) => this.onType(e, 3)}
+							placeholderTextColor={this.props.placeholderTextColor}
+							multiline={false}
+							autoCapitalize='sentences'
+							secureTextEntry={true}
+							enablesReturnKeyAutomatically={true}
+							underlineColorAndroid="transparent"
+						/>
+					</View>
+
+					<TouchableOpacity style={{
+						alignItems: 'flex-end', justifyContent: 'flex-end', marginLeft: LEFTMARGIN,
+						marginRight: RIGHTMARGIN,
+						marginTop: RIGHTMARGIN,
+						marginBottom: RIGHTMARGIN,
+					}}
+						disabled={this.state.showProgress}
+						onPress={() => { this.forgotPassword() }}
+						accessibilityTraits="button">
+						<Text style={[styles.text, { color: '#5E64FF', fontSize: 14 }]}>Forgot Password?</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity style={[styles.view, {
+						borderRadius: 3,
+						backgroundColor: '#5E64FF',
+					}]}
+						disabled={this.state.showProgress}
+						onPress={() => { this.login() }}
+						accessibilityTraits="button">
+						<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+							<Text style={[styles.text, {
+								padding: 10,
+								paddingLeft: 10,
+								paddingRight: 10
+							}]}>Sign In</Text>
+						</View>
+
+					</TouchableOpacity>
+
+
+					<TouchableOpacity style={{
+						alignItems: 'center', justifyContent: 'center', marginLeft: LEFTMARGIN,
+						marginRight: RIGHTMARGIN,
+						marginTop: RIGHTMARGIN,
+						marginBottom: RIGHTMARGIN
+					}}
+						disabled={this.state.showProgress}
+						onPress={() => { this.signUp() }}
+						accessibilityTraits="button">
+						<Text style={[styles.text, { color: '#5E64FF', fontSize: 14 }]}>Don't have an account? Sign Up</Text>
+					</TouchableOpacity>
+
+					{this.renderSignIn()}
+				</ScrollView>
+			</View>
+		);
+	}
 }
 
 LoginPage.propTypes = propTypes;
+LoginPage.defaultProps = defaultProps;
 export default LoginPage;

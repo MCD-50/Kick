@@ -15,9 +15,9 @@ const styles = StyleSheet.create({
 
 
 class Container extends Component {
-    
-    getColor(){
-        if(this.props.color){
+
+    getColor() {
+        if (this.props.color) {
             return this.props.color;
         }
         return '#0086ff';

@@ -19,7 +19,7 @@ class CollectionUtils {
 		return [
 			{
 				title: 'Todo',
-				sub_title: 'Make a todo',
+				sub_title: 'Some random bot with some random description',
 				info: {
 					is_added_to_chat_list: true,
 					chat_type: Type.BOT,
@@ -27,30 +27,13 @@ class CollectionUtils {
 					new_message_count: null,
 					last_message_time: null,
 					last_active: null,
-				},
-				person: null,
-				group: null,
-				bot: {
-					description: 'Some random bot with some random description',
-					commands: [
-						{
-							syntax: '/bot add todo',
-							command_description: 'Some random command with some random description'
-						}, {
-							syntax: '/bot get todo',
-							command_description: 'Some random command with some random description'
-						}, {
-							syntax: '/bot update todo',
-							command_description: 'Some random command with some random description'
-						}, {
-							syntax: '/bot delete todo',
-							command_description: 'Some random command with some random description'
-						}]
+					email: null,
+					users: []
 				}
 			},
 			{
 				title: 'Note',
-				sub_title: 'Make a note',
+				sub_title: 'Some random bot with some random description',
 				info: {
 					is_added_to_chat_list: true,
 					chat_type: Type.BOT,
@@ -58,25 +41,8 @@ class CollectionUtils {
 					new_message_count: null,
 					last_message_time: null,
 					last_active: null,
-				},
-				person: null,
-				group: null,
-				bot: {
-					description: 'Some random bot with some random description',
-					commands: [
-						{
-							syntax: '/bot add todo',
-							command_description: 'Some random command with some random description'
-						}, {
-							syntax: '/bot get todo',
-							command_description: 'Some random command with some random description'
-						}, {
-							syntax: '/bot update todo',
-							command_description: 'Some random command with some random description'
-						}, {
-							syntax: '/bot delete todo',
-							command_description: 'Some random command with some random description'
-						}]
+					email: null,
+					users: []
 				}
 			}];
 	}
@@ -103,111 +69,116 @@ class CollectionUtils {
 			})
 	}
 
-	createChat = (title, sub_title, is_added_to_chat_list, chat_type, room, new_message_count, last_message_time, last_active, person = null, group = null, bot = null) => {
+	createChat = (title, sub_title, is_added_to_chat_list, chat_type, room, email, new_message_count = 0, last_message_time = null, last_active = null, users = []) => {
 		let info = {
 			is_added_to_chat_list: is_added_to_chat_list,
 			chat_type: chat_type,
 			room: room,
 			new_message_count: new_message_count,
 			last_message_time: last_message_time,
-			last_active: last_active
-		}
-		return new Chat(title, sub_title,
-			this.createChatInfoObject(info),
-			this.createChatPersonObject(person),
-			this.createChatGroupObject(group),
-			this.createChatBotObject(bot));
+			last_active: last_active,
+			email: email,
+			users: users
+		};
+		return new Chat(title, sub_title, info);
 	}
 
-	createChatFromResponse = (response) => {
-		if (response.is_bot == 'true') {
+
+	createChatFromResponse = (response, email) => {
+		if (response.meta.chat_type == Type.BOT) {
 			const info = {
 				is_added_to_chat_list: true,
 				chat_type: Type.BOT,
-				room: response.room,
-				new_message_count: 1,
-				last_message_time: response.created_on,
-				last_active: this.getLastActive(response.created_on)
-			}
-			return new Chat(response.bot_name, response.text,
-				info,
-				this.createChatPersonObject(null),
-				this.createChatGroupObject(null),
-				this.createChatBotObject(null));
+				room: response.meta.room,
+				new_message_count: 0,
+				last_message_time: null,
+				last_active: null,
+				email: null,
+				users: []
+			};
+			return new Chat(response.chat_items[0].bot_data.bot_name, response.chat_items[0].text, info);
 		} else {
-			const info = {
+			let info = {
 				is_added_to_chat_list: true,
-				chat_type: response.chat_type,
-				room: response.room,
-				new_message_count: 1,
-				last_message_time: response.created_on,
-				last_active: this.getLastActive(response.created_on)
+				chat_type: response.meta.chat_type,
+				room: response.meta.room,
+				new_message_count: 0,
+				last_message_time: null,
+				last_active: null,
+				email: null,
+				users: response.meta.users
 			}
-			const title = response.chat_type == Type.PERSONAL ? response.user_name : response.chat_title
-			const person = response.chat_type == Type.PERSONAL ? {
-				title: response.user_name,
-				email: response.user_id,
-				number: null
-			} : {
-					title: null,
-					email: null,
-					number: null
-				};
-			return new Chat(title, response.text,
-				info,
-				person,
-				this.createChatGroupObject(null),
-				this.createChatBotObject(null));
+
+			let title = null, users = null, email = null;
+			if (response.meta.chat_type == Type.PERSONAL) {
+				const item = response.meta.users.filter((mm) => mm.email != email)[0];
+				title = item.title;
+				email = item.email;
+			} else {
+				title = response.chat_items[0].chat_data.chat_title
+				email = response.meta.owner;
+			}
+
+			info = Object.assign({}, info, {
+				...info,
+				email: email,
+			});
+			return new Chat(title, response.chat_items[0].text, info);
 		}
 	}
 
 	convertToChat = (item, has_id) => {
-		let chat = new Chat(item.title, item.sub_title,
-			this.createChatInfoObject(item.info),
-			this.createChatPersonObject(item.person),
-			this.createChatGroupObject(item.group),
-			this.createChatBotObject(item.bot));
+		let chat = new Chat(item.title, item.sub_title, item.info);
 		if (has_id)
 			chat.setId(item._id);
-
 		return chat;
 	}
 
-	createChatItemFromResponse = (response, chat_room, bot_id) => {
-		if (response.is_bot == 'true') {
-			let message = new Message(response.bot_name, bot_id, response.text,
-				response.created_on, false,
-				this.createChatItemInfo(JSON.parse(response.info)),
-				this.createChatItemAction(JSON.parse(response.action)),
-				this.createChatItemListItems(JSON.parse(response.list_items)));
-			return new ChatItem(message, chat_room, Type.BOT);
+	getEmailForChat(users, owner) {
+		for (const x of users) {
+			if (x.email != owner.userId)
+				return x.title;
+		}
+		return 'Unknown User';
+	}
+
+	getUserForRoom = (owner, others) => {
+		if (others.length < 1)
+			return []
+		others.push({
+			title: owner.userName,
+			email: owner.userId
+		});
+		return others
+	}
+
+	createChatItemFromResponse = (response, chatToBeUpdated) => {
+		if (chatToBeUpdated.info.chat_type == Type.BOT) {
+			let message = new Message(response.bot_data.bot_name,
+				chatToBeUpdated.title, response.text, response.created_on, false,
+				this.createChatItemInfo(response.bot_data.info));
+			return new ChatItem(message, chatToBeUpdated.info.room, Type.BOT);
 		} else {
-			let alert = response.is_alert == 'true' ? true : false;
-			let message = new Message(response.user_name, response.user_id, response.text,
-				response.created_on, alert,
-				this.createChatItemInfo(null),
-				this.createChatItemAction(null),
-				this.createChatItemListItems(null));
-			return new ChatItem(message, chat_room, response.chat_type);
+			let message = new Message(response.chat_data.user_name,
+				response.chat_data.user_id, response.text,
+				response.created_on, response.chat_data.is_alert,
+				this.createChatItemInfo(null));
+			return new ChatItem(message, chatToBeUpdated.info.room, chatToBeUpdated.info.chat_type);
 		}
 	}
 
-
-
-	createChatItem = (user_name, user_id, text, created_on, is_alert, chat_room, chat_type, info = null, action = null, list_items = null) => {
+	createChatItem = (user_name, user_id, text, created_on, is_alert, chat_room, chat_type, info = null) => {
 		let message = new Message(user_name, user_id, text, created_on, is_alert,
-			this.createChatItemInfo(info),
-			this.createChatItemAction(action),
-			this.createChatItemListItems(list_items));
+			this.createChatItemInfo(info));
 		const chat_item = new ChatItem(message, chat_room, chat_type);
 		return chat_item;
 	}
 
-
 	convertToChatItemFromAirChatMessageObject = (airChatObject, chat_room, chat_type) => {
 		return this.createChatItem(airChatObject.user.name, airChatObject.user._id, airChatObject.text,
-			this.getCreatedOn(), airChatObject.isAlert, chat_room, chat_type, airChatObject.info, airChatObject.action, airChatObject.listItems);
+			this.getCreatedOn(), airChatObject.isAlert, chat_room, chat_type, airChatObject.info);
 	}
+
 
 	convertToAirChatMessageObjectFromChatItem = (chat_item, is_group_chat) => {
 		let message = {
@@ -221,191 +192,114 @@ class CollectionUtils {
 			isAlert: chat_item.message.is_alert,
 			isGroupChat: is_group_chat,
 			info: this.createChatItemInfo(chat_item.message.info),
-			action: this.createChatItemAction(chat_item.message.action),
-			listItems: this.createChatItemListItems(chat_item.message.list_items)
 		}
-
 		return message;
 	}
 
 
 	createChatItemInfo = (info) => {
-
 		if (info) {
 			return {
+				base_action: info.base_action,
 				button_text: info.button_text,
 				is_interactive_chat: info.is_interactive_chat,
-				is_interactive_list: info.is_interactive_list
+				is_interactive_list: info.is_interactive_list,
+				items: info.items
 			}
 		}
 
 		return {
+			base_action: null,
 			button_text: null,
 			is_interactive_chat: null,
-			is_interactive_list: null
-		}
-	}
-
-	createChatItemListItems = (list_items) => {
-		if (list_items) {
-			return {
-				action_on_internal_item_click: list_items.action_on_internal_item_click,
-				items: list_items.items
-			}
-		}
-		return {
-			action_on_internal_item_click: null,
+			is_interactive_list: null,
 			items: []
 		}
 	}
 
-	createChatItemAction = (action) => {
-		if (action) {
-			return {
-				base_action: action.base_action,
-				action_on_button_click: action.action_on_button_click,
-				action_on_list_item_click: action.action_on_list_item_click
-			}
-		}
-		return {
-			base_action: null,
-			action_on_button_click: null,
-			action_on_list_item_click: null
-		}
-	}
-
-	createChatInfoObject = (info) => {
-		return {
-			is_added_to_chat_list: info.is_added_to_chat_list,
-			chat_type: info.chat_type,
-			room: info.room,
-			new_message_count: info.new_message_count,
-			last_message_time: info.last_message_time,
-			last_active: info.last_active,
-		}
-	}
-
-	createChatPersonObject = (personal) => {
-		if (personal) {
-			return {
-				title: personal.title,
-				email: personal.email,
-				number: personal.number,
-			}
-		}
-		return {
-			title: null,
-			email: null,
-			number: null,
-		}
-	}
-
-	createChatBotObject = (bot) => {
-		if (bot) {
-			return {
-				description: bot.description,
-				commands: bot.commands,
-			}
-		}
-		return {
-			description: null,
-			commands: null,
-		}
-	}
-
-	createChatGroupObject = (group) => {
-		if (group) {
-			return {
-				people: group.people,
-				peopleCount: (group.people != null) ? group.people.length : null,
-			}
-		}
-		return {
-			people: null,
-			peopleCount: null,
-		}
-	}
-
-	createChatBotCommandObject = (command) => {
-		if (command) {
-			return {
-				syntax: command.syntax,
-				command_description: command.command_description,
-			}
-		}
-		return {
-			syntax: null,
-			command_description: null,
-		}
-	}
-
-	prepareBeforeSending(chat_type, chat_title, room, airChatMessageObject, chatItem, item_id) {
+	prepareBeforeSending(chat_type, chat_title, room,
+		airChatMessageObject, chatItem, item_id, add = 1) {
 		if (airChatMessageObject) {
 			if (chat_type == Type.BOT) {
 				return {
-					"room": room,
-					"user_id": airChatMessageObject.user._id,
-					"is_bot": 'true',
-					"bot_name": chat_title,
-					"created_on": this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
-					"text": airChatMessageObject.text,
-					"action": this.createChatItemAction(airChatMessageObject.action),
-					"info": this.createChatItemInfo(airChatMessageObject.info),
-					"list_items": this.createChatItemListItems(airChatMessageObject.listItems),
-					"item_id": item_id
-				}
+					meta: {
+						room: room,
+						item_id: item_id,
+						chat_type: Type.BOT,
+						add: add,
+						user_id: airChatMessageObject.user._id,
+					},
+					created_on: this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
+					text: airChatMessageObject.text,
+					chat_data: null,
+					bot_data: {
+						bot_name: chat_title,
+						info: this.createChatItemInfo(airChatMessageObject.info)
+					}
+				};
 			} else {
 				return {
-					"room": room,
-					"is_bot": 'false',
-					"created_on": this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
-					"user_name": airChatMessageObject.user.name,
-					"user_id": airChatMessageObject.user._id,
-					"text": airChatMessageObject.text,
-					"is_alert": airChatMessageObject.isAlert ? "true" : "false",
-					"chat_title": chat_title,
-					"chat_type": chat_type
-				}
+					meta: {
+						room: room,
+						chat_type: chat_type,
+						add: add,
+						user_id: airChatMessageObject.user._id,
+					},
+					created_on: this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
+					text: airChatMessageObject.text,
+					chat_data: {
+						chat_title: chat_title,
+						chat_type: chat_type,
+						user_name: airChatMessageObject.user.name,
+						user_id: airChatMessageObject.user._id,
+						is_alert: airChatMessageObject.isAlert
+					},
+					bot_data: null
+				};
 			}
 		} else if (chatItem) {
 			if (chat_type == Type.BOT) {
 				return {
-					"room": room,
-					"user_id": chatItem.message.user_id,
-					"is_bot": 'true',
-					"bot_name": chat_title,
-					"created_on": chatItem.message.created_on,
-					"text": chatItem.message.text,
-					"page_count": page_count,
-					"action": this.createChatItemAction(chatItem.message.action),
-					"info": this.createChatItemInfo(chatItem.message.info),
-					"list_items": this.createChatItemListItems(chatItem.message.listItems),
-					"item_id": item_id
-				}
+					meta: {
+						room: room,
+						item_id: item_id,
+						chat_type: Type.BOT,
+						add: add,
+						user_id: chatItem.message.user_id
+					},
+					created_on: chatItem.message.created_on,
+					text: chatItem.message.text,
+					chat_data: null,
+					bot_data: {
+						bot_name: chat_title,
+						info: this.createChatItemInfo(chatItem.message.info)
+					}
+				};
 			} else {
 				return {
-					"room": room,
-					"is_bot": 'false',
-					"created_on": chatItem.message.created_on,
-					"user_name": chatItem.message.user_name,
-					"user_id": chatItem.message.user_id,
-					"text": chatItem.message.text,
-					"is_alert": chatItem.message.is_alert ? "true" : "false",
-					"chat_title": chat_title,
-					"chat_type": chat_type
-				}
+					meta: {
+						room: room,
+						chat_type: chat_type,
+						add: add,
+						user_id: chatItem.message.user_id
+					},
+					created_on: chatItem.message.created_on,
+					text: chatItem.message.text,
+					chat_data: {
+						chat_title: chat_title,
+						chat_type: chat_type,
+						user_name: chatItem.message.user_name,
+						user_id: chatItem.message.user_id,
+						is_alert: chatItem.message.is_alert
+					},
+					bot_data: null
+				};
 			}
 		} else {
 			return null;
 		}
 	}
 
-	prepareCallbackData = (text, item_id) => {
-		return {
-			item_id: item_id,
-			text: text
-		}
-	}
 
 	getRoom = (ownerEmail, is_personal, title = null, targetEmail = null) => {
 		ownerEmail = ownerEmail.toLowerCase().trim();
@@ -529,7 +423,6 @@ class CollectionUtils {
 		}
 	}
 
-
 	getSortedArrayByDate = (results) => {
 		_results = results.filter(function (n) { return n.info.last_message_time != undefined });
 		results = results.filter(function (n) { return n.info.last_message_time == undefined })
@@ -548,18 +441,6 @@ class CollectionUtils {
 		return _results.concat(results);
 	}
 
-	getUniqueItems = (listItems) => {
-		var room = [];
-		var arr = [];
-		for (var i = 0; i < listItems.length; i++) {
-			if (room.indexOf(listItems[i].room) < 0) {
-				room.push(listItems[i].room);
-				arr.push(listItems[i]);
-			}
-		}
-		return arr;
-	}
-
 	getUniqueItemsByChatRoom = (listItems) => {
 		var room = [];
 		var arr = [];
@@ -572,24 +453,22 @@ class CollectionUtils {
 		return arr;
 	}
 
-	getSortedArrayByRoom = (listItems) => {
-		listItems = listItems.map((n) => {
-			if (typeof n.room == "object" && n.room != null) {
-				return {
-					...n,
-					room: n.room.room_name
-				}
-			} else {
-				return {
-					...n,
-					room: n.room
-				}
-			}
-		})
+	getSortedResponseArrayByRoom = (listItems) => {
 		return listItems.sort((a, b) => {
-			return a.room > b.room ? -1 : (b.room > a.room ? 1 : 0);
+			return a.meta.room > b.meta.room ? -1 : (b.meta.room > a.meta.room ? 1 : 0);
 		})
+	}
 
+	getUniqueResponseItems = (listItems) => {
+		var room = [];
+		var arr = [];
+		for (var i = 0; i < listItems.length; i++) {
+			if (room.indexOf(listItems[i].meta.room) < 0) {
+				room.push(listItems[i].meta.room);
+				arr.push(listItems[i]);
+			}
+		}
+		return arr;
 	}
 
 	getIndexOfChatInChatListByRoom = (chatList, room) => {
@@ -611,6 +490,39 @@ class CollectionUtils {
 		}
 		return this.getSortedArrayByDate(listOfChats);
 	}
+
+
+	addAndUpdateContactList(users, userFetched, owner) {
+		let newListOfUsers = [];
+		for (user of userFetched) {
+			const x = users.filter((n) => n.info.email == user.email);
+			const last_active = this.getLastActive(user.last_active);
+			const title = user.full_name ? user.full_name : "Unknown";
+			const email = user.email;
+			if (x && x.length > 0) {
+				newListOfUsers.push(Object.assign({}, x[0], {
+					title: title,
+					info: {
+						...x[0].info,
+						last_active: last_active
+					},
+				}));
+			} else {
+				console.log('creating new');
+				const users = this.getUserForRoom(owner,
+					[{
+						title: title,
+						email: email
+					}]);
+				const chat = this.createChat(title, 'No new message', false, Type.PERSONAL,
+					this.getRoom(owner.userId, true, null, email),
+					email, 0, null, last_active, users);
+				newListOfUsers.push(chat);
+			}
+		}
+		return this.getUniqueItemsByChatRoom(newListOfUsers);
+	}
+
 }
 
 const collection = new CollectionUtils();

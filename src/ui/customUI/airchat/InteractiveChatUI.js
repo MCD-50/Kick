@@ -79,11 +79,6 @@ const defaultProps = {
 	info: {
 		button_text: '',
 	},
-	action: {
-		actionName: null,
-		actionOnButtonClick: null,
-		actionOnListItemClick: null
-	},
 	containerStyle: {},
 	textStyle: {},
 	headerStyle: {},
@@ -156,68 +151,56 @@ class InteractiveChatUI extends React.Component {
 	}
 
 	render() {
-
-		return (
-			<View style={[styles[this.props.position].container, this.props.containerStyle[this.props.position]]}>
-				{
-					this.getHeader(this.props)
-				}
-				<View style={styles[this.props.position].container}>
-					<Text style={[styles[this.props.position].text, this.props.textStyle[this.props.position]]}>
-						{this.props.currentMessage.text}
-					</Text>
-
-					<TouchableOpacity
-						style={[styles[this.props.position].innerContainer]}
-						onPress={() => { this.props.onViewInfo(this.props.currentMessage) }}
-						accessibilityTraits="button">
-						<Text style={[styles[this.props.position].text, {
-							color: '#527DA3',
-							fontSize: 12,
-							fontWeight: 'bold',
-							borderWidth: 1.2,
-							marginTop: 7,
-							marginLeft: 10,
-							marginRight: 10,
-							borderColor: '#527DA3',
-							borderRadius: 3,
-							borderLeftWidth:0,
-							padding: 5,
-							paddingLeft: 10,
-							paddingRight: 10
-						}]}>
-							{this.props.currentMessage.info.button_text.toUpperCase()}
+		if (this.props.position == 'left') {
+			return (
+				<View style={[styles[this.props.position].container, this.props.containerStyle[this.props.position]]}>
+					{
+						this.getHeader(this.props)
+					}
+					<View style={styles[this.props.position].container}>
+						<Text style={[styles[this.props.position].text, this.props.textStyle[this.props.position]]}>
+							{this.props.currentMessage.text}
 						</Text>
-					</TouchableOpacity>
+
+						<TouchableOpacity
+							style={[styles[this.props.position].innerContainer]}
+							onPress={() => { this.props.onViewInfo(this.props.currentMessage) }}
+							accessibilityTraits="button">
+							<Text style={[styles[this.props.position].text, {
+								color: '#527DA3',
+								fontSize: 12,
+								fontWeight: 'bold',
+								borderWidth: 1.2,
+								marginTop: 7,
+								marginLeft: 10,
+								marginRight: 10,
+								borderColor: '#527DA3',
+								borderRadius: 3,
+								borderLeftWidth: 0,
+								padding: 5,
+								paddingLeft: 10,
+								paddingRight: 10
+							}]}>
+								{this.props.currentMessage.info.button_text.toUpperCase()}
+							</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
-			</View>
-		);
-	}
-
-
-	/*
-	<TouchableOpacity
-						style={[styles[this.props.position].innerContainer]}
-						onPress={() => { this.props.onViewInfo(this.props.currentMessage) }}
-						accessibilityTraits="button">
-						<Text style={[styles[this.props.position].text, {
-							color: '#0086ff',
-							fontSize: 12,
-							fontWeight: 'bold',
-							borderWidth: 1.2,
-							marginTop: 3,
-							marginLeft: 10,
-							marginRight: 10,
-							borderColor: '#0086ff',
-							borderRadius: 3,
-							padding: 5,
-							paddingLeft: 10,
-							paddingRight: 10
-						}]}>
-							{this.props.currentMessage.info.button_text.toUpperCase()}
+			);
+		} else {
+			return (
+				<View style={[styles[this.props.position].container, this.props.containerStyle[this.props.position]]}>
+					{
+						this.getHeader(this.props)
+					}
+					<View style={styles[this.props.position].container}>
+						<Text style={[styles[this.props.position].text, this.props.textStyle[this.props.position]]}>
+							{this.props.currentMessage.text}
 						</Text>
-					</TouchableOpacity>
-	*/
+					</View>
+				</View>);
+		}
+	}
 }
 
 

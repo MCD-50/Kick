@@ -5,8 +5,7 @@ class StateHelper {
 		this.stateChangeCallbacks = {
 			chat: [],
 			chat_items: [],
-			item: [],
-			recent_action:[]
+			item: []
 		}
 		StateClient.on('change:chatList', (chatList) => {
 			this.onChatListChanged(chatList);
@@ -17,9 +16,7 @@ class StateHelper {
 		StateClient.on('change:currentChat', (currentChat) => {
 			this.onCurrentChatChanged(currentChat);
 		});
-		StateClient.on('change:recentAction', (recentAction) => {
-			this.onRecentActionChanged(recentAction);
-		})
+
 	}
 
 	onChatListChanged = (chatList) => {
@@ -37,10 +34,6 @@ class StateHelper {
 		callbacks.forEach(callback => callback(currentChat));
 	}
 
-	onRecentActionChanged = (recentAction) => {
-		let callbacks = this.stateChangeCallbacks.recent_action;
-		callbacks.forEach(callback => callback(recentAction))
-	}
 
 	setOnChatListChanged = (callback) => {
 		this.stateChangeCallbacks.chat.push(callback)
@@ -54,9 +47,6 @@ class StateHelper {
 		this.stateChangeCallbacks.item.push(callback)
 	}
 
-	setOnRecentActionChanged = (callback)=>{
-		this.stateChangeCallbacks.recent_action.push(callback)
-	}
 
 	removeChatItemListChanged = () => {
 		this.stateChangeCallbacks.chat_items.pop();
@@ -70,9 +60,6 @@ class StateHelper {
 		this.stateChangeCallbacks.item.pop();
 	}
 
-	removeRecentActionChanged  = ()=>{
-		this.stateChangeCallbacks.recent_action.pop();
-	}
 }
 
 const stateHelper = new StateHelper();

@@ -8,7 +8,7 @@ const getPlatformElevation = (elevation) => {
     if (Platform.OS === 'ios') {
         if (elevation !== 0) {
             return {
-                shadowColor: black,
+                shadowColor: 'black',
                 shadowOpacity: 0.3,
                 shadowRadius: elevation,
                 shadowOffset: {

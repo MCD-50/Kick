@@ -1,8 +1,38 @@
 
-import React from 'react';
+import React, {
+	Component,
+	PropTypes,
+} from 'react';
 import {
-  AppRegistry,
+	AppRegistry,
+	View,
+	Text
 } from 'react-native';
 
 import Kick from './Kick.js';
-AppRegistry.registerComponent('chatApp', () => Kick);
+import { NotificationsAndroid } from 'react-native-notifications';
+import Container from './Container.js';
+
+class chatApp extends Component {
+	constructor(params) {
+		super(params)
+		NotificationsAndroid.setRegistrationTokenUpdateListener((deviceToken) => {
+			console.log('Push-notifications registered!', deviceToken)
+		});
+		NotificationsAndroid.setNotificationReceivedListener((notification) => {
+			console.log("Notification received on device", notification.getData());
+		});
+		NotificationsAndroid.setNotificationOpenedListener((notification) => {
+			console.log("Notification opened by device user", notification.getData());
+		});
+	}
+
+	render() {
+		return (
+			<Container>
+				<Kick />
+			</Container>);
+	}
+}
+
+AppRegistry.registerComponent('chatApp', () => chatApp);

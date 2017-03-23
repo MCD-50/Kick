@@ -100,15 +100,8 @@ const defaultProps = {
 	},
 	containerStyle: {},
 	info: {
-		button_text: '',
-	},
-	action: {
 		base_action: null,
-		action_on_button_click: null,
-		action_on_list_item_click: null
-	},
-	listItems: {
-		action_on_internal_item_click: null,
+		button_text: '',
 		items: []
 	},
 	textStyle: {},
@@ -176,11 +169,10 @@ class InteractiveListUI extends React.Component {
 	}
 
 	renderListItem(props) {
-		let listItems = props.currentMessage.listItems.items;
+		let listItems = props.currentMessage.info.items;
 		if (listItems.length > 3)
-			listItems = listItems.splice(0, 3);
-		const views = props.currentMessage.listItems.items.map((item, key) => {
-			console.log(item);
+			listItems = listItems.slice(0, 3);
+		const views = listItems.map((item, key) => {
 			return (
 				<TouchableOpacity key={key} style={[iStyle.container, { marginBottom: 3 }]} onPress={() => { props.onItemClicked(props.currentMessage, key) }} accessibilityTraits="button">
 					<View style={{ flexDirection: 'row' }}>

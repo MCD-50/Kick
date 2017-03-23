@@ -11,7 +11,6 @@ import {
 
 import Fluxify from 'fluxify';
 import Toolbar from '../../customUI/ToolbarUI.js';
-import Container from '../../Container.js';
 import { UPMARGIN, DOWNMARGIN, LEFTMARGIN, RIGHTMARGIN } from '../../../constants/AppConstant.js';
 import { Page } from '../../../enums/Page.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
@@ -19,6 +18,9 @@ import { Type } from '../../../enums/Type.js';
 
 
 const styles = StyleSheet.create({
+	base:{
+		flex:1
+	},
 	container: {
 		flex: 1,
 		marginLeft: LEFTMARGIN,
@@ -146,7 +148,7 @@ class EditInfoPage extends Component {
 
 	render() {
 		return (
-			<Container>
+			<View style={styles.base}>
 				<Toolbar
 					leftElement="arrow-back"
 					onLeftElementPress={() => {
@@ -187,9 +189,8 @@ class EditInfoPage extends Component {
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
-
-			</Container>)
-
+			</View>
+		);
 	}
 }
 

@@ -1,5 +1,5 @@
 export default {
     actionButtonSize: 55,
     iconSize: 24,
-    avatarSize: 42,
+    avatarSize: 50,
 };

@@ -29,6 +29,7 @@
         </intent-filter>
       </activity>
       <activity android:screenOrientation="portrait" android:name="com.facebook.react.devsupport.DevSettingsActivity" />
+      <meta-data android:name="com.wix.reactnativenotifications.gcmSenderId" android:value="1234567890\0"/>
     </application>
 
 </manifest>

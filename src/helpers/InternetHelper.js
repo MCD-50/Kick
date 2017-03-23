@@ -35,11 +35,10 @@ class InternetHelper {
 						alertCallback('Network request failed.',
 							'Incorrect Username / Email, make sure the entered email is correct and try again in a little bit.');
 					} else {
-						successCallback();
+						successCallback(responseData);
 					}
 				}, (reject) => alertCallback('Network request failed.', 'Something went wrong. Please try in a little bit.'))
 		}, (reject) => {
-
 			alertCallback('Network request failed.',
 				'Failed to connect to given domain, make sure the entered domain is correct and try in a little bit.');
 		});
@@ -71,16 +70,36 @@ class InternetHelper {
 			}, (reject) => callback(null, 'Something went wrong.'));
 	}
 
-	setAllUsersInRoom(domain, users, room, callback = null) {
+	setAllUsersInRoom(domain, users, room, chat_type, callback = null) {
 		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.set_users_in_room';
 		let data = {
 			room: room,
-			users: users
+			users: users,
+			chat_type: chat_type
 		}
 
 		const form = new FormData();
 		form.append('obj', JSON.stringify(data));
 
+		let method = {
+			method: "POST",
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'multipart/form-data',
+			},
+			body: form
+		};
+		this.fetch(url, method, callback);
+	}
+
+	removeFromGroup(domain, room, email, callback = null) {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.remove_user_from_group';
+		let data = {
+			room: room,
+			email: email
+		}
+		const form = new FormData();
+		form.append('obj', JSON.stringify(data));
 		let method = {
 			method: "POST",
 			headers: {
@@ -134,7 +153,7 @@ class InternetHelper {
 		let query = {
 			"bot_name": bot_name,
 			"page_count": page_count,
-			"email" : email
+			"email": email
 		};
 
 		const form = new FormData();
@@ -157,11 +176,10 @@ class InternetHelper {
 					callback('Something went wrong.')
 			})
 			.then((responseData) => {
-				//console.log(succ);
 				if (callback)
 					callback(responseData);
-			}, (error) => {
-				console.log(error);
+			}, (reject) => {
+				console.log(reject);
 			})
 	}
 }

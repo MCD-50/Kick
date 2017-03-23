@@ -1,70 +1,42 @@
 
 export class Chat {
-    constructor(title, sub_title, info, person, group, bot) {
-        this.title = title;
-        this.sub_title = sub_title;
-        this.info = info;
-        this.person = person;
-        this.group = group;
-        this.bot = bot;
-    }
+	constructor(title, sub_title, info) {
+		this.title = title;
+		this.sub_title = sub_title;
+		this.info = info;
+	}
 
-    getId() {
-        return this._id;
-    }
+	getId() {
+		return this._id;
+	}
 
-    getTitle() {
-        return this.title;
-    }
+	getTitle() {
+		return this.title;
+	}
 
-    getSubTitle() {
-        return this.sub_title;
-    }
+	getSubTitle() {
+		return this.sub_title;
+	}
 
-    getInfo() {
-        return this.info;
-    }
+	getInfo() {
+		return this.info;
+	}
 
-    getPerson() {
-        return this.person;
-    }
+	setId(_id) {
+		this._id = _id;
+	}
 
-    getGroup() {
-        return this.group;
-    }
+	setTitle(title) {
+		this.title = title;
+	}
 
-    getBot() {
-        return this.bot;
-    }
+	setSubTitle(sub_title) {
+		this.sub_title = sub_title;
+	}
 
-    setId(_id) {
-        this._id = _id;
-    }
-
-    setTitle(title) {
-        this.title = title;
-    }
-
-    setSubTitle(sub_title) {
-        this.sub_title = sub_title;
-    }
-
-    setInfo(info) {
-        this.info = info;
-    }
-
-    setPerson(person) {
-        this.person = person;
-    }
-
-    setBot(bot) {
-        this.bot = bot;
-    }
-
-    setGroup(group) {
-        this.group = group;
-    }
-
+	setInfo(info) {
+		this.info = info;
+	}
 }
 
 

@@ -10,7 +10,6 @@ import {
 
 import Fluxify from 'fluxify';
 import Toolbar from '../../customUI/ToolbarUI.js';
-import Container from '../../Container.js';
 import Avatar from '../../customUI/Avatar.js';
 import Badge from '../../customUI/Badge.js';
 import ListItem from '../../customUI/ListItem.js';
@@ -33,6 +32,9 @@ const colors = [
 
 
 const styles = StyleSheet.create({
+	base: {
+		flex: 1
+	},
 	container: {
 		flex: 1,
 		marginLeft: LEFTMARGIN,
@@ -196,15 +198,17 @@ class ViewInfo extends Component {
 				divider
 				leftElement={<Avatar bgcolor={this.getColor(item.text)} text={title} />}
 				centerElement={{
-					primaryText: item.text,
+					primaryElement: {
+						primaryText: item.text,
+					},
 					secondaryText: item.creation,
 				}}
 				onPress={() => {
 					const message = this.state.message;
-					if (message.action.base_action != 'delete_' && message.action.base_action != 'update_') {
+					if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
 						const page = Page.VIEW_INFO_PAGE;
 						this.props.navigator.push({ id: page.id, name: page.name, data: item, callback: this.callback })
-					} else if (message.action.base_action == 'delete_') {
+					} else if (message.info.base_action == 'delete_') {
 						const x = Object.assign({}, message, {
 							_id: Math.round(Math.random() * 1000000),
 							text: item.text,
@@ -218,7 +222,7 @@ class ViewInfo extends Component {
 							item_id: item.id,
 							message: x
 						});
-					} else if (message.action.base_action == 'update_') {
+					} else if (message.info.base_action == 'update_') {
 						let page = Page.EDIT_INFO_PAGE;
 						this.props.navigator.replace({
 							id: page.id, name: page.name, botName: this.state.botName,
@@ -232,7 +236,7 @@ class ViewInfo extends Component {
 
 	render() {
 		return (
-			<Container>
+			<View style={styles.base}>
 				<Toolbar
 					leftElement="arrow-back"
 					onLeftElementPress={() => {
@@ -248,9 +252,8 @@ class ViewInfo extends Component {
 					renderFooter={this.renderFooter}
 					renderRow={(item) => this.renderListItem(item)}
 				/>
-			</Container>)
+			</View>)
 	}
-
 }
 
 ViewInfo.propTypes = propTypes;

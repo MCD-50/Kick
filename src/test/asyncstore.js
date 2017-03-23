@@ -9,378 +9,343 @@ var reactNativeStore = {};
 var dbName = "db_store";
 
 var Model = function (tableName, databaseData) {
-    this.tableName = tableName;
-    this.databaseData = databaseData;
-    this._where = null;
-    this._limit = 100;
-    this._offset = 0;
-    return this;
+	this.tableName = tableName;
+	this.databaseData = databaseData;
+	this._where = null;
+	this._limit = 100;
+	this._offset = 0;
+	return this;
 };
 
 
 reactNativeStore.createDataBase = function () {
-    var self = this;
-    return new Promise(function (resolve, reject) {
+	var self = this;
+	return new Promise(function (resolve, reject) {
 
-        AsyncStorage.setItem(dbName, JSON.stringify({}), function (err) {
-            if (err) {
-                reject(err)
-            } else {
-                resolve();
-            }
-        });
+		AsyncStorage.setItem(dbName, JSON.stringify({}), function (err) {
+			if (err) {
+				reject(err)
+			} else {
+				resolve();
+			}
+		});
 
-    });
+	});
 };
 
 
 reactNativeStore.saveTable = function (tableName, tableData) {
-    var self = this;
-    return new Promise(function (resolve, reject) {
+	var self = this;
+	return new Promise(function (resolve, reject) {
 
-        self.getItem(dbName).then(function (databaseData) {
-            databaseData[tableName] = tableData || {
-                'totalrows': 0,
-                'autoinc': 1,
-                'rows': {}
-            };
+		self.getItem(dbName).then(function (databaseData) {
+			databaseData[tableName] = tableData || {
+				'totalrows': 0,
+				'autoinc': 1,
+				'rows': {}
+			};
 
-            AsyncStorage.setItem(dbName, JSON.stringify(databaseData), function (err) {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(databaseData);
-                }
-            })
-        });
+			AsyncStorage.setItem(dbName, JSON.stringify(databaseData), function (err) {
+				if (err) {
+					reject(err)
+				} else {
+					resolve(databaseData);
+				}
+			})
+		});
 
-    });
+	});
 }
 
 
 reactNativeStore.table = function (tableName) {
-    var self = this;
-    return new Promise(function (resolve, reject) {
-        return self.getItem(dbName).then(function (databaseData) {
+	var self = this;
+	return new Promise(function (resolve, reject) {
+		return self.getItem(dbName).then(function (databaseData) {
 
-            if (!databaseData)
-                self.createDataBase().then(function () {
-                    self.saveTable(tableName).then(function (databaseData) {
-                        var model = new Model(tableName, databaseData ? databaseData : {});
-                        resolve(model);
-                    })
-                });
-            else {
+			if (!databaseData)
+				self.createDataBase().then(function () {
+					self.saveTable(tableName).then(function (databaseData) {
+						var model = new Model(tableName, databaseData ? databaseData : {});
+						resolve(model);
+					})
+				});
+			else {
 
-                if (!databaseData[tableName]) {
-                    self.saveTable(tableName).then(function (databaseData) {
-                        var model = new Model(tableName, databaseData ? databaseData : {});
-                        resolve(model);
-                    });
-                } else {
-                    var model = new Model(tableName, databaseData ? databaseData : {});
-                    resolve(model);
-                }
-            }
-        })
-    });
+				if (!databaseData[tableName]) {
+					self.saveTable(tableName).then(function (databaseData) {
+						var model = new Model(tableName, databaseData ? databaseData : {});
+						resolve(model);
+					});
+				} else {
+					var model = new Model(tableName, databaseData ? databaseData : {});
+					resolve(model);
+				}
+			}
+		})
+	});
 }
 
 reactNativeStore.getItem = function (key) {
-    return new Promise(function (resolve, reject) {
-        AsyncStorage.getItem(key, function (err, res) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(JSON.parse(res));
-            }
-        });
-    });
+	return new Promise(function (resolve, reject) {
+		AsyncStorage.getItem(key, function (err, res) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(JSON.parse(res));
+			}
+		});
+	});
 };
 
 // where
 Model.prototype.where = function (data) {
-    this._where = data || null;
-    return this;
+	this._where = data || null;
+	return this;
 }
 
 // limit
 Model.prototype.limit = function (data) {
-    this._limit = data || 100;
-    return this;
+	this._limit = data || 100;
+	return this;
 }
 
 Model.prototype.offset = function (data) {
-    this._offset = data || 0;
-    return this;
+	this._offset = data || 0;
+	return this;
 }
 
 Model.prototype.init = function () {
-    this.where();
-    this.limit();
-    this.offset();
-    return this;
+	this.where();
+	this.limit();
+	this.offset();
+	return this;
 }
 
 
-function updateRecursive(o, key, value) {
-    for (var i in o) {
-        if (i == key) {
-            o[i] = value;
-
-            return true;
-        } else if (typeof (o[i]) == "object" && o[i] != null) {
-            return updateRecursive(o[i], key, value);
-        }
-    }
+function searchRecursive(o, key, value) {
+	for (var i in o) {
+		if (i == key && o[i] == value) {
+			return true;
+		} else if (typeof o[i] == "object" && o[i] != null) {
+			return searchRecursive(o[i], key, value);
+		}
+	}
 }
 
-function updateValue(o, key, value) {
 
-    var fullObj = o;
-
-    for (var i in o) {
-        if (i == key) {
-            o[i] = value;
-
-            return fullObj;
-        } else if (typeof (o[i]) == "object" && o[i] != null) {
-            if (updateRecursive(o[i], key, value)) {
-
-                return fullObj;
-            }
-        }
-    }
+function traverse(o, key, value) {
+	for (var i in o) {
+		if (i == key && o[i] == value) {
+			return true;
+		} else if (typeof o[i] == "object" && o[i] != null) {
+			if (searchRecursive(o[i], key, value)) {
+				return true;
+			}
+		}
+	}
 }
+
 
 Model.prototype.update = function (data, callback) {
-    var me = this;
-    var results = [];
-    var rows = this.databaseData[this.tableName]["rows"];
-    var hasParams = false;
-    if (this._where) {
-        hasParams = true;
-    }
+	var me = this;
+	var results = [];
+	var rows = this.databaseData[this.tableName]["rows"];
+	var hasParams = false;
+	if (this._where) {
+		hasParams = true;
+	}
 
-    if (hasParams) {
-        for (var row in rows) {
-            for (var key in this._where) {
-                var val = this.traverse(rows[row], key, this._where[key]);
-                if (val == true) {
-                    //console.log(data);
-                    if (key == '_id') {
-                        this.databaseData[this.tableName]["rows"][row] = data;
-                    } else {
-                        new_data = Object.assign({}, data, {
-                            _id: rows[row]._id ? rows[row]._id : null,
-                        });
-                        //console.log(new_data);
-                        this.databaseData[this.tableName]["rows"][row] = new_data;
-                    }
-                    results.push(this.databaseData[this.tableName]["rows"][row]);
-                }
-            }
-        }
-        reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (data) {
-            if (callback) {
-                callback(results)
-            }
-        }, function (err) {
-            if (callback) {
-                callback(err)
-            }
-        });
-        this.init();
-    }
-    else {
-        if (callback) {
-            callback(null)
-        }
-    }
+	if (hasParams) {
+		for (var row in rows) {
+			for (var key in this._where) {
+				var val = traverse(rows[row], key, this._where[key]);
+				if (val == true) {
+					if (key == '_id') {
+						this.databaseData[this.tableName]["rows"][row] = data;
+					} else {
+						new_data = Object.assign({}, data, {
+							_id: rows[row]._id ? rows[row]._id : null,
+						});
+						this.databaseData[this.tableName]["rows"][row] = new_data;
+					}
+					results.push(this.databaseData[this.tableName]["rows"][row]);
+				}
+			}
+		}
+		reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (data) {
+			if (callback) {
+				callback(results)
+			}
+		}, function (err) {
+			if (callback) {
+				callback(err)
+			}
+		});
+		this.init();
+	}
+	else {
+		if (callback) {
+			callback(null)
+		}
+	}
 };
 
 Model.prototype.updateById = function (id, data, callback) {
-    this.where({
-        _id: id
-    });
-    return this.update(data, callback);
+	this.where({
+		_id: id
+	});
+	return this.update(data, callback);
 }
 
 Model.prototype.remove = function (callback) {
+	var results = [];
+	var rows = this.databaseData[this.tableName]["rows"];
+	var deleted_ids = [];
+	var hasParams = false;
+	if (this._where) {
+		hasParams = true;
+	}
+	var counter = 0;
+	if (hasParams) {
+		for (var row in rows) {
+			for (var key in this._where) {
+				var val = traverse(rows[row], key, this._where[key]);
+				if (val == true) {
+					counter += 1;
+					deleted_ids.push(this.databaseData[this.tableName]["rows"][row]['_id']);
+					delete this.databaseData[this.tableName]["rows"][row];
+					this.databaseData[this.tableName]["totalrows"]--;
+				}
+			}
+		}
 
-    var results = [];
-    var rows = this.databaseData[this.tableName]["rows"];
-    var deleted_ids = [];
-    var hasParams = false;
-    if (this._where) {
-        hasParams = true;
-    }
-
-    var counter = 0;
-    if (hasParams) {
-        for (var row in rows) {
-            for (var key in this._where) {
-                var val = this.traverse(rows[row], key, this._where[key]);
-                if (val == true) {
-                    counter += 1;
-                    deleted_ids.push(this.databaseData[this.tableName]["rows"][row]['_id']);
-                    delete this.databaseData[this.tableName]["rows"][row];
-                    this.databaseData[this.tableName]["totalrows"]--;
-                }
-            }
-        }
-
-    } else {
-        counter = 0;
-        for (var row in rows) {
-            counter += 1;
-            deleted_ids.push(this.databaseData[this.tableName]["rows"][row]['_id']);
-            delete this.databaseData[this.tableName]["rows"][row];
-            this.databaseData[this.tableName]["totalrows"]--;
-        }
-    }
-    this.init();
-
-    if (counter === deleted_ids.length && callback) {
-        reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (data) {
-            if (callback) {
-                var return_data = {
-                    results: data,
-                    deleted_ids: deleted_ids
-                }
-                callback(return_data)
-            }
-        }, function (err) {
-            results.push(err)
-            if (callback) {
-                var return_data = {
-                    error: err,
-                    deleted_ids: deleted_ids
-                }
-                callback(return_data)
-            }
-        })
-    }
-    else if (callback && deleted_ids.length === 0) {
-        callback(null)
-    }
+	} else {
+		counter = 0;
+		for (var row in rows) {
+			counter += 1;
+			deleted_ids.push(this.databaseData[this.tableName]["rows"][row]['_id']);
+			delete this.databaseData[this.tableName]["rows"][row];
+			this.databaseData[this.tableName]["totalrows"]--;
+		}
+	}
+	this.init();
+	if (counter === deleted_ids.length && callback) {
+		reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (data) {
+			if (callback) {
+				var return_data = {
+					results: data,
+					deleted_ids: deleted_ids
+				}
+				callback(return_data)
+			}
+		}, function (err) {
+			results.push(err)
+			if (callback) {
+				var return_data = {
+					error: err,
+					deleted_ids: deleted_ids
+				}
+				callback(return_data)
+			}
+		})
+	}
+	else if (callback && deleted_ids.length === 0) {
+		callback(null)
+	}
 
 };
 
 Model.prototype.removeById = function (id, callback) {
 
-    this.where({
-        _id: id
-    });
+	this.where({
+		_id: id
+	});
 
-    return this.remove(callback);
+	return this.remove(callback);
 }
 
 Model.prototype.add = function (data, callback) {
-    var autoinc = this.databaseData[this.tableName].autoinc;
-    data._id = autoinc;
-    this.databaseData[this.tableName].rows[autoinc] = data;
-    this.databaseData[this.tableName].autoinc += 1;
-    this.databaseData[this.tableName].totalrows += 1;
-    reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (added_data) {
-        if (callback) {
-            callback(data)
-        }
-    }, function (err) {
-        if (callback) {
-            callback(err)
-        }
-    });
+	var autoinc = this.databaseData[this.tableName].autoinc;
+	data._id = autoinc;
+	this.databaseData[this.tableName].rows[autoinc] = data;
+	this.databaseData[this.tableName].autoinc += 1;
+	this.databaseData[this.tableName].totalrows += 1;
+	reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (added_data) {
+		if (callback) {
+			callback(data)
+		}
+	}, function (err) {
+		if (callback) {
+			callback(err)
+		}
+	});
 
-    this.init();
+	this.init();
 }
 
 Model.prototype.multiAdd = function (data, callback) {
-    var self = this;
+	var self = this;
 
-    data.forEach(function (value, index) {
-        var autoinc = self.databaseData[self.tableName].autoinc;
-        value._id = autoinc + index;
-        self.databaseData[self.tableName].rows[autoinc] = value;
-        self.databaseData[self.tableName].autoinc += 1;
-        self.databaseData[self.tableName].totalrows += 1;
-    });
+	data.forEach(function (value, index) {
+		var autoinc = self.databaseData[self.tableName].autoinc;
+		value._id = autoinc + index;
+		self.databaseData[self.tableName].rows[autoinc] = value;
+		self.databaseData[self.tableName].autoinc += 1;
+		self.databaseData[self.tableName].totalrows += 1;
+	});
 
-    reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (added_data) {
-        if (callback) {
-            callback(data)
-        }
-    }, function (err) {
-        if (callback) {
-            callback(err)
-        }
-    });
+	reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName]).then(function (added_data) {
+		if (callback) {
+			callback(data)
+		}
+	}, function (err) {
+		if (callback) {
+			callback(err)
+		}
+	});
 
-    this.init();
+	this.init();
 }
 
 Model.prototype.get = function (id) {
-    this.where({
-        _id: id
-    });
-    return this.find();
+	this.where({
+		_id: id
+	});
+	return this.find();
 }
-
-Model.prototype.searchRecursive = function (o, key, value) {
-    for (var i in o) {
-        if (i == key && o[i] == value) {
-            return true;
-        } else if (typeof o[i] == "object" && o[i] != null) {
-            return this.searchRecursive(o[i], key, value);
-        }
-    }
-}
-
-
-Model.prototype.traverse = function (o, key, value) {
-    for (var i in o) {
-        if (i == key && o[i] == value) {
-            return true;
-        } else if (typeof o[i] == "object" && o[i] != null) {
-            if (this.searchRecursive(o[i], key, value)) {
-                return true;
-            }
-        }
-    }
-}
-
 
 Model.prototype.find = function () {
 
-    var results = [];
-    var rows = this.databaseData[this.tableName]["rows"];
+	var results = [];
+	var rows = this.databaseData[this.tableName]["rows"];
 
-    var hasParams = false;
-    if (this._where) {
-        hasParams = true;
-    }
+	var hasParams = false;
+	if (this._where) {
+		hasParams = true;
+	}
 
-    if (hasParams) {
-        for (var row in rows) {
-            for (var key in this._where) {
-                var val = this.traverse(rows[row], key, this._where[key]);
-                if (val == true) {
-                    results.push(rows[row]);
-                }
-            }
-        }
-    } else {
-        for (var row in rows) {
-            results.push(rows[row]);
-        }
-    }
+	if (hasParams) {
+		for (var row in rows) {
+			for (var key in this._where) {
+				var val = traverse(rows[row], key, this._where[key]);
+				if (val == true) {
+					results.push(rows[row]);
+				}
+			}
+		}
+	} else {
+		for (var row in rows) {
+			results.push(rows[row]);
+		}
+	}
 
-    if (typeof (this._limit) == 'number') {
-        return results.slice(this._offset, this._limit + this._offset);
-    } else {
-        this.init();
-        return results;
-    }
+	if (typeof (this._limit) == 'number') {
+		return results.slice(this._offset, this._limit + this._offset);
+	} else {
+		this.init();
+		return results;
+	}
 }
 
 module.exports = reactNativeStore;

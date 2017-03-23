@@ -3,34 +3,35 @@ import {
 	View,
 	StyleSheet,
 	Text,
+	Alert,
 	ListView,
 	TouchableOpacity
 } from 'react-native';
-
-import _ from 'lodash.groupby';
+import SwipeListView from '../../customUI/SwipeListView.js';
 import Fluxify from 'fluxify';
 import Toolbar from '../../customUI/ToolbarUI.js';
 import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
-import Container from '../../Container.js';
 import { Page } from '../../../enums/Page.js';
 import Avatar from '../../customUI/Avatar.js';
 import Badge from '../../customUI/Badge.js';
 import ListItem from '../../customUI/ListItem.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import { Type } from '../../../enums/Type.js';
-import { EMAIL, FULL_NAME, DOMAIN, MOBILE_NUMBER, LAST_ACTIVE } from '../../../constants/AppConstant.js';
+import { EMAIL, FULL_NAME, DOMAIN, LAST_ACTIVE } from '../../../constants/AppConstant.js';
 import { getStoredDataFromKey, setData } from '../../../helpers/AppStore.js';
 import Progress from '../../customUI/Progress.js';
 import StateHelper from '../../../helpers/StateHelper.js';
 import StateClient from '../../../helpers/StateClient.js';
-
-
+import Toast from '../../customUI/Toast.js';
 window.navigator.userAgent = "react-native"
 import InternetHelper from '../../../helpers/InternetHelper.js';
 import SocketHelper from '../../../helpers/SocketHelper.js';
 
 
 const styles = StyleSheet.create({
+	base: {
+		flex: 1
+	},
 	container: {
 		flex: 1,
 	},
@@ -38,7 +39,28 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center'
-	}
+	},
+	rowBack: {
+		alignItems: 'center',
+		flex: 1,
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	backRightBtn: {
+		alignItems: 'flex-start',
+		bottom: 0,
+		justifyContent: 'center',
+		position: 'absolute',
+		top: 0,
+		paddingLeft: 15,
+		width: 120
+	},
+	backRightBtnRight: {
+		backgroundColor: '#e63237',
+		marginTop: 0,
+		marginBottom: 1,
+		right: 0
+	},
 });
 
 const propTypes = {
@@ -75,15 +97,13 @@ class ChatListPage extends Component {
 		this.state = {
 			searchText: '',
 			isLoading: true,
-			listOfChats: [],
+			chatList: [],
 			dataSource: ds.cloneWithRows([]),
 			title: 'Updating...',
 			userId: '',
 			userName: '',
 			domain: '',
-			number: '',
 		};
-
 
 		this.onSocketConnectCallback = this.onSocketConnectCallback.bind(this);
 		this.onRoomJoinedCallback = this.onRoomJoinedCallback.bind(this);
@@ -103,25 +123,23 @@ class ChatListPage extends Component {
 		this.rightElementPress = this.rightElementPress.bind(this);
 		this.renderElement = this.renderElement.bind(this);
 		this.renderLastMessageTime = this.renderLastMessageTime.bind(this);
-
 		this.callback = this.callback.bind(this);
+
+		this.showAlert = this.showAlert.bind(this);
+		this.deleteRow = this.deleteRow.bind(this);
 	}
 
 	componentWillMount() {
 		getStoredDataFromKey(EMAIL).then((mail) => {
-			getStoredDataFromKey(MOBILE_NUMBER).then((number) => {
-				getStoredDataFromKey(FULL_NAME).then((name) => {
-					getStoredDataFromKey(DOMAIN).then((dom) => {
-						this.setState({ domain: dom });
-						this.setState({ userName: name });
-						this.setState({ userId: mail });
-						this.setState({ number: number });
-						Fluxify.doAction('setAppData', {
-							user_id: mail,
-							user_name: name,
-							number: number,
-							domain: dom
-						});
+			getStoredDataFromKey(FULL_NAME).then((name) => {
+				getStoredDataFromKey(DOMAIN).then((dom) => {
+					this.setState({ domain: dom });
+					this.setState({ userName: name });
+					this.setState({ userId: mail });
+					Fluxify.doAction('setAppData', {
+						user_id: mail,
+						user_name: name,
+						domain: dom
 					});
 				});
 			});
@@ -143,7 +161,7 @@ class ChatListPage extends Component {
 		DatabaseHelper.getAllChats((results) => {
 			let chats = Object.keys(results.rows).map((key) => results.rows[key]);
 			chats = CollectionUtils.getSortedArrayByDate(chats);
-
+			console.log(chats);
 			this.updateFluxState(chats);
 			this.getMessageOnStart(chats);
 		});
@@ -154,30 +172,24 @@ class ChatListPage extends Component {
 	}
 
 	onChatListChanged(chatList) {
-
 		if (Page.CHAT_LIST_PAGE.id == StateClient.currentPageId)
 			this.setStateData(chatList);
 	}
 
 	setStateData(chats) {
-		chats = chats.filter((n) => n.info.is_added_to_chat_list == true);
+		chats = chats.filter((x) => x.info.is_added_to_chat_list == true);
 		this.setState({
-			listOfChats: chats,
+			chatList: chats,
 			dataSource: ds.cloneWithRows(chats),
 			isLoading: false,
 		});
 	}
 
-
 	getMessageOnStart(x) {
 		let chats = x.filter((m) => m.info.chat_type != Type.BOT);
 		chats = CollectionUtils.getUniqueItemsByChatRoom(chats);
-
 		const rooms = chats.map((n) => n.info.room);
 		const last_message_times = chats.map((n) => n.info.last_message_time);
-
-
-
 		InternetHelper.checkIfNetworkAvailable((isConnected) => {
 			if (isConnected) {
 				InternetHelper.getAllMessages(this.state.domain, {
@@ -195,70 +207,77 @@ class ChatListPage extends Component {
 		if (this.state.title == 'Updating...') {
 			this.setState({ title: 'Kick' });
 		}
-		console.log(messages);
 		if (messages.length < 1)
 			return;
 		let finalChatList = [];
 		let finalChatItemsList = [];
+		const chatList = StateClient.chatList;
 
-		let chatList = StateClient.chatList;
-
-		messages = CollectionUtils.getSortedArrayByRoom(messages);
-		const chats = CollectionUtils.getUniqueItems(messages);
-
-		for (const chat of chats) {
-			if (messages.length > 0) {
-				let ignoreOwner = false;
-				let chatToBeUpdated = this.hasChatInChatList(chatList, chat);
-				if (chatToBeUpdated == null) {
-					ignoreOwner = true;
-					chatToBeUpdated = CollectionUtils.createChatFromResponse(chat);
-				}
-				const newChatItemsToBeAdded = messages.filter((m) => m.room == chatToBeUpdated.info.room);
-				messages = messages.filter((m) => m.room != chatToBeUpdated.info.room);
-				if (newChatItemsToBeAdded && newChatItemsToBeAdded.length > 0) {
-					const res = this.updateChat(newChatItemsToBeAdded,
-						chatToBeUpdated, StateClient.appData, chatList,
-						StateClient.currentChat, StateClient.currentChatMessages, ignoreOwner);
-					console.log(res);
-					finalChatList.push(res.chat);
-					finalChatItemsList = finalChatItemsList.concat(res.chatItems);
-				}
-			} else {
-				break;
-			}
+		for (const chat of messages) {
+			let chatToBeUpdated = this.hasChatInChatList(chatList, chat);
+			chatToBeUpdated = (chatToBeUpdated == null)
+				? CollectionUtils.createChatFromResponse(chat, this.state.userId)
+				: chatToBeUpdated;
+			const response = this.updateChat(chat.chat_items, chatToBeUpdated);
+			finalChatList.push(response.chat);
+			finalChatItemsList = finalChatItemsList.concat(response.chatItems);
 		}
 
+
+
+		// for (const chat of chats) {
+		// 	if (messages.length > 0) {
+		// 		let ignoreOwner = false;
+		// 		let chatToBeUpdated = this.hasChatInChatList(chatList, chat);
+		// 		if (chatToBeUpdated == null) {
+		// 			ignoreOwner = true;
+		// 			chatToBeUpdated = CollectionUtils.createChatFromResponse(chat, {
+		// 				userId: this.state.userId,
+		// 				userName: this.state.userName
+		// 			});
+		// 		}
+		// 		const newChatItemsToBeAdded = messages.filter((m) => m.meta.room == chatToBeUpdated.info.room);
+		// 		messages = messages.filter((m) => m.meta.room != chatToBeUpdated.info.room);
+		// 		if (newChatItemsToBeAdded && newChatItemsToBeAdded.length > 0) {
+		// 			const res = this.updateChat(newChatItemsToBeAdded,
+		// 				chatToBeUpdated, StateClient.appData, chatList,
+		// 				StateClient.currentChat, StateClient.currentChatMessages, ignoreOwner);
+		// 			finalChatList.push(res.chat);
+		// 			finalChatItemsList = finalChatItemsList.concat(res.chatItems);
+		// 		}
+		// 	} else {
+		// 		break;
+		// 	}
+		// }
+
 		if (finalChatList && finalChatList.length > 0) {
-			const sortedChatList = CollectionUtils.pushNewDataAndSortArray(chatList, finalChatList);
-			console.log(finalChatItemsList)
-			DatabaseHelper.addNewChat(sortedChatList, (msg) => {
+			finalChatList = CollectionUtils.pushNewDataAndSortArray(chatList, finalChatList).slice();
+			finalChatItemsList = finalChatItemsList.slice();
+			console.log(finalChatList);
+			DatabaseHelper.addNewChat(finalChatList, (msg) => {
 				console.log('chat list page', msg);
 				DatabaseHelper.addNewChatItem(finalChatItemsList, (msg) => {
 					console.log('chat list page', msg);
-				})
+				});
 			}, true);
-			this.updateFluxState(sortedChatList);
+			this.updateFluxState(finalChatList);
 		}
 	}
 
 	hasChatInChatList(chatList, chat) {
-		const x = chatList.filter((n) => n.info.room == chat.room);
+		const x = chatList.filter((n) => n.info.room == chat.meta.room);
 		return x.length > 0 ? x[0] : null;
 	}
 
-	updateChat(newChatItemsToBeAdded, chatToBeUpdated, ownerInfo, chatList,
-		currentChat, currentMessages, ignoreOwner = false) {
-		let chatItems = [];
-		if (chatToBeUpdated.info.chat_type == Type.BOT) {
-			chatItems = newChatItemsToBeAdded.map((x) => {
-				return CollectionUtils.createChatItemFromResponse(x, chatToBeUpdated.info.room, chatToBeUpdated.title)
-			});
-		} else {
-			chatItems = newChatItemsToBeAdded.map((x) => {
-				return CollectionUtils.createChatItemFromResponse(x, chatToBeUpdated.info.room, null)
-			});
-		}
+	updateChat(newChatItemsToBeAdded, chatToBeUpdated) {
+		console.log(chatToBeUpdated, newChatItemsToBeAdded);
+		let chatList = StateClient.chatList;
+		let currentChat = StateClient.currentChat;
+		let currentMessages = StateClient.currentChatMessages;
+
+		let chatItems = newChatItemsToBeAdded.map((x) => {
+			return CollectionUtils.createChatItemFromResponse(x, chatToBeUpdated)
+		});
 
 		if (chatItems.length > 0) {
 			chatItems = CollectionUtils.getSortedChatItems(chatItems);
@@ -274,7 +293,6 @@ class ChatListPage extends Component {
 					new_message_count: new_message_count,
 				}
 			});
-
 			if (currentChat && currentChat.info && currentChat.info.room == chatToBeUpdated.info.room) {
 				let isGroupChat = chatToBeUpdated.info.chat_type == Type.GROUP ? true : false;
 				let botAirchatObject = chatItems.map((item) => {
@@ -283,9 +301,6 @@ class ChatListPage extends Component {
 				currentMessages = botAirchatObject.concat(currentMessages);
 				Fluxify.doAction('updateCurrentChat', chatToBeUpdated);
 				Fluxify.doAction('updateCurrentChatMessages', currentMessages);
-				if (chatToBeUpdated.info.chat_type == Type.BOT) {
-					Fluxify.doAction('updateRecentAction', botAirchatObject[botAirchatObject.length - 1].action)
-				}
 			}
 		}
 		return {
@@ -294,7 +309,7 @@ class ChatListPage extends Component {
 		};
 	}
 
-	callback(fromWhichPage, chat) {
+	callback(fromWhichPage, chat = null) {
 		switch (fromWhichPage.id) {
 			case Page.BOT_LIST_PAGE.id:
 				break;
@@ -318,7 +333,9 @@ class ChatListPage extends Component {
 	}
 
 	onChangeText(e) {
-		this.setState({ searchText: e });
+		this.setState({
+			searchText: e,
+		});
 	}
 
 	getColor(name) {
@@ -332,10 +349,9 @@ class ChatListPage extends Component {
 		return null
 	}
 
-
 	getIcon(type) {
 		if (type == Type.BOT) {
-			return 'toys';
+			return 'headset';
 		} else if (type == Type.GROUP) {
 			return 'people';
 		} else {
@@ -360,22 +376,23 @@ class ChatListPage extends Component {
 	}
 
 	renderListItem(chat) {
-		const searchText = this.state.searchText.toLowerCase();
-		if (searchText.length > 0 && chat.title.toLowerCase().indexOf(searchText) < 0) {
-			return null;
-		}
+		// const searchText = this.state.searchText.toLowerCase();
+		// console.log(searchText);
+		// if (searchText.length > 0 && chat.title.toLowerCase().indexOf(searchText) < 0) {
+		// 	return null;
+		// }
 
 		let title = (chat.title.length > 1) ? chat.title[0] + chat.title[1].toUpperCase() : ((chat.title.length > 0) ? chat.title[0] : 'UN');
 		return (
 			<ListItem
 				divider
-
 				leftElement={<Avatar bgcolor={this.getColor(chat.title)} text={title} />}
-
 				centerElement={{
-					primaryText: chat.title,
+					primaryElement: {
+						primaryText: chat.title,
+						icon: this.getIcon(chat.info.chat_type)
+					},
 					secondaryText: chat.sub_title,
-					tertiaryText: this.getIcon(chat.info.chat_type)
 				}}
 
 				rightElement={{
@@ -412,9 +429,7 @@ class ChatListPage extends Component {
 				page = Page.CONTACT_LIST_PAGE;
 				break;
 			case 2:
-				//creating new group page
-				isForGroupChat = true;
-				page = Page.CONTACT_LIST_PAGE
+				page = Page.NEW_GROUP_PAGE
 				break;
 			case 3: page = Page.NEW_CONTACT_PAGE
 				break;
@@ -435,45 +450,128 @@ class ChatListPage extends Component {
 					userId: state.userId,
 					domain: state.domain
 				},
-				isForGroupChat: isForGroupChat
 			});
 		}
+	}
 
+	showAlert(title, body, callback = null) {
+		Alert.alert(
+			title,
+			body,
+			[{
+				text: 'OK', onPress: () => {
+					if (callback)
+						callback()
+				}
+			},
+			{
+				text: 'CANCEL', onPress: () => {
+					console.log('CANCEL Pressed');
+				}
+			}]
+		);
+	}
+
+
+
+	deleteRow(secId, rowId, _rowMap) {
+		const newData = this.state.chatList;
+		let chat = newData[rowId];
+		const rowMap = Object.assign({}, _rowMap);
+		if (chat.info.chat_type == Type.GROUP) {
+			this.showAlert(null, 'Are you sure you want to delete and exit this group?',
+				() => {
+					this.setState({ isLoading: true });
+					InternetHelper.removeFromGroup(
+						this.state.domain,
+						chat.info.room,
+						this.state.userId,
+						(res) => {
+							DatabaseHelper.removeChatByQuery([{ room: chat.info.room }], (results) => {
+								rowMap[`${secId}${rowId}`].closeRow();
+								newData.splice(rowId, 1);
+								Fluxify.doAction('updateChatList', newData);
+								this.setState({ isLoading: false });
+								Toast.show('Chat deleted');
+							});
+						})
+				});
+		} else {
+			this.showAlert(null, 'Are you sure you want to delete this chat?',
+				() => {
+					chat = Object.assign({}, chat, {
+						info: {
+							...chat.info,
+							is_added_to_chat_list: false
+						}
+					});
+
+					DatabaseHelper.updateChatByQuery({ room: chat.info.room }, chat,
+						(results) => {
+							DatabaseHelper.removeChatItemsByQuery({ chat_room: chat.info.room },
+								(results) => {
+									rowMap[`${secId}${rowId}`].closeRow();
+									newData.splice(rowId, 1);
+									Fluxify.doAction('updateChatList', newData);
+									Toast.show('Chat deleted');
+								});
+						});
+				});
+		}
 	}
 
 	renderElement() {
 		if (this.state.isLoading) {
 			return (
 				<View style={styles.progress}>
-					<Progress color={['#3f51b5']} size={50} duration={300} />
+					<Progress />
 				</View>)
 		}
-
 		return (
-			<ListView
+			<SwipeListView
 				dataSource={this.state.dataSource}
 				keyboardShouldPersistTaps='always'
 				keyboardDismissMode='interactive'
 				enableEmptySections={true}
-				ref={'LISTVIEW'}
 				renderRow={(item) => this.renderListItem(item)}
+				renderHiddenRow={(data, secId, rowId, rowMap) => (
+					<View style={styles.rowBack}>
+						<TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnRight]} onPress={_ => this.deleteRow(secId, rowId, rowMap)}>
+							<Text style={{
+								color: 'white',
+								fontSize: 16,
+							}}>Delete</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+				leftOpenValue={0}
+				rightOpenValue={-120}
 			/>
 		);
-	}
 
+		// <ListView
+		// 	dataSource={this.state.dataSource}
+		// 	keyboardShouldPersistTaps='always'
+		// 	keyboardDismissMode='interactive'
+		// 	enableEmptySections={true}
+		// 	ref={'LISTVIEW'}
+		// 	renderRow={(item) => this.renderListItem(item)}
+		// />
+
+
+	}
+	// searchable={{
+	// 						autoFocus: true,
+	// 						placeholder: 'Search chat...',
+	// 						onChangeText: e => this.onChangeText(e),
+	// 						onSearchClosed: () => this.setState({ searchText: '' }),
+	// 					}}
 
 	render() {
 		return (
-			<Container>
+			<View style={styles.base}>
 				<Toolbar
 					centerElement={this.state.title}
-					searchable={{
-						autoFocus: true,
-						placeholder: 'Search chat...',
-						onChangeText: e => this.onChangeText(e),
-						onSearchClosed: () => this.setState({ searchText: '' }),
-					}}
-
 					rightElement={{
 						menu: { labels: menuItems },
 					}}
@@ -482,7 +580,7 @@ class ChatListPage extends Component {
 				/>
 				{this.renderElement()}
 
-			</Container>
+			</View>
 		)
 	}
 }

@@ -18,12 +18,21 @@ class DatabaseHelper {
 	}
 
 	checkIfChatExists(data, callback) {
-		this.getChatByQuery({ room: data.info.room }, (results) => {
-			if (results && results.length > 0)
-				callback(true);
-			else
-				callback(false);
-		})
+		if (data.info.chat_type == Type.BOT) {
+			this.getChatByQuery({ room: data.info.room }, (results) => {
+				if (results && results.length > 0)
+					callback(true, { room: data.info.room });
+				else
+					callback(false, null);
+			});
+		} else {
+			this.getChatByQuery({ room: data.info.room }, (results) => {
+				if (results && results.length > 0)
+					callback(true, { room: data.info.room });
+				else
+					callback(false, null);
+			});
+		}
 	}
 
 	// Read operation on chats and chatItems;
@@ -49,30 +58,6 @@ class DatabaseHelper {
 		})
 	}
 
-
-
-	getChatById(chatIds, callback) {
-		this.items = [];
-		this.setLock(true);
-		this.getChatByIdInternal(chatIds, callback);
-	}
-
-	getChatByIdInternal(chatIds, callback) {
-
-		let length = chatIds.length;
-		if (length == 0) {
-			this.setLock(false);
-			callback(this.items);
-			return;
-		}
-
-		DB.CHATS.get_id(chatIds[length - 1], (results) => {
-			results.map((item) => this.items.push(item));
-			chatIds.pop();
-			this.getChatByIdInternal(chatIds, callback);
-		})
-	}
-
 	getAllChatItemForChatByChatRoom(chatIds, callback) {
 		this.items = [];
 		this.setLock(true);
@@ -94,34 +79,15 @@ class DatabaseHelper {
 		})
 	}
 
-	getChatItemById(chatIds, callback) {
-		this.items = [];
-		thid.setLock(true);
-		this.getChatItemByIdInternal(chatIds, callback);
-	}
-
-	getChatItemByIdInternal(chatIds, callback) {
-		let length = chatIds.length;
-		if (length == 0) {
-			this.setLock(false);
-			callback(this.items);
-			return;
-		}
-
-		DB.CHATITEMS.get_id(chatIds[length - 1], (results) => {
-			results.map((item) => this.items.push(item));
-			chatIds.pop();
-			this.getChatItemByIdInternal(chatIds, callback);
-		});
-	}
-
 	//create operation on chats and chatItems;
+
 	addNewChat(datas, callback, forceUpdate = false) {
 		this.setLock(true);
 		this.addNewChatInternal(datas, callback, forceUpdate);
 	}
 
-	addNewChatInternal(datas, callback, forceUpdate) {
+	addNewChatInternal(_datas, callback, forceUpdate) {
+		const datas = _datas.slice();
 		let length = datas.length;
 		if (length == 0) {
 			this.setLock(false);
@@ -129,8 +95,10 @@ class DatabaseHelper {
 			return;
 		}
 		this.checkIfChatExists(datas[length - 1], (val, query) => {
+			//console.log(val, query);
+			//console.log(datas);
 			if (val) {
-				if (forceUpdate) {
+				if (forceUpdate && query) {
 					DB.CHATS.update(query, datas[length - 1], (results) => {
 						datas.pop();
 						this.addNewChatInternal(datas, callback, forceUpdate);
@@ -153,7 +121,8 @@ class DatabaseHelper {
 		this.addNewChatItemInternal(datas, callback);
 	}
 
-	addNewChatItemInternal(datas, callback) {
+	addNewChatItemInternal(_datas, callback) {
+		const datas = _datas.slice();
 		let length = datas.length;
 		if (length == 0) {
 			this.setLock(false);
@@ -171,26 +140,6 @@ class DatabaseHelper {
 
 	//update operation on chats and chatItems;
 
-	updateChat(chatIds, datas, callback) {
-		this.setLock(true);
-		this.updateChatInternal(chatIds, datas, callback);
-	}
-
-	updateChatInternal(chatIds, datas, callback) {
-		let length = chatIds.length;
-		if (length == 0) {
-			this.setLock(false);
-			callback('Updated chats');
-			return;
-		}
-
-		DB.CHATS.update_id(chatIds[length - 1], datas[length - 1], (results) => {
-			chatIds.pop();
-			datas.pop();
-			this.updateChatInternal(chatIds, datas, callback);
-		})
-	}
-
 	updateChatByQuery(query, data, callback) {
 		this.setLock(true);
 		this.updateChatByQueryInternal(query, data, callback);
@@ -205,54 +154,34 @@ class DatabaseHelper {
 
 
 	//delete operation on chats and chatItems; 
-
-	removeChatById(chatIds, callback) {
+	removeChatByQuery(rooms, callback) {
 		this.setLock(true);
-		this.removeChatByIdInternal(chatIds, callback);
+		this.removeChatByQueryInternal(rooms, callback);
 	}
 
-
-	removeChatByIdInternal(chatIds, callback) {
-		let length = chatIds.length;
+	removeChatByQueryInternal(_rooms, callback) {
+		const rooms = _rooms.slice();
+		let length = rooms.length;
 		if (length == 0) {
 			this.setLock(false);
 			callback('Removed chats');
 			return;
 		}
 
-		DB.CHATS.remove_id(chatIds[length - 1], (results) => {
-			chatIds.pop();
-			this.removeChatItemsByQuery({ chat_id: chatIds[length - 1] })
-			this.removeChatByIdInternal(chatIds, callback);
+		DB.CHATS.remove(rooms[length - 1], (results) => {
+			const chat_room = rooms[length - 1].room
+			this.removeChatItemsByQuery({ chat_room: chat_room }, (results) => {
+				rooms.pop();
+				this.removeChatByQueryInternal(rooms, callback);
+			});
 		})
 	}
 
 	removeChatItemsByQuery(query, callback) {
 		DB.CHATITEMS.remove(query, (results) => {
-			callback();
+			callback(results);
 		})
 	}
-
-
-	removeChatItemById(chatIds, callback) {
-		this.setLock(true);
-		this.removeChatByIdInternal(chatIds, callback);
-	}
-
-	removeChatItemByIdInternal(chatIds, callback) {
-		let length = chatIds.length;
-		if (length == 0) {
-			this.setLock(false);
-			callback('Removed chats');
-			return;
-		}
-		DB.CHATITEMS.remove_id(chatItemId, (results) => {
-			chatIds.pop();
-			this.removeChatItemByIdInternal(chatIds, callback);
-		})
-	}
-
-
 }
 
 const database = new DatabaseHelper();

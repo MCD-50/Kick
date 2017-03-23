@@ -5,11 +5,10 @@ const StateClient = Fluxify.createStore({
 	id: 'StateClient',
 	initialState: {
 		appData: null,
-		chatList: [],
-		recentAction:null,
-		currentChatMessages: [],
-		currentChat: null,
 		currentPageId: null,
+		chatList: [],
+		currentChat: null,
+		currentChatMessages: [],
 	},
 
 	actionCallbacks: {
@@ -32,12 +31,11 @@ const StateClient = Fluxify.createStore({
 		updateCurrentPageId: (updater, currentPageId) => {
 			updater.set({ currentPageId: currentPageId })
 		},
-		updateRecentAction : (updater, recentAction)=>{
-			const obj = Object.assign({}, recentAction);
-			updater.set({recentAction : recentAction})
-		},
-		removeData : (updater) => {
-			updater.set({ recentAction: null, currentChat:null, currentChatMessages:[] });
+		removeData: (updater) => {
+			updater.set({
+				currentChat: null,
+				currentChatMessages: []
+			});
 		}
 	}
 });

@@ -73,7 +73,7 @@ const styles = {
 	},
 	tickView: {
 		flexDirection: 'row',
-		marginRight: 10,
+		marginRight: 5,
 	}
 };
 
@@ -221,7 +221,7 @@ class BubbleUI extends React.Component {
 		if (currentMessage.user._id !== this.props.user._id) {
 			return;
 		}
-		if (currentMessage.sent || currentMessage.received) {
+		if (currentMessage.sent) {
 			return (
 				<View style={styles.tickView}>
 					{currentMessage.sent && <Text style={[styles.tick, this.props.tickStyle]}>✓</Text>}
@@ -311,7 +311,7 @@ class BubbleUI extends React.Component {
 }
 
 
-BubbleUI.PropTypes = propTypes;
+BubbleUI.propTypes = propTypes;
 BubbleUI.defaultProps = defaultProps;
 BubbleUI.contextTypes = contextTypes;
 

@@ -14,8 +14,6 @@ export const FULL_NAME = 'FULL_NAME';
 export const FIRST_NAME = 'FIRST_NAME';
 export const LAST_NAME = 'LAST_NAME';
 
-export const MOBILE_NUMBER = 'MOBILE_NUMBER';
-
 export const APP_DATA = 'APP_DATA';
 
 export const LEFTMARGIN = 16;
@@ -69,7 +67,6 @@ const last_message_time = 'lastMessageTime';
 
 
 const email = 'email';
-const number = 'number';
 
 const description = 'description';
 const syntax = 'syntax';

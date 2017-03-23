@@ -40,7 +40,6 @@ const last_active = 'lastActive';
 const last_message_time = 'lastMessageTime';
 
 const email = 'email';
-const number = 'number';
 
 const description = 'description';
 const syntax = 'syntax';
@@ -111,14 +110,14 @@ createDatabase = (db) => {
         + is_added_to_chat_list + " BOOLEAN," + chat_type + " TEXT," + room + " TEXT,"
         + image + " BLOB," + new_message_count + " INTEGER," + last_active + " TEXT,"
         + last_message_time + " TEXT," 
-        + email + " TEXT," + number + " TEXT," 
+        + email + " TEXT," +
         + description + " TEXT," + syntax + " TEXT," + syntax_description + " TEXT,"
         ")";
 
 
     let personalTable = "CREATE TABLE IF NOT EXISTS " + table_personal_chat + "("
         + id + " INTEGER PRIMARY KEY AUTOINCREMENT," + chat_id + " INTEGER,"
-        + email + " TEXT," + number + " TEXT,"
+        + email + " TEXT,"
         + "FOREIGN KEY ( chatId ) REFERENCES chat ( id )" + ")";
 
     let botTable = "CREATE TABLE IF NOT EXISTS " + table_bot_chat + "("
