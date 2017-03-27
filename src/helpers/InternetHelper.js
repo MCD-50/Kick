@@ -12,7 +12,7 @@ class InternetHelper {
 	login(full_url, alertCallback, successCallback) {
 		let index = full_url.lastIndexOf('api');
 		let ping_url = full_url.substring(0, index);
-
+		
 		fetch(ping_url + 'api/method/ping', {
 			method: "POST",
 			headers: {

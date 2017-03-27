@@ -10,6 +10,7 @@ import {
 	Linking,
 	Alert,
 	ScrollView,
+	StatusBar
 } from 'react-native';
 
 import Fluxify from 'fluxify';
@@ -25,8 +26,9 @@ import {
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import { Page } from '../../../enums/Page.js';
 import { Type } from '../../../enums/Type.js';
-
-var frappeIcon = require('../../../res/images/frappe.png');
+import Toast from '../../customUI/Toast.js';
+var frappeIcon = require('../../../res/appIcon.png');
+var backgroundImage = require('../../../res/backgroundImage.png');
 
 const styles = StyleSheet.create({
 	base: {
@@ -34,6 +36,7 @@ const styles = StyleSheet.create({
 	},
 	container: {
 		flex: 1,
+
 	},
 	view: {
 		flex: 1,
@@ -53,7 +56,8 @@ const styles = StyleSheet.create({
 		color: 'black',
 		fontSize: 17,
 		borderWidth: 1.2,
-		borderColor: '#b2b2b2',
+		borderColor: 'transparent',
+		backgroundColor: 'white',
 		borderRadius: 3,
 		padding: 5,
 		paddingLeft: 10,
@@ -62,6 +66,12 @@ const styles = StyleSheet.create({
 	image: {
 		width: 80,
 		height: 80,
+	},
+	backgroundImage: {
+		flex: 1,
+		width: null,
+		height: null,
+		resizeMode: 'cover'
 	}
 });
 
@@ -120,6 +130,8 @@ class LoginPage extends Component {
 		this.onType = this.onType.bind(this);
 		this.renderSignIn = this.renderSignIn.bind(this);
 		this.addAllUsers = this.addAllUsers.bind(this);
+		this.saveData = this.saveData.bind(this);
+		this.checkIfSameCredential = this.checkIfSameCredential.bind(this);
 	}
 
 
@@ -134,25 +146,46 @@ class LoginPage extends Component {
 	login() {
 		this.setState({ showProgress: true, });
 		if (this.isAllowed()) {
-
-			let domain = this.state.domain.trim().toLowerCase();
-			let email = this.state.email.trim().toLowerCase();
-			let password = this.state.password;
-
-			let full_url = 'http://' + domain + '/api/method/login?' + 'usr=' + email + '&pwd=' + password;
-			InternetHelper.login(full_url, (title, body) => {
-				this.showAlert(title, body);
-			}, (msg) => {
-				setData(DOMAIN, domain);
-				setData(EMAIL, email);
-				setData(FULL_URL, full_url);
-				setData(FULL_NAME, msg.full_name)
-				this.resolveServerUrl();
-			})
+			this.checkIfSameCredential((old_email) => {
+				if (old_email && old_email.toLowerCase() != this.state.email.toLowerCase()) {
+					this.showAlert("Email doesn't match", "Your previous email does not matches with entered email. All data will be erased. You want to continue?",
+						() => {
+							DatabaseHelper.eraseEverything((msg) => {
+								this.saveData();
+							})
+						})
+				} else {
+					this.saveData();
+				}
+			});
 		} else {
 			this.showAlert('Info...', 'Please fill in all the details');
 		}
 	}
+
+	saveData() {
+		let domain = this.state.domain.trim().toLowerCase();
+		let email = this.state.email.trim().toLowerCase();
+		let password = this.state.password;
+		let full_url = 'http://' + domain + '/api/method/login?' + 'usr=' + email + '&pwd=' + password;
+		InternetHelper.login(full_url, (title, body) => {
+			this.showAlert(title, body);
+		}, (msg) => {
+			setData(DOMAIN, domain);
+			setData(EMAIL, email);
+			setData(FULL_URL, full_url);
+			setData(FULL_NAME, msg.full_name)
+			this.resolveServerUrl();
+		})
+	}
+
+	checkIfSameCredential(callback) {
+		getStoredDataFromKey(EMAIL)
+			.then((email) => {
+				callback(email);
+			})
+	}
+
 
 	cleanDomain(domain) {
 		let array = domain.split("/");
@@ -220,12 +253,17 @@ class LoginPage extends Component {
 
 	}
 
-	showAlert(title, body) {
+	showAlert(title, body, callback = null) {
 		this.setState({ showProgress: false, });
 		Alert.alert(
 			title,
 			body,
-			[{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+			[{
+				text: 'OK', onPress: () => {
+					if (callback)
+						callback();
+				}
+			}]
 		);
 	}
 
@@ -254,97 +292,97 @@ class LoginPage extends Component {
 
 	render() {
 		return (
-			<View style={styles.base}>
-				<ScrollView style={styles.container} keyboardDismissMode='interactive'>
+			<Image style={styles.backgroundImage} source={backgroundImage}>
+				<StatusBar backgroundColor='black' barStyle='light-content' />
+				<View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
+					<Image source={frappeIcon} style={styles.image} />
+				</View>
+				<View style={[styles.base]}>
+					<ScrollView style={[styles.container]} keyboardDismissMode='interactive'>
+						<View style={{ flex: 1, justifyContent: 'center', marginTop: 50 }}>
+							<View style={styles.view}>
+								<TextInput style={styles.textInput}
+									placeholder='Domain'
+									editable={!this.state.showProgress}
+									onChange={(e) => this.onType(e, 1)}
+									placeholderTextColor={this.props.placeholderTextColor}
+									multiline={false}
+									autoCapitalize='sentences'
+									enablesReturnKeyAutomatically={true}
+									underlineColorAndroid="transparent" />
+							</View>
 
-					<View style={{ alignItems: 'center', justifyContent: 'center', marginTop: UPMARGIN, marginBottom: DOWNMARGIN }}>
-						<Image source={frappeIcon} style={styles.image} />
-					</View>
+							<View style={styles.view}>
+								<TextInput style={styles.textInput}
+									placeholder='Email'
+									editable={!this.state.showProgress}
+									onChange={(e) => this.onType(e, 2)}
+									placeholderTextColor={this.props.placeholderTextColor}
+									multiline={false}
+									autoCapitalize='sentences'
+									enablesReturnKeyAutomatically={true}
+									underlineColorAndroid="transparent"
+								/>
+							</View>
 
-					<View style={styles.view}>
-						<TextInput style={styles.textInput}
-							placeholder='Domain...'
-							editable={!this.state.showProgress}
-							onChange={(e) => this.onType(e, 1)}
-							placeholderTextColor={this.props.placeholderTextColor}
-							multiline={false}
-							autoCapitalize='sentences'
-							enablesReturnKeyAutomatically={true}
-							underlineColorAndroid="transparent" />
-					</View>
+							<View style={styles.view}>
+								<TextInput style={styles.textInput}
+									placeholder='Password'
+									editable={!this.state.showProgress}
+									onChange={(e) => this.onType(e, 3)}
+									placeholderTextColor={this.props.placeholderTextColor}
+									multiline={false}
+									autoCapitalize='sentences'
+									secureTextEntry={true}
+									enablesReturnKeyAutomatically={true}
+									underlineColorAndroid="transparent"
+								/>
+							</View>
 
-					<View style={styles.view}>
-						<TextInput style={styles.textInput}
-							placeholder='Email...'
-							editable={!this.state.showProgress}
-							onChange={(e) => this.onType(e, 2)}
-							placeholderTextColor={this.props.placeholderTextColor}
-							multiline={false}
-							autoCapitalize='sentences'
-							enablesReturnKeyAutomatically={true}
-							underlineColorAndroid="transparent"
-						/>
-					</View>
+							<TouchableOpacity style={{
+								alignItems: 'flex-end', justifyContent: 'flex-end', marginLeft: LEFTMARGIN,
+								marginRight: RIGHTMARGIN,
+								marginTop: RIGHTMARGIN,
+								marginBottom: RIGHTMARGIN,
+							}}
+								disabled={this.state.showProgress}
+								onPress={() => { this.forgotPassword() }}
+								accessibilityTraits="button">
+								<Text style={[styles.text, { color: '#0086ff', fontSize: 14 }]}>Forgot Password?</Text>
+							</TouchableOpacity>
 
-					<View style={styles.view}>
-						<TextInput style={styles.textInput}
-							placeholder='Password...'
-							editable={!this.state.showProgress}
-							onChange={(e) => this.onType(e, 3)}
-							placeholderTextColor={this.props.placeholderTextColor}
-							multiline={false}
-							autoCapitalize='sentences'
-							secureTextEntry={true}
-							enablesReturnKeyAutomatically={true}
-							underlineColorAndroid="transparent"
-						/>
-					</View>
+							<View style={[styles.view, { minWidth: 100, backgroundColor: '#0086ff' }]}>
+								<TouchableOpacity style={{
+									alignItems: 'center',
+									justifyContent: 'center',
+									padding: 15,
+									paddingBottom: 8,
+									paddingTop: 8
+								}}
+									onPress={() => this.login()}
+									accessibilityTraits="button">
+									<Text style={[styles.text, { color: 'white', fontSize: 16 }]}>Login</Text>
+								</TouchableOpacity>
+							</View>
 
-					<TouchableOpacity style={{
-						alignItems: 'flex-end', justifyContent: 'flex-end', marginLeft: LEFTMARGIN,
-						marginRight: RIGHTMARGIN,
-						marginTop: RIGHTMARGIN,
-						marginBottom: RIGHTMARGIN,
-					}}
-						disabled={this.state.showProgress}
-						onPress={() => { this.forgotPassword() }}
-						accessibilityTraits="button">
-						<Text style={[styles.text, { color: '#5E64FF', fontSize: 14 }]}>Forgot Password?</Text>
-					</TouchableOpacity>
 
-					<TouchableOpacity style={[styles.view, {
-						borderRadius: 3,
-						backgroundColor: '#5E64FF',
-					}]}
-						disabled={this.state.showProgress}
-						onPress={() => { this.login() }}
-						accessibilityTraits="button">
-						<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-							<Text style={[styles.text, {
-								padding: 10,
-								paddingLeft: 10,
-								paddingRight: 10
-							}]}>Sign In</Text>
+							<TouchableOpacity style={{
+								alignItems: 'center', justifyContent: 'center', marginLeft: LEFTMARGIN,
+								marginRight: RIGHTMARGIN,
+								marginTop: RIGHTMARGIN,
+								marginBottom: RIGHTMARGIN
+							}}
+								disabled={this.state.showProgress}
+								onPress={() => { this.signUp() }}
+								accessibilityTraits="button">
+								<Text style={[styles.text, { color: '#0086ff', fontSize: 14 }]}>Don't have an account? Sign Up</Text>
+							</TouchableOpacity>
+
+							{this.renderSignIn()}
 						</View>
-
-					</TouchableOpacity>
-
-
-					<TouchableOpacity style={{
-						alignItems: 'center', justifyContent: 'center', marginLeft: LEFTMARGIN,
-						marginRight: RIGHTMARGIN,
-						marginTop: RIGHTMARGIN,
-						marginBottom: RIGHTMARGIN
-					}}
-						disabled={this.state.showProgress}
-						onPress={() => { this.signUp() }}
-						accessibilityTraits="button">
-						<Text style={[styles.text, { color: '#5E64FF', fontSize: 14 }]}>Don't have an account? Sign Up</Text>
-					</TouchableOpacity>
-
-					{this.renderSignIn()}
-				</ScrollView>
-			</View>
+					</ScrollView>
+				</View>
+			</Image>
 		);
 	}
 }

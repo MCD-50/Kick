@@ -203,32 +203,43 @@ class ViewInfo extends Component {
 					},
 					secondaryText: item.creation,
 				}}
+
 				onPress={() => {
-					const message = this.state.message;
-					if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
-						const page = Page.VIEW_INFO_PAGE;
-						this.props.navigator.push({ id: page.id, name: page.name, data: item, callback: this.callback })
-					} else if (message.info.base_action == 'delete_') {
-						const x = Object.assign({}, message, {
-							_id: Math.round(Math.random() * 1000000),
-							text: item.text,
-							createdAt: new Date(),
-							user: {
-								_id: this.state.owner.userId,
-								name: this.state.owner.userName,
-							}
-						});
-						this.popAndSetData({
-							item_id: item.id,
-							message: x
-						});
-					} else if (message.info.base_action == 'update_') {
-						let page = Page.EDIT_INFO_PAGE;
-						this.props.navigator.replace({
-							id: page.id, name: page.name, botName: this.state.botName,
-							owner: this.state.owner, message: message, item: item, callback: this.props.route.callback
-						});
-					}
+					const page = Page.VIEW_INFO_PAGE;
+					this.props.navigator.replace({
+						id: page.id,
+						name: page.name,
+						data: data,
+						botName: this.state.chat.title,
+						owner: this.state.owner,
+						message: message,
+						callback: this.props.route.callback
+					});
+					// const message = this.state.message;
+					// if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
+					// 	const page = Page.VIEW_INFO_PAGE;
+					// 	this.props.navigator.push({ id: page.id, name: page.name, data: item, callback: this.callback })
+					// } else if (message.info.base_action == 'delete_') {
+					// 	const x = Object.assign({}, message, {
+					// 		_id: Math.round(Math.random() * 1000000),
+					// 		text: item.text,
+					// 		createdAt: new Date(),
+					// 		user: {
+					// 			_id: this.state.owner.userId,
+					// 			name: this.state.owner.userName,
+					// 		}
+					// 	});
+					// 	this.popAndSetData({
+					// 		item_id: item.id,
+					// 		message: x
+					// 	});
+					// } else if (message.info.base_action == 'update_') {
+					// 	let page = Page.EDIT_INFO_PAGE;
+					// 	this.props.navigator.replace({
+					// 		id: page.id, name: page.name, botName: this.state.botName,
+					// 		owner: this.state.owner, message: message, item: item, callback: this.props.route.callback
+					// 	});
+					// }
 				}} />
 		);
 	}

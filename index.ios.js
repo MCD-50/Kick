@@ -13,6 +13,9 @@ import Kick from './Kick.js';
 import { NotificationsAndroid } from 'react-native-notifications';
 import Container from './Container.js';
 
+
+//user this for automatic linking 
+//react-native link package_name && rnpm link package_name
 class chatApp extends Component {
 
 	constructor(params) {

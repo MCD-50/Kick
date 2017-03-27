@@ -182,6 +182,16 @@ class DatabaseHelper {
 			callback(results);
 		})
 	}
+
+	eraseEverything(callback) {
+		DB.CHATS.erase_db((x) => {
+			console.log(x);
+			DB.CHATITEMS.erase_db((y) => {
+				console.log(y);
+				callback('done');
+			})
+		})
+	}
 }
 
 const database = new DatabaseHelper();

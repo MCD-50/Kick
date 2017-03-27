@@ -7,7 +7,7 @@ import React, {
 } from 'react'
 
 
-class AlertHelper extends Component {
+const AlertHelper =  {
 	showAlert(title, body, callback = null) {
 		Alert.alert(
 			title,
@@ -15,13 +15,19 @@ class AlertHelper extends Component {
 			[{
 				text: 'OK', onPress: () => {
 					if (callback)
-						callback()
+						callback({
+							Ok: true,
+							Cancel: false
+						})
 				}
 			},
 			{
 				text: 'CANCEL', onPress: () => {
 					if (callback)
-						callback()
+						callback({
+							Ok: false,
+							Cancel: true
+						})
 				}
 			}]
 		);

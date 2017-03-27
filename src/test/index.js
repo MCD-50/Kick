@@ -122,7 +122,7 @@ RNDBModel.create_db = function (db) {
      */
     me.erase_db = function (callback) {
         ReactNativeStore.table(me.db_name).then(function (collection) {
-            collection.remove(function (data_removed) {
+            collection.erase(function (data_removed) {
                 if (callback) {
                     callback(data_removed);
                 }
@@ -179,7 +179,6 @@ RNDBModel.create_db = function (db) {
             });
         });
     };
-
 };
 
 module.exports = RNDBModel;

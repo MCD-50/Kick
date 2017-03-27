@@ -301,11 +301,7 @@ class ContactListPage extends Component {
 						this.props.navigator.pop();
 					}}
 					centerElement={this.state.title}
-					rightElement={{
-						menu: {
-							labels: ['Add contact']
-						}
-					}}
+					
 					onRightElementPress={(action) => {
 						if (action.index == 0) {
 							let page = Page.NEW_CONTACT_PAGE;

@@ -282,7 +282,7 @@ class NewGroupPage extends Component {
 	getBackground(color = '#f0f0f0') {
 		if (this.state.selectedCount > 0)
 			return color;
-		return '#b2b2b2';
+		return '#dddddd';
 	}
 
 	renderFooter() {

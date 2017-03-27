@@ -71,7 +71,7 @@ const propTypes = {
 };
 
 const menuItems = [
-	'Bots', 'Contacts', 'New group', 'New contact', 'Profile', 'Settings'
+	'Bots', 'Contacts', 'New group', 'Profile', 'Settings'
 ]
 
 const defaultProps = {
@@ -431,11 +431,11 @@ class ChatListPage extends Component {
 			case 2:
 				page = Page.NEW_GROUP_PAGE
 				break;
-			case 3: page = Page.NEW_CONTACT_PAGE
+			// case 3: page = Page.NEW_CONTACT_PAGE
+			// 	break;
+			case 3: page = Page.OWNER_INFO_PAGE
 				break;
-			case 4: page = Page.OWNER_INFO_PAGE
-				break;
-			case 5: page = Page.SETTINGS_PAGE
+			case 4: page = Page.SETTINGS_PAGE
 				break;
 		}
 

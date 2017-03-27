@@ -33,6 +33,7 @@ import Progress from '../../customUI/Progress.js';
 import CheckBox from '../../customUI/CheckBox.js';
 import RippleFeedback from '../../customUI/utils/ripplefeedback.js';
 
+
 const styles = StyleSheet.create({
 	base: {
 		flex: 1
@@ -184,13 +185,14 @@ class OwnerInfoPage extends Component {
 							</View>
 							<View style={{
 								flex: 1, marginLeft: 15,
-								alignItems: 'flex-start', justifyContent: 'center'}}>
+								alignItems: 'flex-start', justifyContent: 'center'
+							}}>
 								<Text style={styles.textBold}>{chat.full_name}</Text>
 								<Text style={styles.text}>{CollectionUtils.getLastActive(chat.last_active.split('.')[0])}</Text>
 							</View>
 						</View>
 					</View>
-					<ScrollView style={{ flex: 1}} keyboardDismissMode='interactive'>
+					<ScrollView style={{ flex: 1 }} keyboardDismissMode='interactive'>
 						<Card fullWidth='0'>
 							<View style={styles.view}>
 								<Text style={styles.textBodyBold}>Email</Text>
@@ -246,6 +248,10 @@ class OwnerInfoPage extends Component {
 					onRightElementPress={(action) => {
 						if (action.index == 0) {
 							setData(FIRST_RUN, 'true');
+							setTimeout(() => {
+								const page = Page.LOGIN_PAGE;
+								this.props.navigator.resetTo({ id: page.id, name: page.name, showFirstRunPage: true })
+							}, 100);
 						}
 					}}
 					translucent={true}

@@ -259,20 +259,16 @@ class ChatPage extends Component {
 
 	onViewInfo(message, item = null) {
 		let page = Page.VIEW_INFO_PAGE;
-		if (item == null)
-			this.props.navigator.push({
-				id: page.id,
-				name: page.name,
-				data: message.info.items[0],
-				callback: this.callback
-			});
-		else
-			this.props.navigator.push({
-				id: page.id,
-				name: page.name,
-				data: item,
-				callback: this.callback
-			});
+		let data = item == null ? message.info.items[0] : item;
+		this.props.navigator.push({
+			id: page.id,
+			name: page.name,
+			data: data,
+			botName: this.state.chat.title,
+			owner: this.state.owner,
+			message: message,
+			callback: this.callback
+		});
 	}
 
 	onViewMore(message) {
@@ -288,33 +284,33 @@ class ChatPage extends Component {
 	}
 
 	onItemClicked(message, index) {
-		const item = message.info.items[index];
-		if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
-			this.onViewInfo(null, item);
-		} else if (message.info.base_action == 'delete_') {
-			const owner = this.state.owner;
-			message = Object.assign({}, message, {
-				_id: Math.round(Math.random() * 1000000),
-				text: item.text,
-				createdAt: new Date(),
-				user: {
-					_id: owner.userId,
-					name: owner.userName,
-				}
-			});
-			this.onSend([message], item.id);
-		} else if (message.info.base_action == 'update_') {
-			let page = Page.EDIT_INFO_PAGE;
-			this.props.navigator.push({
-				id: page.id,
-				name: page.name,
-				botName: this.state.chat.title,
-				owner: this.state.owner,
-				message: message,
-				item: item,
-				callback: this.callback
-			});
-		}
+		this.onViewInfo(null, message.info.items[index]);
+		// if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
+		// 	this.onViewInfo(null, item);
+		// } else if (message.info.base_action == 'delete_') {
+		// 	const owner = this.state.owner;
+		// 	message = Object.assign({}, message, {
+		// 		_id: Math.round(Math.random() * 1000000),
+		// 		text: item.text,
+		// 		createdAt: new Date(),
+		// 		user: {
+		// 			_id: owner.userId,
+		// 			name: owner.userName,
+		// 		}
+		// 	});
+		// 	this.onSend([message], item.id);
+		// } else if (message.info.base_action == 'update_') {
+		// 	let page = Page.EDIT_INFO_PAGE;
+		// 	this.props.navigator.push({
+		// 		id: page.id,
+		// 		name: page.name,
+		// 		botName: this.state.chat.title,
+		// 		owner: this.state.owner,
+		// 		message: message,
+		// 		item: item,
+		// 		callback: this.callback
+		// 	});
+		// }
 	}
 
 	callback(data = null) {

@@ -44,7 +44,6 @@ reactNativeStore.saveTable = function (tableName, tableData) {
 				'autoinc': 1,
 				'rows': {}
 			};
-
 			AsyncStorage.setItem(dbName, JSON.stringify(databaseData), function (err) {
 				if (err) {
 					reject(err)
@@ -219,7 +218,6 @@ Model.prototype.remove = function (callback) {
 				}
 			}
 		}
-
 	} else {
 		counter = 0;
 		for (var row in rows) {
@@ -255,6 +253,8 @@ Model.prototype.remove = function (callback) {
 	}
 
 };
+
+
 
 Model.prototype.removeById = function (id, callback) {
 
@@ -346,6 +346,20 @@ Model.prototype.find = function () {
 		this.init();
 		return results;
 	}
+}
+
+Model.prototype.erase = function (callback) {
+	this.databaseData[this.tableName] = null;
+	reactNativeStore.saveTable(this.tableName, this.databaseData[this.tableName])
+		.then(function (data) {
+			if (callback) {
+				callback(data)
+			}
+		}, function (err) {
+			if (callback) {
+				callback(err)
+			}
+		});
 }
 
 module.exports = reactNativeStore;

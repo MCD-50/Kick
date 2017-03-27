@@ -5,6 +5,8 @@ import {
 	Image,
 	StatusBar,
 	Alert,
+	TouchableOpacity,
+	Text
 } from 'react-native';
 
 import Fluxify from 'fluxify';
@@ -16,7 +18,8 @@ import { Page } from '../../../enums/Page.js';
 import Progress from '../../customUI/Progress.js';
 import { Type } from '../../../enums/Type.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
-var frappeIcon = require('../../../res/images/frappe.png');
+import Icon from '../../customUI/Icon.js';
+var frappeIcon = require('../../../res/appIcon.png');
 
 
 
@@ -57,11 +60,12 @@ class SplashPage extends Component {
 		this.state = {
 			isFirstRun: false,
 			showProgress: false,
+			loginError: false,
 		}
 
 		this.navigate = this.navigate.bind(this);
 		this.showAlert = this.showAlert.bind(this);
-		this.renderProgressRing = this.renderProgressRing.bind(this);
+		this.renderFooter = this.renderFooter.bind(this);
 		this.setServerUrl = this.setServerUrl.bind(this);
 		this.resolveServerUrl = this.resolveServerUrl.bind(this);
 		this.addAllUsers = this.addAllUsers.bind(this);
@@ -98,7 +102,7 @@ class SplashPage extends Component {
 							this.showAlert(title, body);
 						}, () => {
 							this.resolveServerUrl(full_url);
-						})
+						});
 					} else {
 						page = Page.LOGIN_PAGE;
 						setTimeout(() => {
@@ -116,7 +120,6 @@ class SplashPage extends Component {
 				});
 		}
 	}
-
 
 	resolveServerUrl(full_url) {
 		let index = full_url.lastIndexOf('api');
@@ -159,7 +162,7 @@ class SplashPage extends Component {
 	}
 
 	addAllUsers(users, domain, email) {
-		
+
 		domain = domain.toLowerCase().trim();
 		email = email.toLowerCase().trim();
 		InternetHelper.getAllUsers(domain,
@@ -171,7 +174,7 @@ class SplashPage extends Component {
 							userId: email
 						});
 				}
-				
+
 				DatabaseHelper.addNewChat(users, (msg) => {
 					//console.log(msg)
 					this.setState({ showProgress: false });
@@ -181,26 +184,45 @@ class SplashPage extends Component {
 			});
 	}
 
-
 	showAlert(title, body, navigateToOtherPage = true) {
-		this.setState({ showProgress: false });
-		let page = Page.LOGIN_PAGE;
+		this.setState({ showProgress: false, loginError: true });
 		Alert.alert(
 			title,
 			body,
 			[{
 				text: 'OK', onPress: () => {
-					if (navigateToOtherPage)
-						this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false })
+					console.log('OK pressed');
+					// if (navigateToOtherPage)
+					// 	this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false })
 				}
 			}]
 		);
 	}
 
-	renderProgressRing() {
+	renderFooter() {
 		if (this.state.showProgress) {
+			return (<Progress />)
+		} else if (this.state.loginError) {
 			return (
-				<Progress />)
+				<View style={{ alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+					<View style={{minWidth: 100, backgroundColor: '#0086ff' }}>
+						<TouchableOpacity style={{
+							alignItems: 'center',
+							justifyContent: 'center',
+							padding: 15,
+							paddingBottom: 5,
+							paddingTop: 5
+						}}
+							onPress={() => {
+								let page = Page.LOGIN_PAGE;
+								this.props.navigator.replace({ id: page.id, name: page.name, showFirstRunPage: false })
+							}}
+							accessibilityTraits="button">
+							<Text style={[styles.text, { color: 'white', fontSize: 16 }]}>Login</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			);
 		}
 		return null;
 	}
@@ -211,7 +233,9 @@ class SplashPage extends Component {
 				<StatusBar backgroundColor='black' barStyle='light-content' />
 				<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'black' }}>
 					<Image source={frappeIcon} style={styles.image} resizeMode="contain" />
-					{this.renderProgressRing()}
+					<View style={{ marginTop: 20 }}>
+						{this.renderFooter()}
+					</View>
 				</View>
 			</View>
 		);
