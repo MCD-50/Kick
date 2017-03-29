@@ -141,7 +141,7 @@ class ViewInfo extends Component {
 			return (
 				<TouchableOpacity style={[styles.view, {
 					borderRadius: 3,
-					backgroundColor: '#5E64FF',
+					backgroundColor: 'white',
 				}]}
 					onPress={() => {
 						this.pageCount += 1;
@@ -151,6 +151,7 @@ class ViewInfo extends Component {
 					<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
 						<Text style={[styles.text, {
 							padding: 10,
+							color:'black',
 							paddingLeft: 10,
 							paddingRight: 10
 						}]}>Load More</Text>
@@ -177,7 +178,6 @@ class ViewInfo extends Component {
 					} else {
 						this.setState({ hasMore: false });
 					}
-					console.log(this.state.items);
 				});
 			}
 		});
@@ -188,60 +188,43 @@ class ViewInfo extends Component {
 	}
 
 	renderListItem(item) {
-		const searchText = this.state.searchText.toLowerCase();
-		if (searchText.length > 0 && item.text.toLowerCase().indexOf(searchText) < 0) {
+		let x = Object.keys(item).map((key) => {
+			if (item[key].list_title_field != 0)
+				return item[key]
+		}).filter((nn) => nn != undefined || nn != null);
+		x = x.sort((x, y) => x.list_title_field > y.list_title_field ? 1 : -1);
+
+		const title = (x[0].fieldvalue.length > 1)
+			? x[0].fieldvalue[0].toUpperCase() + x[0].fieldvalue[1].toUpperCase()
+			: x[0].fieldvalue[0].toUpperCase();
+
+		if (x && x.length > 0) {
+			return (
+				<ListItem
+					divider
+					leftElement={<Avatar bgcolor={this.getColor(x[0].fieldvalue)} text={title} />}
+					centerElement={{
+						primaryElement: {
+							primaryText: x[0].fieldvalue,
+						},
+						secondaryText: this.state.botName,
+					}}
+					onPress={() => {
+						const page = Page.VIEW_INFO_PAGE;
+						this.props.navigator.replace({
+							id: page.id,
+							name: page.name,
+							data: item,
+							botName: this.state.botName,
+							owner: this.state.owner,
+							message: this.state.message,
+							callback: this.props.route.callback
+						});
+					}} />
+			);
+		} else {
 			return null;
 		}
-		let title = (item.text.length > 1) ? item.text[0].toUpperCase() + item.text[1].toUpperCase() : item.text[0].toUpperCase();
-		return (
-			<ListItem
-				divider
-				leftElement={<Avatar bgcolor={this.getColor(item.text)} text={title} />}
-				centerElement={{
-					primaryElement: {
-						primaryText: item.text,
-					},
-					secondaryText: item.creation,
-				}}
-
-				onPress={() => {
-					const page = Page.VIEW_INFO_PAGE;
-					this.props.navigator.replace({
-						id: page.id,
-						name: page.name,
-						data: data,
-						botName: this.state.chat.title,
-						owner: this.state.owner,
-						message: message,
-						callback: this.props.route.callback
-					});
-					// const message = this.state.message;
-					// if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
-					// 	const page = Page.VIEW_INFO_PAGE;
-					// 	this.props.navigator.push({ id: page.id, name: page.name, data: item, callback: this.callback })
-					// } else if (message.info.base_action == 'delete_') {
-					// 	const x = Object.assign({}, message, {
-					// 		_id: Math.round(Math.random() * 1000000),
-					// 		text: item.text,
-					// 		createdAt: new Date(),
-					// 		user: {
-					// 			_id: this.state.owner.userId,
-					// 			name: this.state.owner.userName,
-					// 		}
-					// 	});
-					// 	this.popAndSetData({
-					// 		item_id: item.id,
-					// 		message: x
-					// 	});
-					// } else if (message.info.base_action == 'update_') {
-					// 	let page = Page.EDIT_INFO_PAGE;
-					// 	this.props.navigator.replace({
-					// 		id: page.id, name: page.name, botName: this.state.botName,
-					// 		owner: this.state.owner, message: message, item: item, callback: this.props.route.callback
-					// 	});
-					// }
-				}} />
-		);
 	}
 
 

@@ -316,97 +316,77 @@ class ListItem extends PureComponent {
 
 			if (typeof centerElement === 'string') {
 				primaryText = centerElement;
+				content = (
+					<View style={styles.textViewContainer}>
+						<View style={styles.firstLine}>
+							<View style={styles.primaryTextContainer}>
+								<Text numberOfLines={1} style={styles.primaryText}>
+									{primaryText}
+								</Text>
+							</View>
+						</View>
+					</View>);
 			} else {
 				primaryText = centerElement.primaryElement.primaryText;
 				icon = centerElement.primaryElement.icon ? centerElement.primaryElement.icon : null;
 				secondaryText = centerElement.secondaryText;
 				tertiaryText = centerElement.tertiaryText;
-			}
 
+				const numberOfLines = !tertiaryText ?
+					getNumberOfSecondaryTextLines(this.state.numberOfLines) : 1;
 
-			const numberOfLines = !tertiaryText ?
-				getNumberOfSecondaryTextLines(this.state.numberOfLines) : 1;
-
-			if (tertiaryText != null && typeof tertiaryText != undefined) {
-				content = (
-					<View style={styles.textViewContainer}>
-						<View style={styles.firstLine}>
-							<View style={{ alignItems: 'center', justifyContent: 'center' }}>
-								{this.renderCenterElementIcon(icon)}
+				if (tertiaryText != null && typeof tertiaryText != undefined) {
+					content = (
+						<View style={styles.textViewContainer}>
+							<View style={styles.firstLine}>
+								<View style={{ alignItems: 'center', justifyContent: 'center' }}>
+									{this.renderCenterElementIcon(icon)}
+								</View>
+								<View style={styles.primaryTextContainer}>
+									<Text numberOfLines={1} style={styles.primaryText}>
+										{primaryText}
+									</Text>
+								</View>
 							</View>
-							<View style={styles.primaryTextContainer}>
-								<Text numberOfLines={1} style={styles.primaryText}>
-									{primaryText}
-								</Text>
-							</View>
+							{secondaryText &&
+								<View>
+									<Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
+										{secondaryText}
+									</Text>
+								</View>
+							}
+							{tertiaryText &&
+								<View>
+									<Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
+										{tertiaryText}
+									</Text>
+								</View>
+							}
 						</View>
-						{secondaryText &&
-							<View>
-								<Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
-									{secondaryText}
-								</Text>
+					);
+				} else {
+					content = (
+						<View style={styles.textViewContainer}>
+							<View style={[styles.firstLine, { marginBottom: 5 }]}>
+								<View style={{ alignItems: 'center', justifyContent: 'center' }}>
+									{this.renderCenterElementIcon(icon)}
+								</View>
+								<View style={styles.primaryTextContainer}>
+									<Text numberOfLines={1} style={styles.primaryText}>
+										{primaryText}
+									</Text>
+								</View>
 							</View>
-						}
-						{tertiaryText &&
-							<View>
-								<Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
-									{tertiaryText}
-								</Text>
-							</View>
-						}
-					</View>
-				);
-			} else {
-				content = (
-					<View style={styles.textViewContainer}>
-						<View style={[styles.firstLine, { marginBottom: 5 }]}>
-							<View style={{ alignItems: 'center', justifyContent: 'center' }}>
-								{this.renderCenterElementIcon(icon)}
-							</View>
-							<View style={styles.primaryTextContainer}>
-								<Text numberOfLines={1} style={styles.primaryText}>
-									{primaryText}
-								</Text>
-							</View>
-						</View>
-						{secondaryText &&
-							<View>
-								<Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
-									{secondaryText}
-								</Text>
-							</View>
-						}
-					</View>)
+							{secondaryText &&
+								<View>
+									<Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
+										{secondaryText}
+									</Text>
+								</View>
+							}
+						</View>)
+				}
 			}
-
-
-
-			// content = (
-			//     <View style={styles.textViewContainer}>
-			//         <View style={styles.firstLine}>
-			//             <View style={styles.primaryTextContainer}>
-			//                 <Text numberOfLines={1} style={styles.primaryText}>
-			//                     {primaryText}
-			//                 </Text>
-			//             </View>
-			//         </View>
-			//         {secondaryText &&
-			//             <View>
-			//                 <Text numberOfLines={numberOfLines} style={styles.secondaryText}>
-			//                     {secondaryText}
-			//                 </Text>
-			//             </View>
-			//         }
-
-			//         {tertiaryText &&
-			//             <View>
-			//                 <Text numberOfLines={numberOfLines} style={styles.tertiaryText}>
-			//                     {tertiaryText}
-			//                 </Text>
-			//             </View>
-			//         }
-			//     </View>
-			// );
 		}
 
 

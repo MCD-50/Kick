@@ -453,6 +453,23 @@ class CollectionUtils {
 		return arr;
 	}
 
+	getText = (value) => {
+		if (value && value.length > 0) {
+			return value;
+		} else {
+			return "It's empty in here";
+		}
+	}
+
+	capitalize(str) {
+		var pieces = str.split(" ");
+		for (var i = 0; i < pieces.length; i++) {
+			var j = pieces[i].charAt(0).toUpperCase();
+			pieces[i] = j + pieces[i].substr(1);
+		}
+		return pieces.join(" ");
+	}
+
 	getSortedResponseArrayByRoom = (listItems) => {
 		return listItems.sort((a, b) => {
 			return a.meta.room > b.meta.room ? -1 : (b.meta.room > a.meta.room ? 1 : 0);

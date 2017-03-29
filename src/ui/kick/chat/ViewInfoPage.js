@@ -36,9 +36,18 @@ const styles = StyleSheet.create({
 		fontSize: 17,
 	},
 
-	text: {
-		fontSize: 14,
+	textBold: {
+		color: 'white',
+		fontSize: 19,
+		marginBottom: 5,
 	},
+
+	text: {
+		color: 'white',
+		fontSize: 14,
+		marginBottom: 10,
+	},
+
 	textBodyBold: {
 		fontSize: 16,
 		color: 'black',
@@ -69,9 +78,10 @@ class ViewInfo extends Component {
 	constructor(params) {
 		super(params);
 		this.state = {
-			data: this.props.route.data,
+			item: this.props.route.item,
 			owner: this.props.route.owner,
 			botName: this.props.route.botName,
+			message: this.props.route.message,
 		}
 
 		this.addBackEvent = this.addBackEvent.bind(this);
@@ -92,13 +102,13 @@ class ViewInfo extends Component {
 
 	updateDoc() {
 		let page = Page.EDIT_INFO_PAGE;
-		this.props.navigator.push({
+		this.props.navigator.replace({
 			id: page.id,
 			name: page.name,
-			item: this.state.data,
-			botName: this.state.chat.title,
+			item: this.state.item,
+			botName: this.state.botName,
 			owner: this.state.owner,
-			message: message,
+			message: this.state.message,
 			callback: this.props.route.callback
 		});
 	}
@@ -106,16 +116,26 @@ class ViewInfo extends Component {
 	deleteDoc() {
 		AlertHelper.showAlert('Delete ?', 'This will delete the item from database. You sure you want to delete this?'
 			, (data) => {
-				if (data.ok) {
-					let page = Page.EDIT_INFO_PAGE;
-					this.props.navigator.replace({
-						id: page.id,
-						name: page.name,
-						item: this.state.data,
-						botName: this.state.botName,
-						owner: this.state.owner,
-						message: message,
-						callback: this.props.route.callback
+				console.log(this.state.item);
+				if (data.Ok) {
+					let page = Page.CHAT_PAGE;
+					const x = Object.assign({}, this.state.message, {
+						_id: Math.round(Math.random() * 1000000),
+						text: `Delete ${this.state.botName} where id is ${this.state.item["name"].fieldvalue}.`,
+						createdAt: new Date(),
+						user: {
+							_id: this.state.owner.userId,
+							name: this.state.owner.userName,
+						},
+						info: {
+							...this.state.message.info,
+							base_action: 'delete_',
+							items: [].concat(this.state.item)
+						}
+					});
+					this.popAndSetData({
+						item_id: this.state.item["name"].fieldvalue,
+						message: x
 					});
 				}
 			});
@@ -148,12 +168,14 @@ class ViewInfo extends Component {
 	}
 
 	renderView() {
-		console.log(this.state.data);
-		const components = Object.keys(this.state.data).map((key) => {
+		const components = Object.keys(this.state.item).map((key) => {
+			if (key == 'name')
+				return null;
+			console.log(this.state.item, key);
 			return (
 				<View key={key} style={styles.view}>
-					<Text style={styles.textBodyBold}>{key.trim().toUpperCase()}</Text>
-					<Text style={styles.textBody}>{this.state.data[key].trim()}</Text>
+					<Text style={styles.textBodyBold}>{CollectionUtils.capitalize(key)}</Text>
+					<Text style={[styles.text, { color: '#a0a0a0' }]}>{CollectionUtils.getText(this.state.item[key].fieldvalue)}</Text>
 				</View>
 			)
 		});
@@ -161,11 +183,9 @@ class ViewInfo extends Component {
 			<View style={styles.container}>
 				<View style={[{ backgroundColor: '#0086ff', height: 68, marginBottom: 2 }]}>
 					<View style={[styles.view, { flexDirection: 'row' }]}>
-						<View style={{
-							flex: 1, marginLeft: 15,
-							alignItems: 'flex-start', justifyContent: 'center'
-						}}>
-							<Text style={styles.textBold}>{this.state.data.name}</Text>
+						<View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
+							<Text style={[styles.textBold, { color: 'white' }]}>{this.state.botName}</Text>
+							<Text style={[styles.text, { color: 'white' }]}>{this.state.item["name"].fieldvalue}</Text>
 						</View>
 					</View>
 				</View>
@@ -187,7 +207,7 @@ class ViewInfo extends Component {
 						this.popAndSetData();
 					}}
 					centerElement=''
-					rightElement={['delete', 'update']}
+					rightElement={['delete', 'edit']}
 					onRightElementPress={(action) => {
 						if (action.index == 0)
 							this.deleteDoc()

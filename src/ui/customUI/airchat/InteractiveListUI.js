@@ -139,6 +139,7 @@ class InteractiveListUI extends React.Component {
 		this.capitalize = this.capitalize.bind(this);
 		this.getHeaderColor = this.getHeaderColor.bind(this);
 		this.getHeader = this.getHeader.bind(this);
+		this.renderItem = this.renderItem.bind(this);
 	}
 
 	capitalize(str) {
@@ -168,6 +169,39 @@ class InteractiveListUI extends React.Component {
 		return null;
 	}
 
+	renderItem(item) {
+		let x = Object.keys(item).map((key) => {
+			if (item[key].list_title_field != 0)
+				return item[key]
+		}).filter((nn) => nn != undefined || nn != null);
+		x = x.sort((x, y) => x.list_title_field > y.list_title_field ? 1 : -1);
+		if (x && x.length > 0) {
+			if (x.length > 1) {
+				return (
+					<View style={{ flexDirection: 'row' }}>
+						<AvatarUI text={x[0].fieldvalue.toUpperCase()} size={14} />
+						<View style={{ flexDirection: 'column' }}>
+							<Text style={iStyle.text}> {x[0].fieldvalue.substring(0, 30) + '...'} </Text>
+							<Text style={iStyle.textSec}> {x[1].fieldvalue.split(' ')[0]} </Text>
+						</View>
+					</View>
+				);
+			} else {
+				return (
+					<View style={{ flexDirection: 'row' }}>
+						<AvatarUI text={x[0].fieldvalue.toUpperCase()} size={14} />
+						<View style={{ flexDirection: 'column' }}>
+							<Text style={iStyle.text}> {x[0].fieldvalue.substring(0, 30) + '...'} </Text>
+							<Text style={iStyle.textSec}> {x[0].fieldvalue.split(' ')[0]} </Text>
+						</View>
+					</View>
+				);
+			}
+		} else {
+			return null;
+		}
+	}
+
 	renderListItem(props) {
 		let listItems = props.currentMessage.info.items;
 		if (listItems.length > 3)
@@ -175,13 +209,7 @@ class InteractiveListUI extends React.Component {
 		const views = listItems.map((item, key) => {
 			return (
 				<TouchableOpacity key={key} style={[iStyle.container, { marginBottom: 3 }]} onPress={() => { props.onItemClicked(props.currentMessage, key) }} accessibilityTraits="button">
-					<View style={{ flexDirection: 'row' }}>
-						<AvatarUI text={item.text.toUpperCase()} size={14} />
-						<View style={{ flexDirection: 'column' }}>
-							<Text style={iStyle.text}> {item.text.substring(0, 30) + '...'} </Text>
-							<Text style={iStyle.textSec}> {item.creation.split(' ')[0]} </Text>
-						</View>
-					</View>
+					{this.renderItem(item)}
 				</TouchableOpacity>
 			)
 		});

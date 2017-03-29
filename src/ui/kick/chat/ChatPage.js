@@ -259,11 +259,14 @@ class ChatPage extends Component {
 
 	onViewInfo(message, item = null) {
 		let page = Page.VIEW_INFO_PAGE;
-		let data = item == null ? message.info.items[0] : item;
+		if (message.info.base_action == 'create_')
+			page = Page.EDIT_INFO_PAGE;
+		const data = item == null ? message.info.items[0] : item;
+		console.log(data);
 		this.props.navigator.push({
 			id: page.id,
 			name: page.name,
-			data: data,
+			item: data,
 			botName: this.state.chat.title,
 			owner: this.state.owner,
 			message: message,
@@ -284,33 +287,7 @@ class ChatPage extends Component {
 	}
 
 	onItemClicked(message, index) {
-		this.onViewInfo(null, message.info.items[index]);
-		// if (message.info.base_action != 'delete_' && message.info.base_action != 'update_') {
-		// 	this.onViewInfo(null, item);
-		// } else if (message.info.base_action == 'delete_') {
-		// 	const owner = this.state.owner;
-		// 	message = Object.assign({}, message, {
-		// 		_id: Math.round(Math.random() * 1000000),
-		// 		text: item.text,
-		// 		createdAt: new Date(),
-		// 		user: {
-		// 			_id: owner.userId,
-		// 			name: owner.userName,
-		// 		}
-		// 	});
-		// 	this.onSend([message], item.id);
-		// } else if (message.info.base_action == 'update_') {
-		// 	let page = Page.EDIT_INFO_PAGE;
-		// 	this.props.navigator.push({
-		// 		id: page.id,
-		// 		name: page.name,
-		// 		botName: this.state.chat.title,
-		// 		owner: this.state.owner,
-		// 		message: message,
-		// 		item: item,
-		// 		callback: this.callback
-		// 	});
-		// }
+		this.onViewInfo(message, message.info.items[index]);
 	}
 
 	callback(data = null) {
