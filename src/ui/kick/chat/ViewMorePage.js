@@ -214,7 +214,7 @@ class ViewInfo extends Component {
 						this.props.navigator.replace({
 							id: page.id,
 							name: page.name,
-							data: item,
+							item: item,
 							botName: this.state.botName,
 							owner: this.state.owner,
 							message: this.state.message,

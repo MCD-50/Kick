@@ -44,29 +44,19 @@ const propTypes = {
 	route: PropTypes.object.isRequired,
 };
 
-const menuItems = [
-	'View info', 'Clear chat', 'Mail chat'
-]
+let menuItems = ['View info', 'Clear chat']
 
-let count = 0;
 class ChatPage extends Component {
 	constructor(params) {
 		super(params);
 		const chat = this.props.route.chat;
-		if (chat.info.chat_type == Type.BOT)
-			delete menuItems[menuItems.indexOf('Mail chat')];
+		if (chat.info.chat_type != Type.BOT)
+			menuItems = menuItems.concat(['Mail chat'])
 		this.state = {
 			chat: chat,
 			isLoading: true,
 			messages: [],
 			owner: this.props.route.owner,
-			info: {
-				base_action: null,
-				button_text: null,
-				is_interactive_chat: null,
-				is_interactive_list: null,
-				items: []
-			},
 			isGroupChat: chat.info.chat_type == Type.GROUP,
 		};
 
@@ -82,7 +72,6 @@ class ChatPage extends Component {
 		this.setUsers = this.setUsers.bind(this);
 		this.renderSend = this.renderSend.bind(this);
 		this.onSend = this.onSend.bind(this);
-
 
 		this.onViewInfo = this.onViewInfo.bind(this);
 		this.onViewMore = this.onViewMore.bind(this);
@@ -243,6 +232,7 @@ class ChatPage extends Component {
 	}
 
 	onSend(messages = [], item_id = null) {
+		console.log(messages)
 		InternetHelper.checkIfNetworkAvailable((isConnected) => {
 			if (isConnected) {
 				this.storeChatItemInDatabase(messages[0], null);
@@ -298,9 +288,7 @@ class ChatPage extends Component {
 	}
 
 	renderSend(props) {
-		return (
-			<SendUI {...props } />
-		)
+		return (<SendUI {...props } />);
 	}
 
 	showAlert(title, body) {
@@ -401,7 +389,13 @@ class ChatPage extends Component {
 						_id: this.state.owner.userId,
 						name: this.state.owner.userName,
 					}}
-					info={this.state.info}
+					info={{
+						base_action: null,
+						button_text: null,
+						is_interactive_chat: null,
+						is_interactive_list: null,
+						items: []
+					}}
 					onViewInfo={this.onViewInfo}
 					onViewMore={this.onViewMore}
 					onItemClicked={this.onItemClicked}

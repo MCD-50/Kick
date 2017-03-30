@@ -15,13 +15,12 @@ import DatabaseHelper from '../../../helpers/DatabaseHelper.js';
 import { isFirstRun, getStoredDataFromKey, hasServerUrl, setData } from '../../../helpers/AppStore.js';
 import { FULL_URL, SERVER_URL, SID, DOMAIN, EMAIL, FIRST_RUN, APP_DATA } from '../../../constants/AppConstant.js';
 import { Page } from '../../../enums/Page.js';
-import Progress from '../../customUI/Progress.js';
+import Progress from '../../customUI/Progress';
 import { Type } from '../../../enums/Type.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import Icon from '../../customUI/Icon.js';
+
 var frappeIcon = require('../../../res/appIcon.png');
-
-
 
 const styles = StyleSheet.create({
 	container: {
@@ -59,7 +58,7 @@ class SplashPage extends Component {
 		super(params);
 		this.state = {
 			isFirstRun: false,
-			showProgress: false,
+			showProgress: true,
 			loginError: false,
 		}
 
@@ -185,7 +184,10 @@ class SplashPage extends Component {
 	}
 
 	showAlert(title, body, navigateToOtherPage = true) {
-		this.setState({ showProgress: false, loginError: true });
+		this.setState({
+			showProgress: false,
+			loginError: true
+		});
 		Alert.alert(
 			title,
 			body,
@@ -201,11 +203,11 @@ class SplashPage extends Component {
 
 	renderFooter() {
 		if (this.state.showProgress) {
-			return (<Progress />)
+			return (<Progress/>);
 		} else if (this.state.loginError) {
 			return (
 				<View style={{ alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-					<View style={{minWidth: 100, backgroundColor: '#0086ff' }}>
+					<View style={{ minWidth: 100, backgroundColor: '#0086ff' }}>
 						<TouchableOpacity style={{
 							alignItems: 'center',
 							justifyContent: 'center',

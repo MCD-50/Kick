@@ -431,8 +431,6 @@ class ChatListPage extends Component {
 			case 2:
 				page = Page.NEW_GROUP_PAGE
 				break;
-			// case 3: page = Page.NEW_CONTACT_PAGE
-			// 	break;
 			case 3: page = Page.OWNER_INFO_PAGE
 				break;
 			case 4: page = Page.SETTINGS_PAGE

@@ -140,6 +140,7 @@ class InteractiveListUI extends React.Component {
 		this.getHeaderColor = this.getHeaderColor.bind(this);
 		this.getHeader = this.getHeader.bind(this);
 		this.renderItem = this.renderItem.bind(this);
+		this.renderElement = this.renderElement.bind(this);
 	}
 
 	capitalize(str) {
@@ -211,9 +212,35 @@ class InteractiveListUI extends React.Component {
 				<TouchableOpacity key={key} style={[iStyle.container, { marginBottom: 3 }]} onPress={() => { props.onItemClicked(props.currentMessage, key) }} accessibilityTraits="button">
 					{this.renderItem(item)}
 				</TouchableOpacity>
-			)
+			);
 		});
 		return views
+	}
+
+	renderElement(props) {
+		if (props.currentMessage.info.items.length < 1) {
+			return (<Text style={iStyle.text}>Its empty in here.</Text>);
+		}
+		return (<View style={[styles[props.position].innerContainer]}>
+			<Text style={[styles[props.position].text, props.textStyle[props.position], { marginBottom: 5 }]}>
+				{props.currentMessage.text}
+			</Text>
+
+			{this.renderListItem(props)}
+
+			<TouchableOpacity
+				style={[styles[props.position].innerContainer, { marginTop: 5 }]}
+				onPress={() => { props.onViewMore(props.currentMessage) }}
+				accessibilityTraits="button">
+				<Text style={[styles[props.position].text, {
+					color: '#527DA3', fontSize: 12, fontWeight: 'bold', borderWidth: 1.2,
+					alignItems: 'flex-start', marginTop: 3, marginLeft: 10, marginRight: 10,
+					borderColor: '#527DA3', borderRadius: 3, padding: 5, paddingLeft: 10, paddingRight: 10
+				}]}>
+					{props.currentMessage.info.button_text.toUpperCase()}
+				</Text>
+			</TouchableOpacity>
+		</View>);
 	}
 
 	render() {
@@ -223,38 +250,7 @@ class InteractiveListUI extends React.Component {
 					{
 						this.getHeader(this.props)
 					}
-					<View style={[styles[this.props.position].innerContainer]}>
-						<Text style={[styles[this.props.position].text, this.props.textStyle[this.props.position], { marginBottom: 5 }]}>
-							{this.props.currentMessage.text}
-						</Text>
-
-						{this.renderListItem(this.props)}
-
-						<TouchableOpacity
-							style={[styles[this.props.position].innerContainer, { marginTop: 5 }]}
-							onPress={() => { this.props.onViewMore(this.props.currentMessage) }}
-							accessibilityTraits="button">
-							<Text style={[styles[this.props.position].text, {
-								color: '#527DA3',
-								fontSize: 12,
-								fontWeight: 'bold',
-								borderWidth: 1.2,
-								alignItems: 'flex-start',
-								marginTop: 3,
-								marginLeft: 10,
-								marginRight: 10,
-								borderColor: '#527DA3',
-								borderRadius: 3,
-								padding: 5,
-								paddingLeft: 10,
-								paddingRight: 10
-							}]}>
-								{this.props.currentMessage.info.button_text.toUpperCase()}
-							</Text>
-						</TouchableOpacity>
-
-					</View>
-
+					{this.renderElement(this.props)}
 				</View>
 			);
 		} else {

@@ -11,44 +11,12 @@ import { EMAIL, FULL_NAME, DOMAIN } from '../constants/AppConstant.js';
 import { getStoredDataFromKey } from './AppStore.js';
 import DatabaseHelper from './DatabaseHelper.js';
 import InternetHelper from './InternetHelper.js';
-
+import { getBotList } from '../constants/BotList.js'
 
 class CollectionUtils {
 
-	getAllBots = () => {
-		return [
-			{
-				title: 'Todo',
-				sub_title: 'Some random bot with some random description',
-				info: {
-					is_added_to_chat_list: true,
-					chat_type: Type.BOT,
-					room: null,
-					new_message_count: null,
-					last_message_time: null,
-					last_active: null,
-					email: null,
-					users: []
-				}
-			},
-			{
-				title: 'Note',
-				sub_title: 'Some random bot with some random description',
-				info: {
-					is_added_to_chat_list: true,
-					chat_type: Type.BOT,
-					room: null,
-					new_message_count: null,
-					last_message_time: null,
-					last_active: null,
-					email: null,
-					users: []
-				}
-			}];
-	}
-
 	addDefaultBots = (callback) => {
-		let array = this.getAllBots();
+		let array = getBotList();
 
 		getStoredDataFromKey(EMAIL)
 			.then((mail) => {
@@ -462,7 +430,7 @@ class CollectionUtils {
 	}
 
 	capitalize(str) {
-		var pieces = str.split(" ");
+		var pieces = str.split(/_| /);
 		for (var i = 0; i < pieces.length; i++) {
 			var j = pieces[i].charAt(0).toUpperCase();
 			pieces[i] = j + pieces[i].substr(1);

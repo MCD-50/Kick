@@ -9,10 +9,10 @@ import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
-import com.psykar.cookiemanager.CookieManagerPackage;
+
 import org.pgsqlite.SQLitePluginPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
-import com.wix.reactnativenotifications.RNNotificationsPackage;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,12 +29,9 @@ public class MainApplication extends Application implements ReactApplication {
 			long size = 50L * 1024L * 1024L; // 50 MB
 			com.facebook.react.modules.storage.ReactDatabaseSupplier.getInstance(getApplicationContext()).setMaximumSize(size);
 			return Arrays.<ReactPackage>asList(
-					new SQLitePluginPackage(),  
 					new MainReactPackage(),
-            		new ReactNativeRestartPackage(MainApplication.this),
-					new CookieManagerPackage(),
-					new VectorIconsPackage(),
-					new RNNotificationsPackage(MainApplication.this)
+					new SQLitePluginPackage(),  
+					new VectorIconsPackage()
 			);
 		}
 	};

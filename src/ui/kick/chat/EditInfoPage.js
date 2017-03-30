@@ -108,6 +108,7 @@ class EditInfoPage extends Component {
 		this.updateDoc = this.updateDoc.bind(this);
 		this.updateItems = this.updateItems.bind(this);
 		this.renderFields = this.renderFields.bind(this);
+		this.mapTitle = this.mapTitle.bind(this);
 	}
 
 	addBackEvent() {
@@ -175,9 +176,9 @@ class EditInfoPage extends Component {
 	updateDoc() {
 		if (this.isRequiredFieldsNotEmpty()) {
 			const item_id = this.state.item["name"].fieldvalue
-			
+
 			let text = `Update ${this.state.botName} where id is ${item_id}.`, base_action = 'update_';
-			if(item_id == null || item_id.length < 1){
+			if (item_id == null || item_id.length < 1) {
 				text = `Create new ${this.state.botName}`;
 				base_action = 'create_';
 			}
@@ -196,7 +197,7 @@ class EditInfoPage extends Component {
 					items: [].concat(this.updateItems())
 				}
 			});
-			
+
 			this.popAndSetData({
 				item_id: item_id,
 				message: x
@@ -206,12 +207,19 @@ class EditInfoPage extends Component {
 		}
 	}
 
+	mapTitle(key) {
+
+		if (this.state.item[key].is_req == 1)
+			return '* ' + CollectionUtils.capitalize(key);
+		return CollectionUtils.capitalize(key)
+	}
+
 	renderFields() {
 		let x = Object.keys(this.state.item).filter((nn) => this.state.item[nn].is_editable == 1);
 		x = x.map((nn) => {
 			return (
 				<View style={[styles.view, { marginBottom: 10 }]} key={nn}>
-					<Text style={[styles.textBodyBold]}> {'* ' + CollectionUtils.capitalize(nn)} </Text>
+					<Text style={[styles.textBodyBold]}> {this.mapTitle(nn)} </Text>
 					<AutoGrowTextInput
 						style={styles.textInput}
 						ref={nn}
@@ -246,23 +254,23 @@ class EditInfoPage extends Component {
 					}}
 					translucent={true} />
 
-					<View style={styles.container}>
-						<View style={[{ backgroundColor: '#0086ff', height: 68, marginBottom: 2 }]}>
-							<View style={[styles.view, { flexDirection: 'row' }]}>
-								<View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
-									<Text style={[styles.textBold, { color: 'white' }]}>{this.state.botName}</Text>
-									<Text style={[styles.text, { color: 'white' }]}>{this.state.item["name"].fieldvalue}</Text>
-								</View>
+				<View style={styles.container}>
+					<View style={[{ backgroundColor: '#0086ff', height: 68, marginBottom: 2 }]}>
+						<View style={[styles.view, { flexDirection: 'row' }]}>
+							<View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
+								<Text style={[styles.textBold, { color: 'white' }]}>{this.state.botName}</Text>
+								<Text style={[styles.text, { color: 'white' }]}>{this.state.item["name"].fieldvalue}</Text>
 							</View>
 						</View>
-						<ScrollView style={{ flex: 1 }} keyboardDismissMode='interactive'>
-							<Card fullWidth='0'>
-								<View style={{ flex: 1 }}>
-									{this.renderFields()}
-								</View>
-							</Card>
-						</ScrollView>
 					</View>
+					<ScrollView style={{ flex: 1 }} keyboardDismissMode='interactive'>
+						<Card fullWidth='0'>
+							<View style={{ flex: 1 }}>
+								{this.renderFields()}
+							</View>
+						</Card>
+					</ScrollView>
+				</View>
 			</View>
 		);
 	}

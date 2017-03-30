@@ -35,12 +35,12 @@ const propTypes = {
 
 const defaultProps = {
 	animating: true,
-	duration: 500,
+	duration: 600,
 	color: 'rgba(0, 122, 255, 1)',
 	direction: 'clockwise',
 	hidesWhenStopped: false,
 	size: 40,
-	thickness: 2,
+	thickness: 2.5,
 };
 
 class Progress extends Component {
