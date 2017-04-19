@@ -27,7 +27,6 @@ import SocketHelper from '../../../helpers/SocketHelper.js';
 import Toast from '../../customUI/Toast.js';
 import Communications from '../../customUI/airchat/Communication.js';
 
-
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
@@ -44,14 +43,12 @@ const propTypes = {
 	route: PropTypes.object.isRequired,
 };
 
-let menuItems = ['View info', 'Clear chat']
+let menuItems = ['View info', 'Clear chat', 'Mail chat']
 
 class ChatPage extends Component {
 	constructor(params) {
 		super(params);
 		const chat = this.props.route.chat;
-		if (chat.info.chat_type != Type.BOT)
-			menuItems = menuItems.concat(['Mail chat'])
 		this.state = {
 			chat: chat,
 			isLoading: true,

@@ -178,8 +178,7 @@ class BotInfoPage extends Component {
 						</View>
 						<View style={{
 							flex: 1, marginLeft: 15,
-							alignItems: 'flex-start', justifyContent: 'center'
-						}}>
+							alignItems: 'flex-start', justifyContent: 'center'}}>
 							<Text style={styles.textBold}>{bot.title}</Text>
 							<Text style={styles.text}>Active</Text>
 						</View>

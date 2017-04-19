@@ -17,7 +17,7 @@ import Badge from '../../customUI/Badge.js';
 import ListItem from '../../customUI/ListItem.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import { Type } from '../../../enums/Type.js';
-import { EMAIL, FULL_NAME, DOMAIN, LAST_ACTIVE } from '../../../constants/AppConstant.js';
+import { EMAIL, FULL_NAME, DOMAIN, LAST_ACTIVE, IS_CHAT_MODE } from '../../../constants/AppConstant.js';
 import { getStoredDataFromKey, setData } from '../../../helpers/AppStore.js';
 import Progress from '../../customUI/Progress.js';
 import StateHelper from '../../../helpers/StateHelper.js';
@@ -376,12 +376,6 @@ class ChatListPage extends Component {
 	}
 
 	renderListItem(chat) {
-		// const searchText = this.state.searchText.toLowerCase();
-		// console.log(searchText);
-		// if (searchText.length > 0 && chat.title.toLowerCase().indexOf(searchText) < 0) {
-		// 	return null;
-		// }
-
 		let title = (chat.title.length > 1) ? chat.title[0] + chat.title[1].toUpperCase() : ((chat.title.length > 0) ? chat.title[0] : 'UN');
 		return (
 			<ListItem
@@ -402,19 +396,25 @@ class ChatListPage extends Component {
 
 				onPress={() => {
 					let page = Page.CHAT_PAGE;
-					let state = this.state;
-					this.props.navigator.push({
-						id: page.id,
-						name: page.name,
-						chat: chat,
-						callback: this.callback,
-						owner: {
-							userName: state.userName,
-							userId: state.userId,
-							domain: state.domain
-						}
-					})
+					getStoredDataFromKey(IS_CHAT_MODE)
+						.then((val) => {
+							if (chat.info.chat_type == Type.BOT && val == '0')
+								page = Page.BOT_PAGE;
+							this.props.navigator.push({
+								id: page.id,
+								name: page.name,
+								chat: chat,
+								botName: chat.title,
+								callback: this.callback,
+								owner: {
+									userName: this.state.userName,
+									userId: this.state.userId,
+									domain: this.state.domain
+								}
+							})
+						})
 				}} />
+
 		);
 	}
 

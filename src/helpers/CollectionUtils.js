@@ -13,6 +13,16 @@ import DatabaseHelper from './DatabaseHelper.js';
 import InternetHelper from './InternetHelper.js';
 import { getBotList } from '../constants/BotList.js'
 
+
+const colors = [
+	'#e67e22', // carrot
+	'#3498db', // peter river
+	'#8e44ad', // wisteria
+	'#e74c3c', // alizarin
+	'#1abc9c', // turquoise
+	'#2c3e50', // midnight blue
+];
+
 class CollectionUtils {
 
 	addDefaultBots = (callback) => {
@@ -421,11 +431,24 @@ class CollectionUtils {
 		return arr;
 	}
 
-	getText = (value) => {
-		if (value && value.length > 0) {
-			return value;
+	getColor(name) {
+		const length = name.length;
+		return colors[length % colors.length];
+	}
+
+	getText = (value, prev_page) => {
+		if (prev_page) {
+			if (value && value.length > 0) {
+				return value;
+			} else {
+				return "It's empty in here";
+			}
 		} else {
-			return "It's empty in here";
+			if (value.fieldvalue && value.fieldvalue.length > 0) {
+				return value.fieldvalue;
+			} else {
+				return "It's empty in here";
+			}
 		}
 	}
 

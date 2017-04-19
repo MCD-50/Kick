@@ -18,17 +18,21 @@ import { Page } from '../../../enums/Page.js';
 import { Type } from '../../../enums/Type.js';
 import Avatar from '../../customUI/Avatar.js';
 import Card from '../../customUI/Card.js';
+import { setData, getStoredDataFromKey } from '../../../helpers/AppStore.js';
 import {
 	UPMARGIN,
 	DOWNMARGIN,
 	LEFTMARGIN,
-	RIGHTMARGIN
+	RIGHTMARGIN,
+	IS_CHAT_MODE
 } from '../../../constants/AppConstant.js';
 import Icon from '../../customUI/Icon.js';
 import ListItem from '../../customUI/ListItem.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import Progress from '../../customUI/Progress.js';
 import CheckBox from '../../customUI/CheckBox.js';
+import AppStore from '../../../helpers/AppStore.js';
+
 
 const styles = StyleSheet.create({
 	base: {
@@ -96,6 +100,8 @@ class SettingPage extends Component {
 		super(params);
 		this.state = {
 			owner: this.props.route.owner,
+			chat_mode: true,
+			value : 0
 		}
 
 		this.addBackEvent = this.addBackEvent.bind(this);
@@ -130,15 +136,26 @@ class SettingPage extends Component {
 
 	componentWillMount() {
 		this.addBackEvent();
+		let chat_mode = 0;
+		getStoredDataFromKey(IS_CHAT_MODE)
+			.then((val) => {
+				if (val == null || val == '0')
+					chat_mode = false
+				else
+					chat_mode = true
+				this.setState({ chat_mode: chat_mode });
+			});
 	}
 
 	componentWillUnmount() {
 		this.removeBackEvent();
 	}
 
+
 	renderElement() {
 		return (
 			<ScrollView style={styles.container} keyboardDismissMode='interactive'>
+
 				<Card fullWidth='0'>
 					<View style={styles.view}>
 						<Text style={styles.textBodyBold}>Kickbot beta</Text>
@@ -146,6 +163,17 @@ class SettingPage extends Component {
 						<Text style={styles.textBody}>Simple bot app by frappe inc. Making the erpnext product more simple to use.</Text>
 					</View>
 				</Card>
+
+				<Card fullWidth='0'>
+					<CheckBox value={1}
+						label='Chat mode'
+						checked={this.state.chat_mode}
+						onCheck={(check, value) => {
+							this.setState({ chat_mode: check});
+							setData(IS_CHAT_MODE, check ? '1' : '0');
+						}} />
+				</Card>
+
 			</ScrollView>
 		)
 	}

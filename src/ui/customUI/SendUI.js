@@ -51,22 +51,21 @@ class SendUI extends Component {
 				}}
 				accessibilityTraits="button">
 				<View style={styles.icon}>
-					<Icon name='send' color='#527DA3' size={23} />
+					<Icon name='send' color='#0086ff' size={23} />
 				</View>
 			</TouchableOpacity>);
 		}
-		return null;
-		// return (
-		// 	<TouchableOpacity
-		// 		style={[styles.container, this.props.containerStyle]}
-		// 		onPress={() => {
-
-		// 		}}
-		// 		accessibilityTraits="button">
-		// 		<View style={styles.icon}>
-		// 			<Icon name='attach-file' color='#527DA3' size={23} />
-		// 		</View>
-		// 	</TouchableOpacity>);
+		return (
+			<TouchableOpacity
+				style={[styles.container, this.props.containerStyle]}
+				onPress={() => {
+					
+				}}
+				accessibilityTraits="button">
+				<View style={styles.icon}>
+					<Icon name='launch' color='#0086ff' size={23} />
+				</View>
+			</TouchableOpacity>);
 	}
 }
 

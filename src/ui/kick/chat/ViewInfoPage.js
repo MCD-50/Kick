@@ -82,6 +82,7 @@ class ViewInfo extends Component {
 			owner: this.props.route.owner,
 			botName: this.props.route.botName,
 			message: this.props.route.message,
+			prev_name: this.props.route.prev_name ? true : false
 		}
 
 		this.addBackEvent = this.addBackEvent.bind(this);
@@ -101,6 +102,8 @@ class ViewInfo extends Component {
 	}
 
 	updateDoc() {
+		if (this.state.prev_name)
+			return;
 		let page = Page.EDIT_INFO_PAGE;
 		this.props.navigator.replace({
 			id: page.id,
@@ -114,6 +117,8 @@ class ViewInfo extends Component {
 	}
 
 	deleteDoc() {
+		if (this.state.prev_name)
+			return;
 		AlertHelper.showAlert('Delete ?', 'This will delete the item from database. You sure you want to delete this?'
 			, (data) => {
 				console.log(this.state.item);
@@ -141,10 +146,16 @@ class ViewInfo extends Component {
 			});
 	}
 
+	popAndSetData(data = null) {
+		this.props.navigator.pop();
+		Fluxify.doAction('updateCurrentPageId', Page.CHAT_PAGE.id);
+		this.props.route.callback(data);
+	}
+
 	addBackEvent() {
 		BackAndroid.addEventListener('hardwareBackPress', () => {
 			if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-				this.popAndSetData();
+				this.props.navigator.pop();
 				return true;
 			}
 			return false;
@@ -154,28 +165,22 @@ class ViewInfo extends Component {
 	removeBackEvent() {
 		BackAndroid.removeEventListener('hardwareBackPress', () => {
 			if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-				this.popAndSetData();
+				this.props.navigator.pop();
 				return true;
 			}
 			return false;
 		});
 	}
 
-	popAndSetData(data = null) {
-		this.props.navigator.pop();
-		Fluxify.doAction('updateCurrentPageId', Page.CHAT_PAGE.id);
-		this.props.route.callback(data);
-	}
 
 	renderView() {
 		const components = Object.keys(this.state.item).map((key) => {
 			if (key == 'name')
 				return null;
-			console.log(this.state.item, key);
 			return (
 				<View key={key} style={styles.view}>
 					<Text style={styles.textBodyBold}>{CollectionUtils.capitalize(key)}</Text>
-					<Text style={[styles.text, { color: '#a0a0a0' }]}>{CollectionUtils.getText(this.state.item[key].fieldvalue)}</Text>
+					<Text style={[styles.text, { color: '#a0a0a0' }]}>{CollectionUtils.getText(this.state.item[key], this.state.prev_name)}</Text>
 				</View>
 			)
 		});
@@ -185,7 +190,7 @@ class ViewInfo extends Component {
 					<View style={[styles.view, { flexDirection: 'row' }]}>
 						<View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center' }}>
 							<Text style={[styles.textBold, { color: 'white' }]}>{this.state.botName}</Text>
-							<Text style={[styles.text, { color: 'white' }]}>{this.state.item["name"].fieldvalue}</Text>
+							<Text style={[styles.text, { color: 'white' }]}>{CollectionUtils.getText(this.state.item["name"], this.state.prev_name)}</Text>
 						</View>
 					</View>
 				</View>
@@ -204,7 +209,7 @@ class ViewInfo extends Component {
 				<Toolbar
 					leftElement="arrow-back"
 					onLeftElementPress={() => {
-						this.popAndSetData();
+						this.props.navigator.pop();
 					}}
 					centerElement=''
 					rightElement={['delete', 'edit']}

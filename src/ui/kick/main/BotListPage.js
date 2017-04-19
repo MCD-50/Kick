@@ -16,7 +16,8 @@ import { Page } from '../../../enums/Page.js';
 import { Type } from '../../../enums/Type.js';
 import Avatar from '../../customUI/Avatar.js';
 import Icon from '../../customUI/Icon.js';
-
+import { EMAIL, FULL_NAME, DOMAIN, LAST_ACTIVE, IS_CHAT_MODE } from '../../../constants/AppConstant.js';
+import { getStoredDataFromKey, setData } from '../../../helpers/AppStore.js';
 import ListItem from '../../customUI/ListItem.js';
 import CollectionUtils from '../../../helpers/CollectionUtils.js';
 import Progress from '../../customUI/Progress.js';
@@ -168,15 +169,12 @@ class BotListPage extends Component {
 	}
 
 	renderListItem(bot) {
-		// const searchText = this.state.searchText.toLowerCase();
-		// if (searchText.length > 0 && bot.title.toLowerCase().indexOf(searchText) < 0) {
-		// 	return null;
-		// }
 		const title = (bot.title.length > 1) ?
 			bot.title[0] + bot.title[1].toUpperCase() :
 			((bot.title.length > 0) ?
 				bot.title[0] :
 				'UN');
+
 		return (
 			<ListItem
 				divider
@@ -189,14 +187,20 @@ class BotListPage extends Component {
 					secondaryText: bot.sub_title,
 				}}
 				onPress={() => {
-					let page = Page.CHAT_PAGE;
-					this.props.navigator.replace({
-						id: page.id,
-						name: page.name,
-						chat: bot,
-						owner: this.state.owner,
-						callback: this.props.route.callback,
-					})
+					getStoredDataFromKey(IS_CHAT_MODE)
+						.then((val) => {
+							let page = Page.CHAT_PAGE;
+							if (val == '0')
+								page = Page.BOT_PAGE;
+							this.props.navigator.replace({
+								id: page.id,
+								name: page.name,
+								chat: bot,
+								botName: bot.title,
+								owner: this.state.owner,
+								callback: this.props.route.callback,
+							})
+						})
 				}} />
 		);
 	}
@@ -242,30 +246,6 @@ class BotListPage extends Component {
 		);
 	}
 
-	// <View style={styles.rowBack}>
-	// 					<TouchableOpacity style={[styles.backLeftBtn, styles.backLeftBtnLeft]}
-	// 						onPress={_ => console.log('x')}>
-	// 						<Text style={{
-	// 							color: 'white',
-	// 							fontSize: 16,
-	// 						}}>Details</Text>
-	// 					</TouchableOpacity>
-	// 					<TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnRight]}
-	// 						onPress={_ => console.log('x')}>
-	// 						<Text style={{
-	// 							color: 'white',
-	// 							fontSize: 16,
-	// 						}}>Details</Text>
-	// 					</TouchableOpacity>
-	// 				</View>
-
-	// searchable={{
-	// 						autoFocus: true,
-	// 						placeholder: 'Search bot...',
-	// 						onChangeText: e => this.onChangeText(e),
-	// 						onSearchClosed: () => this.setState({ searchText: '' }),
-	// 					}}
-
 	render() {
 		return (
 			<View style={styles.base}>
@@ -279,7 +259,7 @@ class BotListPage extends Component {
 				/>
 				{this.renderElement()}
 			</View>
-		)
+		);
 	}
 }
 

@@ -25,4 +25,5 @@ export const Page = {
     NEW_CONTACT_PAGE: { id: '17', name: 'New contact' },
     NEW_GROUP_PAGE: { id: '18', name: 'New group' },
 
+    BOT_PAGE: { id: '19', name: 'Bot' },
 }

@@ -21,6 +21,7 @@ import LoginPage from './src/ui/kick/main/LoginPage.js';
 import SettingsPage from './src/ui/kick/main/SettingsPage.js';
 
 import BotInfoPage from './src/ui/kick/others/BotInfoPage.js';
+import BotPage from './src/ui/kick/chat/BotPage.js';
 //import ChatInfoPage from './src/ui/kick/others/ChatInfoPage.js';
 import ContactInfoPage from './src/ui/kick/others/ContactInfoPage.js';
 //import FirstRunPage from './src/ui/kick/others/FirstRunPage.js';
@@ -85,6 +86,9 @@ class Kick extends Component {
 			return <NewContactPage navigator={navigator} route={route} />
 		else if (id == 18)
 			return <NewGroupPage navigator={navigator} route={route} />
+		else if (id == 19)
+			return <BotPage navigator={navigator} route={route} />
+
 	}
 
 	render() {

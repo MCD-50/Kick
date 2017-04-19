@@ -12,7 +12,7 @@ class InternetHelper {
 	login(full_url, alertCallback, successCallback) {
 		let index = full_url.lastIndexOf('api');
 		let ping_url = full_url.substring(0, index);
-		
+
 		fetch(ping_url + 'api/method/ping', {
 			method: "POST",
 			headers: {
@@ -148,8 +148,10 @@ class InternetHelper {
 		this.fetch(url, method);
 	}
 
-	loadMore(domain, bot_name, page_count, email, callback) {
+	loadMore(domain, bot_name, page_count, email, callback, is_load_items = false) {
 		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.load_more';
+		if (is_load_items)
+			url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.load_items';
 		let query = {
 			"bot_name": bot_name,
 			"page_count": page_count,
@@ -167,6 +169,15 @@ class InternetHelper {
 			body: form
 		};
 		this.fetch(url, method, callback);
+	}
+
+	getMeta(domain, bot_name, callback) {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_meta?bot_name=' + bot_name;
+		fetch(url)
+			.then((response) => response.json(),
+			(reject) => callback({ is_error: true, data: null }))
+			.then((responseData) => callback({ is_error: false, data: responseData.message }),
+			(reject) => callback({ is_error: true, data: null }));
 	}
 
 	fetch(url, method, callback = null) {

@@ -13,7 +13,7 @@ export const LAST_ACTIVE = 'LAST_ACTIVE'
 export const FULL_NAME = 'FULL_NAME';
 export const FIRST_NAME = 'FIRST_NAME';
 export const LAST_NAME = 'LAST_NAME';
-
+export const IS_CHAT_MODE = 'IS_CHAT_MODE';
 export const APP_DATA = 'APP_DATA';
 
 export const LEFTMARGIN = 16;

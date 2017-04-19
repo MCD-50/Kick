@@ -422,8 +422,6 @@ class AirChatUI extends React.Component {
 			};
 		});
 
-
-
 		if (shouldResetInputToolbar === true) {
 			this.setIsTypingDisabled(true);
 			this.resetInputToolbar();
