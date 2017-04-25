@@ -44,30 +44,24 @@ class InternetHelper {
 		});
 	}
 
-	getAllUsers(domain, user_id, callback) {
-		fetch('http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_all_users?email=' + user_id, {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json',
-			},
-		}).then((response) => response.json(), (reject) => callback(null, 'Something went wrong.'))
-			.then((responseData) => {
-				callback(responseData.message, null)
-			}, (reject) => callback(null, 'Something went wrong.'));
-	}
-
 	getAllUsersInRoom(domain, room, callback) {
-		fetch('http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_users_in_room?room=' + room, {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_users_in_room';
+		let data = {
+			room: room,
+		}
+
+		const form = new FormData();
+		form.append('obj', JSON.stringify(data));
+
+		let method = {
 			method: "POST",
 			headers: {
 				'Accept': 'application/json',
-				'Content-Type': 'application/json',
+				'Content-Type': 'multipart/form-data',
 			},
-		}).then((response) => response.json(), (reject) => callback(null, 'Something went wrong.'))
-			.then((responseData) => {
-				callback(responseData.message, null)
-			}, (reject) => callback(null, 'Something went wrong.'));
+			body: form
+		};
+		this.fetch(url, method, callback);
 	}
 
 	setAllUsersInRoom(domain, users, room, chat_type, callback = null) {
@@ -77,7 +71,6 @@ class InternetHelper {
 			users: users,
 			chat_type: chat_type
 		}
-
 		const form = new FormData();
 		form.append('obj', JSON.stringify(data));
 
@@ -111,8 +104,50 @@ class InternetHelper {
 		this.fetch(url, method, callback);
 	}
 
+	getUsers(domain, user_id, page_count, callback) {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_users';
+
+		let data = {
+			email: user_id,
+			page_count: page_count
+		}
+
+		const form = new FormData();
+		form.append('obj', JSON.stringify(data));
+
+		let method = {
+			method: "POST",
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'multipart/form-data',
+			},
+			body: form
+		};
+
+		this.fetch(url, method, callback)
+	}
+
+	get_user(domain, user_id, callback) {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_user_by_email';
+		let data = {
+			email: user_id,
+		}
+		const form = new FormData();
+		form.append('obj', JSON.stringify(data));
+		
+		let method = {
+			method: "POST",
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'multipart/form-data',
+			},
+			body: form
+		};
+		this.fetch(url, method, callback)
+	}
+
 	getAllMessages(domain, obj) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_message_for_first_time';
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_message';
 		const form = new FormData();
 		form.append('obj', JSON.stringify(obj));
 
@@ -127,14 +162,47 @@ class InternetHelper {
 		this.fetch(url, method)
 	}
 
+
+	getAllIssues(domain, obj, callback) {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_issues';
+		const form = new FormData();
+		form.append('obj', JSON.stringify(obj));
+
+		let method = {
+			method: "POST",
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'multipart/form-data',
+			},
+			body: form
+		};
+		this.fetch(url, method, callback)
+	}
+
+	getIssueForUser(domain, obj, callback) {
+		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_issue_for_user';
+		const form = new FormData();
+		form.append('obj', JSON.stringify(obj));
+
+		let method = {
+			method: "POST",
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'multipart/form-data',
+			},
+			body: form
+		};
+		this.fetch(url, method, callback)
+	}
+
 	sendData(domain, data, userId) {
 		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.send_message_and_get_reply';
 		let query = {
 			"user_id": userId,
-			"obj": data
+			"data": data
 		};
 		const form = new FormData();
-		form.append('query', JSON.stringify(query));
+		form.append('obj', JSON.stringify(query));
 
 		let method = {
 			method: "POST",

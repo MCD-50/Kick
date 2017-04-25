@@ -111,12 +111,14 @@ class ContactListPage extends Component {
 
 	constructor(params) {
 		super(params);
+		this.pageCount = 1;
 		this.state = {
 			searchText: '',
 			title: 'Syncing...',
 			owner: this.props.route.owner,
 			isLoading: true,
 			contacts: [],
+			hasMore: true,
 			dataSource: ds.cloneWithRows([]),
 		};
 
@@ -125,6 +127,7 @@ class ContactListPage extends Component {
 		this.removeBackEvent = this.removeBackEvent.bind(this);
 		this.setStateData = this.setStateData.bind(this);
 		this.renderListItem = this.renderListItem.bind(this);
+		this.renderFooter = this.renderFooter.bind(this);
 
 		this.onChangeText = this.onChangeText.bind(this);
 		this.getColor = this.getColor.bind(this);
@@ -132,6 +135,18 @@ class ContactListPage extends Component {
 
 		this.loadcontacts = this.loadcontacts.bind(this);
 		this.syncUsers = this.syncUsers.bind(this);
+	}
+
+	componentWillMount() {
+		this.addBackEvent();
+	}
+
+	componentWillUnmount() {
+		this.removeBackEvent();
+	}
+
+	componentDidMount() {
+		this.loadcontacts();
 	}
 
 	addBackEvent() {
@@ -156,17 +171,6 @@ class ContactListPage extends Component {
 		});
 	}
 
-	componentWillMount() {
-		this.addBackEvent();
-	}
-
-	componentWillUnmount() {
-		this.removeBackEvent();
-	}
-
-	componentDidMount() {
-		this.loadcontacts();
-	}
 
 	loadcontacts() {
 		DatabaseHelper.getAllChatsByQuery({ chat_type: Type.PERSONAL }, (results) => {
@@ -174,20 +178,26 @@ class ContactListPage extends Component {
 		})
 	}
 
-	syncUsers(user_list) {
-		
-		InternetHelper.getAllUsers(this.state.owner.domain,
-			this.state.owner.userId, (array, msg) => {
-				if (array && array.length > 0) {
-					user_list = CollectionUtils.addAndUpdateContactList(user_list,
-						array.filter((nn) => nn.email != this.state.owner.userId), this.state.owner);
-					
-					DatabaseHelper.addNewChat(user_list, (msg) => {
-						//console.log(msg);
-					}, true);
-				}
 
-				this.setStateData(user_list, 'Contacts');
+	syncUsers(user_list = null) {
+		if (user_list == null)
+			user_list = this.state.contacts.filter((x) => x.info.email != this.state.owner.userId);
+		
+		let hasMore = true;
+		InternetHelper.getUsers(this.state.owner.domain, this.state.owner.userId, this.pageCount,
+			(responseData) => {
+				if (responseData && responseData.message && responseData.message.length > 0) {
+					
+					hasMore = responseData.message.length > 19 ? true : false
+					user_list = CollectionUtils.addAndUpdateContactList(user_list,
+						responseData.message.filter((nn) => nn.email != this.state.owner.userId),
+						this.state.owner);
+					DatabaseHelper.addNewChat(user_list, (msg) => { }, true);
+				} else {
+					hasMore = false;
+				}
+				
+				this.setStateData(user_list, 'Contacts', hasMore);
 				const x = user_list.slice();
 				const all_users = CollectionUtils.getSortedArrayByDate(
 					x.concat(StateClient.chatList.filter((nn) => nn.info.chat_type != Type.PERSONAL))
@@ -196,9 +206,10 @@ class ContactListPage extends Component {
 			});
 	}
 
-	setStateData(users, title) {
+	setStateData(users, title, hasMore) {
 		this.setState({
 			contacts: users,
+			hasMore: hasMore,
 			dataSource: ds.cloneWithRows(users),
 			title: title,
 			isLoading: false,
@@ -246,14 +257,42 @@ class ContactListPage extends Component {
 		);
 	}
 
+	renderFooter() {
+		if (this.state.hasMore) {
+			return (
+				<TouchableOpacity style={[styles.view, {
+					borderRadius: 3,
+					backgroundColor: 'white'
+				}]}
+					onPress={() => {
+						this.pageCount += 1;
+						this.syncUsers()
+					}}
+					accessibilityTraits="button">
+					<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+						<Text style={[styles.text, {
+							padding: 10,
+							color: 'black',
+							paddingLeft: 10,
+							paddingRight: 10
+						}]}>
+							Load More
+						</Text>
+					</View>
+				</TouchableOpacity>
+			)
+		}
+		return null;
+	}
+
+
 	renderElement() {
-		console.log(this.state);
 		if (this.state.isLoading) {
 			return (
 				<View style={styles.progress}>
 					<Progress />
 				</View>)
-		} else if (this.state.contacts < 1) {
+		} else if (this.state.contacts.length < 1) {
 			return (
 				<Text style={styles.text}>It's empty in here.</Text>
 			);
@@ -265,6 +304,7 @@ class ContactListPage extends Component {
 				keyboardDismissMode='interactive'
 				enableEmptySections={true}
 				renderRow={(item) => this.renderListItem(item)}
+				renderFooter={this.renderFooter}
 				renderHiddenRow={(data, secId, rowId, rowMap) => (
 					<View style={styles.rowBack}>
 						<TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnRight]}
@@ -301,7 +341,7 @@ class ContactListPage extends Component {
 						this.props.navigator.pop();
 					}}
 					centerElement={this.state.title}
-					
+
 					onRightElementPress={(action) => {
 						if (action.index == 0) {
 							let page = Page.NEW_CONTACT_PAGE;
@@ -315,6 +355,7 @@ class ContactListPage extends Component {
 					}}
 				/>
 				{this.renderElement()}
+				{this.renderFooter()}
 			</View>
 		)
 	}

@@ -11,6 +11,8 @@ import MessageTextUI from './MessageTextUI.js';
 import MessageImageUI from './MessageImageUI.js';
 import InteractiveChatUI from './InteractiveChatUI.js';
 import InteractiveListUI from './InteractiveListUI.js';
+import CommunicationCommentUI from './CommunicationCommentUI.js';
+import CommunicationEmailUI from './CommunicationEmailUI.js';
 import TimeUI from './TimeUI.js';
 
 import { isSameDay, isSameUser, warnDeprecated } from './UtilsUI.js';
@@ -171,7 +173,7 @@ class BubbleUI extends React.Component {
 
 	renderMessageText() {
 		if (this.props.currentMessage.text) {
-			const {containerStyle, wrapperStyle, ...messageTextProps} = this.props;
+			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
 			if (this.props.renderMessageText) {
 				return this.props.renderMessageText(messageTextProps);
 			}
@@ -182,7 +184,7 @@ class BubbleUI extends React.Component {
 
 	renderMessageImage() {
 		if (this.props.currentMessage.image) {
-			const {containerStyle, wrapperStyle, ...messageImageProps} = this.props;
+			const { containerStyle, wrapperStyle, ...messageImageProps } = this.props;
 			if (this.props.renderMessageImage) {
 				return this.props.renderMessageImage(messageImageProps);
 			}
@@ -191,9 +193,32 @@ class BubbleUI extends React.Component {
 		return null;
 	}
 
+	renderCommunicationComment() {
+		if (this.props.currentMessage.text) {
+			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
+			if (this.props.renderCommunicationComment) {
+				return this.props.renderCommunicationComment(messageTextProps);
+			}
+			return <CommunicationCommentUI { ...messageTextProps} />;
+		}
+		return null;
+	}
+
+
+	renderCommunicationEmail() {
+		if (this.props.currentMessage.text) {
+			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
+			if (this.props.renderCommunicationEmail) {
+				return this.props.renderCommunicationEmail(messageTextProps);
+			}
+			return <CommunicationEmailUI { ...messageTextProps} />;
+		}
+		return null;
+	}
+
 	renderInteractiveChat() {
 		if (this.props.currentMessage.text) {
-			const {containerStyle, wrapperStyle, ...messageTextProps} = this.props;
+			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
 			if (this.props.renderInteractiveChat) {
 				return this.props.renderInteractiveChat(messageTextProps);
 			}
@@ -204,7 +229,7 @@ class BubbleUI extends React.Component {
 
 	renderInteractiveList() {
 		if (this.props.currentMessage.text) {
-			const {containerStyle, wrapperStyle, ...messageTextProps} = this.props;
+			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
 			if (this.props.renderInteractiveList) {
 				return this.props.renderInteractiveList(messageTextProps);
 			}
@@ -214,7 +239,7 @@ class BubbleUI extends React.Component {
 	}
 
 	renderTicks() {
-		const {currentMessage} = this.props;
+		const { currentMessage } = this.props;
 		if (this.props.renderTicks) {
 			return this.props.renderTicks(currentMessage);
 		}
@@ -233,7 +258,7 @@ class BubbleUI extends React.Component {
 
 	renderTime() {
 		if (this.props.currentMessage.createdAt) {
-			const {containerStyle, wrapperStyle, ...timeProps} = this.props;
+			const { containerStyle, wrapperStyle, ...timeProps } = this.props;
 			if (this.props.renderTime) {
 				return this.props.renderTime(timeProps);
 			}
@@ -255,7 +280,7 @@ class BubbleUI extends React.Component {
 		} else {
 			if (this.props.currentMessage.text) {
 				const options = [
-					'Copy Text',
+					'Copy text',
 					'Cancel',
 				];
 				const cancelButtonIndex = options.length - 1;
@@ -274,15 +299,19 @@ class BubbleUI extends React.Component {
 		}
 	}
 
-	renderExtra(info) {
-		if (info && info.is_interactive_chat) {
-			return this.renderInteractiveChat();
-		} else if (info && info.is_interactive_list) {
-			return this.renderInteractiveList();
-		}
-		else {
+	renderExtra(currentMessage) {
+		if (currentMessage.isPersonalCommunicationChat && currentMessage.communication.is_comment) {
+			return this.renderCommunicationComment();
+		} else if (currentMessage.isPersonalCommunicationChat && !currentMessage.communication.is_comment) {
+			return this.renderCommunicationEmail();
+		} else {
 			return this.renderMessageText()
 		}
+		// else if (info && info.is_interactive_chat) {
+		// 	return this.renderInteractiveChat();
+		// } else if (info && info.is_interactive_list) {
+		// 	return this.renderInteractiveList();
+		// }
 	}
 
 	render() {
@@ -293,16 +322,18 @@ class BubbleUI extends React.Component {
 						onLongPress={this.onLongPress}
 						accessibilityTraits="text"
 						{...this.props.touchableProps}>
+						
 						<View>
 							{this.renderCustomView()}
-							{this.renderExtra(this.props.currentMessage.info)}
+							{this.renderExtra(this.props.currentMessage)}
+							
 							{this.renderMessageImage()}
 							<View style={styles.bottom}>
 								{this.renderTime()}
 								{this.renderTicks()}
 							</View>
-
 						</View>
+						
 					</TouchableWithoutFeedback>
 				</View>
 			</View>

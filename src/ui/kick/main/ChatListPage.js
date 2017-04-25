@@ -71,7 +71,7 @@ const propTypes = {
 };
 
 const menuItems = [
-	'Bots', 'Contacts', 'New group', 'Profile', 'Settings'
+	'Contacts', 'New group', 'Profile', 'Settings'
 ]
 
 const defaultProps = {
@@ -161,7 +161,6 @@ class ChatListPage extends Component {
 		DatabaseHelper.getAllChats((results) => {
 			let chats = Object.keys(results.rows).map((key) => results.rows[key]);
 			chats = CollectionUtils.getSortedArrayByDate(chats);
-			console.log(chats);
 			this.updateFluxState(chats);
 			this.getMessageOnStart(chats);
 		});
@@ -190,13 +189,19 @@ class ChatListPage extends Component {
 		chats = CollectionUtils.getUniqueItemsByChatRoom(chats);
 		const rooms = chats.map((n) => n.info.room);
 		const last_message_times = chats.map((n) => n.info.last_message_time);
+
 		InternetHelper.checkIfNetworkAvailable((isConnected) => {
 			if (isConnected) {
-				InternetHelper.getAllMessages(this.state.domain, {
-					mail_id: this.state.userId,
-					rooms: rooms,
-					last_message_times: last_message_times
-				});
+				InternetHelper.getAllIssues(this.state.domain, {
+					email: this.state.userId,
+				}, (res) => {
+					console.log(res);
+					InternetHelper.getAllMessages(this.state.domain, {
+						email: this.state.userId,
+						rooms: rooms,
+						last_message_times: last_message_times
+					});
+				})
 			} else {
 				this.setState({ title: 'Kick' });
 			}
@@ -223,37 +228,9 @@ class ChatListPage extends Component {
 			finalChatItemsList = finalChatItemsList.concat(response.chatItems);
 		}
 
-
-
-		// for (const chat of chats) {
-		// 	if (messages.length > 0) {
-		// 		let ignoreOwner = false;
-		// 		let chatToBeUpdated = this.hasChatInChatList(chatList, chat);
-		// 		if (chatToBeUpdated == null) {
-		// 			ignoreOwner = true;
-		// 			chatToBeUpdated = CollectionUtils.createChatFromResponse(chat, {
-		// 				userId: this.state.userId,
-		// 				userName: this.state.userName
-		// 			});
-		// 		}
-		// 		const newChatItemsToBeAdded = messages.filter((m) => m.meta.room == chatToBeUpdated.info.room);
-		// 		messages = messages.filter((m) => m.meta.room != chatToBeUpdated.info.room);
-		// 		if (newChatItemsToBeAdded && newChatItemsToBeAdded.length > 0) {
-		// 			const res = this.updateChat(newChatItemsToBeAdded,
-		// 				chatToBeUpdated, StateClient.appData, chatList,
-		// 				StateClient.currentChat, StateClient.currentChatMessages, ignoreOwner);
-		// 			finalChatList.push(res.chat);
-		// 			finalChatItemsList = finalChatItemsList.concat(res.chatItems);
-		// 		}
-		// 	} else {
-		// 		break;
-		// 	}
-		// }
-
 		if (finalChatList && finalChatList.length > 0) {
 			finalChatList = CollectionUtils.pushNewDataAndSortArray(chatList, finalChatList).slice();
 			finalChatItemsList = finalChatItemsList.slice();
-			console.log(finalChatList);
 			DatabaseHelper.addNewChat(finalChatList, (msg) => {
 				console.log('chat list page', msg);
 				DatabaseHelper.addNewChatItem(finalChatItemsList, (msg) => {
@@ -422,18 +399,18 @@ class ChatListPage extends Component {
 		let page = null;
 		let isForGroupChat = false;
 		switch (action.index) {
+			// case 0:
+			// 	page = Page.BOT_LIST_PAGE;
+			// 	break;
 			case 0:
-				page = Page.BOT_LIST_PAGE;
-				break;
-			case 1:
 				page = Page.CONTACT_LIST_PAGE;
 				break;
-			case 2:
+			case 1:
 				page = Page.NEW_GROUP_PAGE
 				break;
-			case 3: page = Page.OWNER_INFO_PAGE
+			case 2: page = Page.OWNER_INFO_PAGE
 				break;
-			case 4: page = Page.SETTINGS_PAGE
+			case 3: page = Page.SETTINGS_PAGE
 				break;
 		}
 
@@ -546,17 +523,6 @@ class ChatListPage extends Component {
 				rightOpenValue={-120}
 			/>
 		);
-
-		// <ListView
-		// 	dataSource={this.state.dataSource}
-		// 	keyboardShouldPersistTaps='always'
-		// 	keyboardDismissMode='interactive'
-		// 	enableEmptySections={true}
-		// 	ref={'LISTVIEW'}
-		// 	renderRow={(item) => this.renderListItem(item)}
-		// />
-
-
 	}
 	// searchable={{
 	// 						autoFocus: true,

@@ -54,7 +54,8 @@ class ChatPage extends Component {
 			isLoading: true,
 			messages: [],
 			owner: this.props.route.owner,
-			isGroupChat: chat.info.chat_type == Type.GROUP,
+			chat_type: chat.info.chat_type,
+			is_personal_communication_chat: false,
 		};
 
 		this.addBackEvent = this.addBackEvent.bind(this);
@@ -70,9 +71,10 @@ class ChatPage extends Component {
 		this.renderSend = this.renderSend.bind(this);
 		this.onSend = this.onSend.bind(this);
 
-		this.onViewInfo = this.onViewInfo.bind(this);
-		this.onViewMore = this.onViewMore.bind(this);
-		this.onItemClicked = this.onItemClicked.bind(this);
+		// this.onViewInfo = this.onViewInfo.bind(this);
+		// this.onViewMore = this.onViewMore.bind(this);
+		// this.onItemClicked = this.onItemClicked.bind(this);
+		this.onRespond = this.onRespond.bind(this);
 		this.callback = this.callback.bind(this);
 
 		this.showAlert = this.showAlert.bind(this);
@@ -95,8 +97,9 @@ class ChatPage extends Component {
 		this.setUsers();
 		StateHelper.setOnChatItemListChanged(this.onChatListItemChanged);
 		DatabaseHelper.getAllChatItemForChatByChatRoom([this.state.chat.info.room], (results) => {
+			const is_group_chat = this.state.chat_type == Type.GROUP;
 			let messages = results.map((result) => {
-				return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, this.state.isGroupChat)
+				return CollectionUtils.convertToAirChatMessageObjectFromChatItem(result, is_group_chat)
 			});
 			let chat = Object.assign({}, this.state.chat, {
 				info: {
@@ -170,16 +173,15 @@ class ChatPage extends Component {
 			isLoading: false,
 			messages: messages,
 		})
-		if (this.state.chat.info.chat_type == Type.BOT && messages.length > 0) {
-			this.setState({ info: messages[0].info });
-		}
 	}
 
 	setUsers() {
 		let chat = this.state.chat;
-		if (this.state.isGroupChat) {
-			InternetHelper.getAllUsersInRoom(this.state.owner.domain, chat.info.room, (users) => {
-				if (users) {
+		const is_group_chat = this.state.chat_type == Type.GROUP;
+		if (is_group_chat) {
+			InternetHelper.getAllUsersInRoom(this.state.owner.domain, chat.info.room, (res) => {
+				if (res && res.message && res.message.length > 0) {
+					let users = res.message;
 					users = users.map((n) => {
 						return {
 							title: n.title,
@@ -196,7 +198,7 @@ class ChatPage extends Component {
 					Fluxify.doAction('updateCurrentChat', chat);
 				}
 			});
-		} else if (chat.info.chat_type == Type.PERSONAL) {
+		} else if (this.state.chat.info.chat_type == Type.PERSONAL) {
 			InternetHelper.setAllUsersInRoom(this.state.owner.domain, chat.info.users,
 				chat.info.room, chat.info.chat_type)
 		}
@@ -219,6 +221,7 @@ class ChatPage extends Component {
 				last_active: CollectionUtils.getLastActive(item.message.created_on)
 			}
 		});
+
 		Fluxify.doAction('updateCurrentChat', chat);
 		DatabaseHelper.updateChatByQuery({ room: chat.info.room }, chat, (msg) => {
 			console.log('chat page', msg);
@@ -244,38 +247,42 @@ class ChatPage extends Component {
 		})
 	}
 
-	onViewInfo(message, item = null) {
-		let page = Page.VIEW_INFO_PAGE;
-		if (message.info.base_action == 'create_')
-			page = Page.EDIT_INFO_PAGE;
-		const data = item == null ? message.info.items[0] : item;
-		console.log(data);
-		this.props.navigator.push({
-			id: page.id,
-			name: page.name,
-			item: data,
-			botName: this.state.chat.title,
-			owner: this.state.owner,
-			message: message,
-			callback: this.callback
-		});
+	onRespond(message) {
+		console.log(message);
 	}
 
-	onViewMore(message) {
-		let page = Page.VIEW_MORE_PAGE;
-		this.props.navigator.push({
-			id: page.id,
-			name: page.name,
-			botName: this.state.chat.title,
-			owner: this.state.owner,
-			message: message,
-			callback: this.callback
-		});
-	}
+	// onViewInfo(message, item = null) {
+	// 	let page = Page.VIEW_INFO_PAGE;
+	// 	if (message.info.base_action == 'create_')
+	// 		page = Page.EDIT_INFO_PAGE;
+	// 	const data = item == null ? message.info.items[0] : item;
+	// 	console.log(data);
+	// 	this.props.navigator.push({
+	// 		id: page.id,
+	// 		name: page.name,
+	// 		item: data,
+	// 		botName: this.state.chat.title,
+	// 		owner: this.state.owner,
+	// 		message: message,
+	// 		callback: this.callback
+	// 	});
+	// }
 
-	onItemClicked(message, index) {
-		this.onViewInfo(message, message.info.items[index]);
-	}
+	// onViewMore(message) {
+	// 	let page = Page.VIEW_MORE_PAGE;
+	// 	this.props.navigator.push({
+	// 		id: page.id,
+	// 		name: page.name,
+	// 		botName: this.state.chat.title,
+	// 		owner: this.state.owner,
+	// 		message: message,
+	// 		callback: this.callback
+	// 	});
+	// }
+
+	// onItemClicked(message, index) {
+	// 	this.onViewInfo(message, message.info.items[index]);
+	// }
 
 	callback(data = null) {
 		if (data && data.message) {
@@ -393,12 +400,18 @@ class ChatPage extends Component {
 						is_interactive_list: null,
 						items: []
 					}}
-					onViewInfo={this.onViewInfo}
-					onViewMore={this.onViewMore}
-					onItemClicked={this.onItemClicked}
+					communication={{
+						from_name: null,
+						from_email: null,
+						to_emails: [],
+						subject: null,
+						status: null,
+						attachments: [],
+						is_comment: false
+					}}
 					isAlert={false}
-					isGroupChat={this.state.isGroupChat}
-
+					chatType={this.state.chat_type}
+					isPersonalCommunicationChat={this.state.is_personal_communication_chat}
 					keyboardDismissMode='interactive'
 					enableEmptySections={true}
 					renderSend={this.renderSend}

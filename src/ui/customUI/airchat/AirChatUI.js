@@ -27,7 +27,10 @@ import SendUI from './SendUI.js';
 import TimeUI from './TimeUI.js';
 import InteractiveChatUI from './InteractiveChatUI.js';
 import InteractiveListUI from './InteractiveListUI.js';
+import CommunicationEmailUI from './CommunicationEmailUI.js';
+import CommunicationCommentUI from './CommunicationCommentUI.js';
 import Communication from './Communication.js';
+
 // Min and max heights of ToolbarInput and Composer
 // Needed for Composer auto grow and ScrollView animation
 // TODO move these values to Constants.js (also with used colors #b2b2b2)
@@ -58,17 +61,13 @@ const childContextTypes = {
 
 const defaultProps = {
 	messages: [],
-	onSend: () => {
-	},
-	onViewInfo: () => {
-	},
-	onViewMore: () => {
-	},
-	onItemClicked: () => {
-	},
+	onSend: () => { },
+	onViewInfo: () => { },
+	onViewMore: () => { },
+	onItemClicked: () => { },
+	onRespond: () => { },
+	onLoadEarlier: () => { },
 	loadEarlier: false,
-	onLoadEarlier: () => {
-	},
 	locale: null,
 	isAnimated: Platform.select({
 		ios: true,
@@ -101,13 +100,23 @@ const defaultProps = {
 		name: null
 	},
 	isAlert: false,
-	isGroupChat: false,
+	chatType: 'personal',
+	isPersonalCommunicationChat: false,
 	info: {
 		base_action: null,
 		button_text: null,
 		is_interactive_chat: null,
 		is_interactive_list: null,
 		items: []
+	},
+	communication: {
+		from_name: null,
+		from_email: null,
+		to_emails: [],
+		subject: null,
+		status: null,
+		attachments: [],
+		is_comment: false,
 	},
 	bottomOffset: 0,
 	isLoadingEarlier: false,
@@ -119,8 +128,9 @@ const propTypes = {
 	onViewInfo: React.PropTypes.func,
 	onViewMore: React.PropTypes.func,
 	onItemClicked: React.PropTypes.func,
-	loadEarlier: React.PropTypes.bool,
+	onRespond: React.PropTypes.func,
 	onLoadEarlier: React.PropTypes.func,
+	loadEarlier: React.PropTypes.bool,
 	locale: React.PropTypes.string,
 	isAnimated: React.PropTypes.bool,
 	renderAccessory: React.PropTypes.func,
@@ -143,8 +153,10 @@ const propTypes = {
 	renderTime: React.PropTypes.func,
 	user: React.PropTypes.object,
 	isAlert: React.PropTypes.bool,
-	isGroupChat: React.PropTypes.bool,
+	chatType: React.PropTypes.string,
+	isPersonalCommunicationChat: React.PropTypes.bool,
 	info: React.PropTypes.object,
+	communication: React.PropTypes.object,
 	bottomOffset: React.PropTypes.number,
 	isLoadingEarlier: React.PropTypes.bool,
 	keyboardShouldPersistTaps: React.PropTypes.oneOf(['always', 'never', 'handled']),
@@ -179,7 +191,9 @@ class AirChatUI extends React.Component {
 		this.onViewInfo = this.onViewInfo.bind(this);
 		this.onViewMore = this.onViewMore.bind(this);
 		this.onItemClicked = this.onItemClicked.bind(this);
+		this.onRespond = this.onRespond.bind(this);
 		this.getLocale = this.getLocale.bind(this);
+
 
 		this.invertibleScrollViewProps = {
 			inverted: true,
@@ -385,6 +399,7 @@ class AirChatUI extends React.Component {
 			onViewInfo: this.onViewInfo,
 			onViewMore: this.onViewMore,
 			onItemClicked: this.onItemClicked,
+			onRespond: this.onRespond,
 		}
 
 		return (
@@ -415,8 +430,10 @@ class AirChatUI extends React.Component {
 				...message,
 				user: this.props.user,
 				info: this.props.info,
+				communication: this.props.communication,
 				isAlert: this.props.isAlert,
-				isGroupChat: this.props.isGroupChat,
+				chatType: this.props.chatType,
+				isPersonalCommunicationChat: this.props.isPersonalCommunicationChat,
 				createdAt: new Date(),
 				_id: Math.round(Math.random() * 1000000),
 			};
@@ -444,15 +461,27 @@ class AirChatUI extends React.Component {
 	}
 
 	onViewMore(message) {
-		//console.log(message);
 		this.props.onViewMore(message);
 	}
 
 	onItemClicked(message, index) {
-		// console.log(message);
-		// console.log(index);
 		this.props.onItemClicked(message, index);
 	}
+
+	onRespond(message) {
+		this.props.onRespond(message);
+	}
+
+	/*
+	What about row height * item index? Let's say you want to scroll to 20th element in your ListView. Each row has height: 50. We calculate an offset at 20th element by using formula I mentioned above: 50 * 20 = 1000. Then use scrollTo(0, 1000) and you'll scroll to the desired element.
+
+	To be able to scroll back, you need to store an offset before you apply a scrollTo function:
+
+	var scrollProperties = this.refs.listView.scrollProperties;
+	var scrollOffset = scrollProperties.contentLength - scrollProperties.visibleLength;
+	After you hook up on keyboard's event (keyboardWillHide from the DeviceEventEmitter), you can do scrollTo to the previous offset.
+	*/
+
 	resetInputToolbar() {
 		this.setState((previousState) => {
 			return {
@@ -592,6 +621,8 @@ export {
 	MessageTextUI,
 	InteractiveChatUI,
 	InteractiveListUI,
+	CommunicationCommentUI,
+	CommunicationEmailUI,
 	ComposerUI,
 	DayUI,
 	InputToolbarUI,

@@ -232,25 +232,28 @@ class LoginPage extends Component {
 	addAllUsers(users) {
 		const domain = this.state.domain.toLowerCase().trim();
 		const email = this.state.email.toLowerCase().trim();
-		InternetHelper.getAllUsers(domain, email,
-			(array, msg) => {
-				if (array && array.length > 0) {
-					users = CollectionUtils.addAndUpdateContactList(users,
-						array.filter((nn) => nn.email != email), {
-							userName: array.filter((nn) => nn.email == email)[0].full_name,
-							userId: email
+		InternetHelper.get_user(domain, email,
+			(res) => {
+				if (res && res.message && res.message.length > 0) {
+					InternetHelper.getUsers(domain, email, 1,
+						(res) => {
+							if (res && res.message.length > 0) {
+								users = CollectionUtils.addAndUpdateContactList(users,
+									res.message.filter((nn) => nn.email != email),
+									{
+										userName: res.message[0].full_name,
+										userId: res.message[0].email
+									});
+							}
+
+							DatabaseHelper.addNewChat(users, (msg) => {
+								setData(FIRST_RUN, 'false');
+								let page = Page.CHAT_LIST_PAGE;
+								this.props.navigator.replace({ id: page.id, name: page.name });
+							}, true);
 						});
 				}
-				DatabaseHelper.addNewChat(users, (msg) => {
-					//console.log(msg)
-					setData(FIRST_RUN, 'false');
-					CollectionUtils.addDefaultBots(() => {
-						let page = Page.CHAT_LIST_PAGE;
-						this.props.navigator.replace({ id: page.id, name: page.name });
-					});
-				}, true);
-			});
-
+			})
 	}
 
 	showAlert(title, body, callback = null) {

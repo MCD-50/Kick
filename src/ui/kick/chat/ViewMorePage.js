@@ -227,7 +227,6 @@ class ViewInfo extends Component {
 		}
 	}
 
-
 	render() {
 		return (
 			<View style={styles.base}>

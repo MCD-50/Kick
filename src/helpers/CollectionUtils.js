@@ -205,7 +205,7 @@ class CollectionUtils {
 						item_id: item_id,
 						chat_type: Type.BOT,
 						add: add,
-						user_id: airChatMessageObject.user._id,
+						email: airChatMessageObject.user._id,
 					},
 					created_on: this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
 					text: airChatMessageObject.text,
@@ -221,7 +221,7 @@ class CollectionUtils {
 						room: room,
 						chat_type: chat_type,
 						add: add,
-						user_id: airChatMessageObject.user._id,
+						email: airChatMessageObject.user._id,
 					},
 					created_on: this.parseCreatedAt(airChatMessageObject.createdAt.toString()),
 					text: airChatMessageObject.text,
@@ -243,7 +243,7 @@ class CollectionUtils {
 						item_id: item_id,
 						chat_type: Type.BOT,
 						add: add,
-						user_id: chatItem.message.user_id
+						email: chatItem.message.user_id
 					},
 					created_on: chatItem.message.created_on,
 					text: chatItem.message.text,
@@ -259,7 +259,7 @@ class CollectionUtils {
 						room: room,
 						chat_type: chat_type,
 						add: add,
-						user_id: chatItem.message.user_id
+						email: chatItem.message.user_id
 					},
 					created_on: chatItem.message.created_on,
 					text: chatItem.message.text,
@@ -419,6 +419,12 @@ class CollectionUtils {
 		return _results.concat(results);
 	}
 
+	getSortedArrayByName = (results) => {
+		return results.sort((a, b) => {
+			return a.title > b.title ? 1 : (b.title > a.title ? -1 : 0);
+		})
+	}
+
 	getUniqueItemsByChatRoom = (listItems) => {
 		var room = [];
 		var arr = [];
@@ -487,7 +493,7 @@ class CollectionUtils {
 		return -1;
 	}
 
-	pushNewDataAndSortArray = (listOfChats, chats) => {
+	pushNewDataAndSortArray = (listOfChats, chats, sort_by_name = false) => {
 		for (const x of chats) {
 			let index = this.getIndexOfChatInChatListByRoom(listOfChats, x.info.room);
 			if (index > -1) {
@@ -496,6 +502,8 @@ class CollectionUtils {
 				listOfChats.push(x);
 			}
 		}
+		if (sort_by_name)
+			return this.getSortedArrayByName(listOfChats);
 		return this.getSortedArrayByDate(listOfChats);
 	}
 
@@ -516,7 +524,6 @@ class CollectionUtils {
 					},
 				}));
 			} else {
-				console.log('creating new');
 				const users = this.getUserForRoom(owner,
 					[{
 						title: title,
@@ -528,7 +535,7 @@ class CollectionUtils {
 				newListOfUsers.push(chat);
 			}
 		}
-		return this.getUniqueItemsByChatRoom(newListOfUsers);
+		return this.pushNewDataAndSortArray(users, newListOfUsers, true);
 	}
 
 }

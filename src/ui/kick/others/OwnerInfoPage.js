@@ -152,15 +152,13 @@ class OwnerInfoPage extends Component {
 	}
 
 	componentDidMount() {
-		fetch('http://' + this.state.owner.domain + '/api/method/frappe.utils.kickapp.bridge.get_user_by_email?email=' + this.state.owner.userId)
-			.then((res) => res.json(), (reject) => this.setState({ isLoading: false }))
-			.then((responseData) => {
-				console.log(responseData);
+		InternetHelper.get_user(this.state.owner.domain, this.state.owner.userId,
+			(res) => {
 				this.setState({
 					isLoading: false,
-					data: responseData.message
+					data: res && res.message ? res.message : []
 				});
-			}, (reject) => this.setState({ isLoading: false }));
+			});
 	}
 
 	getColor(name) {
