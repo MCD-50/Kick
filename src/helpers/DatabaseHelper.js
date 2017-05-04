@@ -1,56 +1,30 @@
-import React from 'react';
+//import from app
 import DB from './DatabaseClient.js';
 import { Type } from '../enums/Type.js';
 
 
 class DatabaseHelper {
-	constructor() {
-		this.chats = [];
-		this.isLocked = false;
-	}
-
-	setLock(val) {
-		this.isLocked = val;
-	}
-
-	getLock() {
-		return this.isLocked;
-	}
 
 	checkIfChatExists(data, callback) {
-		if (data.info.chat_type == Type.BOT) {
-			this.getChatByQuery({ room: data.info.room }, (results) => {
-				if (results && results.length > 0)
-					callback(true, { room: data.info.room });
-				else
-					callback(false, null);
-			});
-		} else {
-			this.getChatByQuery({ room: data.info.room }, (results) => {
-				if (results && results.length > 0)
-					callback(true, { room: data.info.room });
-				else
-					callback(false, null);
-			});
-		}
+		this.getChatByQuery({ room: room }, (results) => {
+			if (results && results.length > 0)
+				callback(true, { room: room });
+			else
+				callback(false, null);
+		});
 	}
 
-	// Read operation on chats and chatItems;
 	getAllChats(callback) {
-		this.setLock(true);
 		return DB.CHATS.get_all((results) => {
-			this.setLock(false);
 			callback(results);
 		});
 	}
 
-	//don't set lock over this.
 	getChatByQuery(query, callback) {
 		return DB.CHATS.get(query, (results) => {
 			callback(results);
 		})
 	}
-
 
 	getAllChatsByQuery(query, callback) {
 		return DB.CHATS.get(query, (results) => {
@@ -60,14 +34,13 @@ class DatabaseHelper {
 
 	getAllChatItemForChatByChatRoom(chatIds, callback) {
 		this.items = [];
-		this.setLock(true);
 		this.getAllChatItemForChatByChatRoomInternal(chatIds, callback);
 	}
 
 	getAllChatItemForChatByChatRoomInternal(chatIds, callback) {
 		let length = chatIds.length;
 		if (length == 0) {
-			this.setLock(false);
+
 			callback(this.items);
 			return;
 		}
@@ -81,8 +54,7 @@ class DatabaseHelper {
 
 	//create operation on chats and chatItems;
 
-	addNewChat(datas, callback, forceUpdate = false) {
-		this.setLock(true);
+	addNewChat(datas, callback = null, forceUpdate = false) {
 		this.addNewChatInternal(datas, callback, forceUpdate);
 	}
 
@@ -90,13 +62,11 @@ class DatabaseHelper {
 		const datas = _datas.slice();
 		let length = datas.length;
 		if (length == 0) {
-			this.setLock(false);
-			callback('Added Chats');
+			if (callback)
+				callback('Added Chats');
 			return;
 		}
-		this.checkIfChatExists(datas[length - 1], (val, query) => {
-			//console.log(val, query);
-			//console.log(datas);
+		this.checkIfChatExists(datas[length - 1].info.room, (val, query) => {
 			if (val) {
 				if (forceUpdate && query) {
 					DB.CHATS.update(query, datas[length - 1], (results) => {
@@ -117,7 +87,6 @@ class DatabaseHelper {
 	}
 
 	addNewChatItem(datas, callback) {
-		this.setLock(true);
 		this.addNewChatItemInternal(datas, callback);
 	}
 
@@ -125,7 +94,6 @@ class DatabaseHelper {
 		const datas = _datas.slice();
 		let length = datas.length;
 		if (length == 0) {
-			this.setLock(false);
 			callback('Added Chat items')
 			return;
 		}
@@ -141,13 +109,11 @@ class DatabaseHelper {
 	//update operation on chats and chatItems;
 
 	updateChatByQuery(query, data, callback) {
-		this.setLock(true);
 		this.updateChatByQueryInternal(query, data, callback);
 	}
 
 	updateChatByQueryInternal(query, data, callback) {
 		DB.CHATS.update(query, data, (results) => {
-			this.setLock(false);
 			callback(results);
 		})
 	}
@@ -155,7 +121,6 @@ class DatabaseHelper {
 
 	//delete operation on chats and chatItems; 
 	removeChatByQuery(rooms, callback) {
-		this.setLock(true);
 		this.removeChatByQueryInternal(rooms, callback);
 	}
 
@@ -163,7 +128,6 @@ class DatabaseHelper {
 		const rooms = _rooms.slice();
 		let length = rooms.length;
 		if (length == 0) {
-			this.setLock(false);
 			callback('Removed chats');
 			return;
 		}
@@ -185,9 +149,7 @@ class DatabaseHelper {
 
 	eraseEverything(callback) {
 		DB.CHATS.erase_db((x) => {
-			console.log(x);
 			DB.CHATITEMS.erase_db((y) => {
-				console.log(y);
 				callback('done');
 			})
 		})

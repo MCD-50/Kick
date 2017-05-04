@@ -1,3 +1,4 @@
+//import from app
 import StateClient from './StateClient.js';
 
 class StateHelper {
@@ -11,12 +12,11 @@ class StateHelper {
 			this.onChatListChanged(chatList);
 		});
 		StateClient.on('change:currentChatMessages', (chatItemList) => {
-			this.onChatListItemChanged(chatItemList);
+			this.onChatItemListChanged(chatItemList);
 		});
 		StateClient.on('change:currentChat', (currentChat) => {
 			this.onCurrentChatChanged(currentChat);
 		});
-
 	}
 
 	onChatListChanged = (chatList) => {
@@ -24,7 +24,7 @@ class StateHelper {
 		callbacks.forEach(callback => callback(chatList));
 	}
 
-	onChatListItemChanged = (chatItemList) => {
+	onChatItemListChanged = (chatItemList) => {
 		let callbacks = this.stateChangeCallbacks.chat_items;
 		callbacks.forEach(callback => callback(chatItemList));
 	}
@@ -33,7 +33,6 @@ class StateHelper {
 		let callbacks = this.stateChangeCallbacks.item;
 		callbacks.forEach(callback => callback(currentChat));
 	}
-
 
 	setOnChatListChanged = (callback) => {
 		this.stateChangeCallbacks.chat.push(callback)

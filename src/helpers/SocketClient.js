@@ -1,10 +1,8 @@
-
-import React from 'react';
+//don't remove this
 window.navigator.userAgent = "react-native"
-import io from 'socket.io-client/dist/socket.io';
-import InternetHelper from './InternetHelper.js';
-import ParseHelper from './ParseHelper.js';
 
+//import from system
+import io from 'socket.io-client/dist/socket.io';
 
 class SocketClient {
 	constructor() {
@@ -45,13 +43,13 @@ class SocketClient {
 	}
 
 	onJoinedRoom(msg) {
-		console.log('joined_room')
+		console.log(msg);
 		let callbacks = this.stateChangeCallbacks.join;
 		callbacks.forEach(callback => callback());
 	}
 
 	onLeftRoom(msg) {
-		console.log('left_room')
+		console.log(msg);
 		let callbacks = this.stateChangeCallbacks.left;
 		callbacks.forEach(callback => callback());
 	}
@@ -90,22 +88,15 @@ class SocketClient {
 		callbacks.forEach(callback => callback(noti));
 	}
 
-	//query is object which contains the various params needed by server.
-
 	sendMessage(query) {
-		//emit message to server directly.
 		this.socket.emit('message_from_client', query);
 	}
 
 	joinRoom(room_name) {
-		//console.log(room_name)
-		//console.log(this.stateChangeCallbacks);
 		this.socket.emit('join_room', room_name);
 	}
 
 	leaveRoom(room_name) {
-		//console.log(room_name);
-		//console.log(this.stateChangeCallbacks);
 		this.removeDummyCallbacks();
 		this.socket.emit('leave_room', room_name);
 	}

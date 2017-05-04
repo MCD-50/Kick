@@ -62,9 +62,6 @@ const childContextTypes = {
 const defaultProps = {
 	messages: [],
 	onSend: () => { },
-	onViewInfo: () => { },
-	onViewMore: () => { },
-	onItemClicked: () => { },
 	onRespond: () => { },
 	onLoadEarlier: () => { },
 	loadEarlier: false,
@@ -102,13 +99,6 @@ const defaultProps = {
 	isAlert: false,
 	chatType: 'personal',
 	isPersonalCommunicationChat: false,
-	info: {
-		base_action: null,
-		button_text: null,
-		is_interactive_chat: null,
-		is_interactive_list: null,
-		items: []
-	},
 	communication: {
 		from_name: null,
 		from_email: null,
@@ -125,9 +115,6 @@ const defaultProps = {
 const propTypes = {
 	messages: React.PropTypes.array,
 	onSend: React.PropTypes.func,
-	onViewInfo: React.PropTypes.func,
-	onViewMore: React.PropTypes.func,
-	onItemClicked: React.PropTypes.func,
 	onRespond: React.PropTypes.func,
 	onLoadEarlier: React.PropTypes.func,
 	loadEarlier: React.PropTypes.bool,
@@ -155,7 +142,6 @@ const propTypes = {
 	isAlert: React.PropTypes.bool,
 	chatType: React.PropTypes.string,
 	isPersonalCommunicationChat: React.PropTypes.bool,
-	info: React.PropTypes.object,
 	communication: React.PropTypes.object,
 	bottomOffset: React.PropTypes.number,
 	isLoadingEarlier: React.PropTypes.bool,
@@ -429,7 +415,6 @@ class AirChatUI extends React.Component {
 			return {
 				...message,
 				user: this.props.user,
-				info: this.props.info,
 				communication: this.props.communication,
 				isAlert: this.props.isAlert,
 				chatType: this.props.chatType,

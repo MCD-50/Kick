@@ -1,267 +1,106 @@
+//import from system
 import { NetInfo } from 'react-native';
-import { getStoredDataFromKey } from './AppStore.js';
+
+//import from app
+import { getData } from './AsyncStore';
 import { DOMAIN } from '../constants/AppConstant.js';
-class InternetHelper {
+import AlertHelper from '../helpers/AlertHelper.js';
 
-	checkIfNetworkAvailable(networkStatusCallback) {
-		NetInfo.isConnected.fetch().then(isConnected => {
-			networkStatusCallback(isConnected)
+export const checkIfNetworkAvailable = () => {
+	return new Promise((resolve, reject) => {
+		NetInfo.isConnected.fetch()
+			.then((res) => resolve(res), (rej) => reject(rej));
+	});
+}
+
+export const login = (full_url) => {
+	const index = full_url.lastIndexOf('api');
+	const ping_url = full_url.substring(0, index);
+	const method = getMethod()
+	fetchUrl(ping_url + 'api/method/ping', method)
+	.then((json) => {
+		fetchUrl(full_url, method)
+		.then((res) => {
+			if (res.message.includes('Incorrect password')) {
+				AlertHelper.showAlert('Network request failed.', 
+					'Incorrect Password, make sure the entered password is correct and try again in a little bit.');
+				return Promise.reject();
+			} else if (res.message.includes('User disabled or missing')) {
+				AlertHelper.showAlert('Network request failed.', 
+					'Incorrect Username / Email, make sure the entered email is correct and try again in a little bit.');
+				return Promise.reject();
+			} else {
+				return Promise.resolve(res)
+			}
+		})
+		.catch((rej) => {
+			showRejectMessage(rej, 'Something went wrong. Please try in a little bit.');
+			return Promise.reject();
 		});
-	}
+	})
+	.catch((rej) => {
+		showRejectMessage(rej, 'Failed to connect to given domain, make sure the entered domain is correct and try in a little bit.')
+		return Promise.reject();
+	});
+}
 
-	login(full_url, alertCallback, successCallback) {
-		let index = full_url.lastIndexOf('api');
-		let ping_url = full_url.substring(0, index);
+export const resolveRequest = (url, data = null) => {
+	return new Promise((resolve, reject)=>{
+		let form = null
+		if(data){
+			data = JSON.stringify(data);
+			form = new FormData();
+			form.append('obj', data);
+		}
+		const method = getMethod(form);
+		fetchUrl(url, method)
+		.then((json) => resolve(json))
+		.catch((rej)=>{
+			showRejectMessage(rej, 'Something went wrong. Please try in a little bit.');
+			reject(rej);
+		});
+	})
+}
 
-		fetch(ping_url + 'api/method/ping', {
+const getMethod = (body = null) => {
+	if (body) {
+		return {
 			method: "POST",
 			headers: {
 				'Accept': 'application/json',
 				'Content-Type': 'application/json',
 			},
-		}).then((succ) => {
-			fetch(full_url, {
-				method: "POST",
-				headers: {
-					'Accept': 'application/json',
-					'Content-Type': 'application/json',
-				},
-			}).then((response) => response.json(), (reject) => alertCallback('Network request failed.', 'Something went wrong. Please try in a little bit.'))
-				.then((responseData) => {
-					if (responseData.message.includes('Incorrect password')) {
-						alertCallback('Network request failed.',
-							'Incorrect Password, make sure the entered password is correct and try again in a little bit.');
-					} else if (responseData.message.includes('User disabled or missing')) {
-						alertCallback('Network request failed.',
-							'Incorrect Username / Email, make sure the entered email is correct and try again in a little bit.');
-					} else {
-						successCallback(responseData);
-					}
-				}, (reject) => alertCallback('Network request failed.', 'Something went wrong. Please try in a little bit.'))
-		}, (reject) => {
-			alertCallback('Network request failed.',
-				'Failed to connect to given domain, make sure the entered domain is correct and try in a little bit.');
-		});
-	}
-
-	getAllUsersInRoom(domain, room, callback) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_users_in_room';
-		let data = {
-			room: room,
+			body: body
 		}
-
-		const form = new FormData();
-		form.append('obj', JSON.stringify(data));
-
-		let method = {
+	} else {
+		return {
 			method: "POST",
 			headers: {
 				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback);
-	}
-
-	setAllUsersInRoom(domain, users, room, chat_type, callback = null) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.set_users_in_room';
-		let data = {
-			room: room,
-			users: users,
-			chat_type: chat_type
+				'Content-Type': 'application/json',
+			}
 		}
-		const form = new FormData();
-		form.append('obj', JSON.stringify(data));
-
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback);
-	}
-
-	removeFromGroup(domain, room, email, callback = null) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.remove_user_from_group';
-		let data = {
-			room: room,
-			email: email
-		}
-		const form = new FormData();
-		form.append('obj', JSON.stringify(data));
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback);
-	}
-
-	getUsers(domain, user_id, page_count, callback) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_users';
-
-		let data = {
-			email: user_id,
-			page_count: page_count
-		}
-
-		const form = new FormData();
-		form.append('obj', JSON.stringify(data));
-
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-
-		this.fetch(url, method, callback)
-	}
-
-	get_user(domain, user_id, callback) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_user_by_email';
-		let data = {
-			email: user_id,
-		}
-		const form = new FormData();
-		form.append('obj', JSON.stringify(data));
-		
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback)
-	}
-
-	getAllMessages(domain, obj) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_message';
-		const form = new FormData();
-		form.append('obj', JSON.stringify(obj));
-
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method)
-	}
-
-
-	getAllIssues(domain, obj, callback) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_issues';
-		const form = new FormData();
-		form.append('obj', JSON.stringify(obj));
-
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback)
-	}
-
-	getIssueForUser(domain, obj, callback) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_issue_for_user';
-		const form = new FormData();
-		form.append('obj', JSON.stringify(obj));
-
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback)
-	}
-
-	sendData(domain, data, userId) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.send_message_and_get_reply';
-		let query = {
-			"user_id": userId,
-			"data": data
-		};
-		const form = new FormData();
-		form.append('obj', JSON.stringify(query));
-
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-
-		this.fetch(url, method);
-	}
-
-	loadMore(domain, bot_name, page_count, email, callback, is_load_items = false) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.load_more';
-		if (is_load_items)
-			url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.load_items';
-		let query = {
-			"bot_name": bot_name,
-			"page_count": page_count,
-			"email": email
-		};
-
-		const form = new FormData();
-		form.append('query', JSON.stringify(query));
-		let method = {
-			method: "POST",
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'multipart/form-data',
-			},
-			body: form
-		};
-		this.fetch(url, method, callback);
-	}
-
-	getMeta(domain, bot_name, callback) {
-		let url = 'http://' + domain + '/api/method/frappe.utils.kickapp.bridge.get_meta?bot_name=' + bot_name;
-		fetch(url)
-			.then((response) => response.json(),
-			(reject) => callback({ is_error: true, data: null }))
-			.then((responseData) => callback({ is_error: false, data: responseData.message }),
-			(reject) => callback({ is_error: true, data: null }));
-	}
-
-	fetch(url, method, callback = null) {
-		fetch(url, method)
-			.then((response) => response.json(), (reject) => {
-				if (callback)
-					callback('Something went wrong.')
-			})
-			.then((responseData) => {
-				if (callback)
-					callback(responseData);
-			}, (reject) => {
-				console.log(reject);
-			})
 	}
 }
 
-const internet = new InternetHelper();
-export default internet;
+const fetchUrl = (url, method) => {
+	return new Promise((resolve, reject) => {
+		checkIfNetworkAvailable()
+		.then((r)=>{
+			fetch(url, method)
+			.then((res) => res.json(), (rej) => reject(rej))
+			.then((json) => resolve(json), (rej) => reject(rej));
+		})
+		.catch((rej)=> reject({ is_connected:false }));
+	})
+}
+
+
+const showRejectMessage = (rej, message)=>{
+	if (rej) {
+		AlertHelper.showAlert("Network request failed.",
+			"Please check your internet connection and try again.")
+	}else{
+		AlertHelper.showAlert('Network request failed.', message)
+	}
+}

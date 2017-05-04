@@ -23,6 +23,7 @@
     "react-native-invertible-scroll-view": "^1.0.0",
     "react-native-lightbox": "^0.6.0",
     "react-native-loading-spinner-overlay": "^0.4.2",
+    "react-native-material-component": "^1.0.2",
     "react-native-parsed-text": "0.0.16",
     "react-native-sqlite-storage": "^3.2.2",
     "react-native-swipe-list-view": "^0.4.0",

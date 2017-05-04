@@ -1,93 +1,45 @@
+//app store keys
+export const DOMAIN = 'domain';
+export const EMAIL = 'email';
+export const USER_NAME = 'user_name';
+export const IS_LOGGED = 'is_logged';
+export const FULL_URL = 'full_url';
+export const SERVER_URL = 'server_url';
+export const APP_INFO = 'app_info';
+
+//app_margin
+export const MARGIN_16 = 16;
+export const MARGIN_10 = 10;
+export const MARGIN_5 = 5;
 
 
-export const DOMAIN = 'DOMAIN';
-export const EMAIL = 'EMAIL';
-export const SID = 'SID';
-export const FIRST_RUN = 'FIRST_RUN';
-export const FULL_URL = 'FULL_URL';
-export const SERVER_URL = 'SERVER_URL';
-export const BOTS = 'BOTS';
-export const CHATS = 'CHATS';
-export const CHATITEMS = 'CHATITEMS';
-export const LAST_ACTIVE = 'LAST_ACTIVE'
-export const FULL_NAME = 'FULL_NAME';
-export const FIRST_NAME = 'FIRST_NAME';
-export const LAST_NAME = 'LAST_NAME';
-export const IS_CHAT_MODE = 'IS_CHAT_MODE';
-export const APP_DATA = 'APP_DATA';
-
-export const LEFTMARGIN = 16;
-export const RIGHTMARGIN = 16;
-export const UPMARGIN = 5;
-export const DOWNMARGIN = 5;
+//app text size
+export const TEXT_SIZE_13 = 13;
+export const TEXT_SIZE_14 = 14;
+export const TEXT_SIZE_15 = 15;
+export const TEXT_SIZE_16 = 16;
+export const TEXT_SIZE_17 = 17;
+export const TEXT_SIZE_18 = 18;
+export const TEXT_SIZE_19 = 19;
+export const TEXT_SIZE_20 = 20;
+export const TEXT_SIZE_22 = 22;
 
 
-export const HEADERTEXTSIZE = 18;
-export const HEADERTEXTSIZEBIG = 20;
-export const SUBHEADERTEXTSIZE = 16;
-export const TEXTINPUTTEXTSIZE = 17;
-export const BODYTEXTSIZE = 14;
-export const SMALLTEXTSIZE = 12;
-export const OTHERTEXTSIZE = 10;
+//app component variables
+export const TOOLBAR_HEIGHT = 55;
 
 
+//app api constants
+export const GET_USERS_IN_ROOM = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_users_in_room";
+export const SET_USERS_IN_ROOM = "http://{0}/api/method/frappe.utils.kickapp.bridge.set_users_in_room";
+export const REMOVE_USER_FROM_GROUP = "http://{0}/api/method/frappe.utils.kickapp.bridge.remove_user_from_group";
 
-//Database variables
+export const GET_USERS = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_users";
+export const GET_USER_BY_EMAIL = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_user_by_email";
+export const GET_MESSAGES = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_messages";
 
-const database_name = "Kick.db";
-const database_version = "1.0";
-const database_displayname = 'Kick';
-const database_size = 200000;
-
-
-const table_chat = 'chat';
-const table_personal_chat = 'personalChat';
-const table_group_chat = 'groupChat';
-const table_bot_chat = 'botChat';
-
-const table_chat_item = 'chatItem';
-const table_chat_item_list = 'chatItemList';
-
-const id = 'id';
-const title = 'title';
-const sub_title = 'subTitle';
+export const GET_ISSUES = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_issues";
+export const GET_ISSUES_FOR_USER = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_issues_for_user";
+export const SEND_MESSAGE = "http://{0}/api/method/frappe.utils.kickapp.bridge.send_message";
 
 
-const chat_id = 'chatId';
-const chat_item_id = 'chatItemId';
-
-const is_added_to_chat_list = 'isAddedToChatList';
-const chat_type = 'chatType';
-const room = 'room';
-const image = 'image';
-const new_message_count = 'newMessageCount';
-const last_active = 'lastActive';
-const last_message_time = 'lastMessageTime';
-
-
-
-const email = 'email';
-
-const description = 'description';
-const syntax = 'syntax';
-const syntax_description = 'syntaxDescription';
-
-const is_mute = 'isMute';
-const people = 'people';
-const people_count = 'peopleCount';
-
-const user_name = 'userName';
-const user_id = 'userId';
-const text = 'text';
-const created_on = 'createdOn';
-const is_alert = 'isAlert';
-
-const action_name = 'actionName';
-const action_on_button_click = 'actionOnButtonClick';
-const action_on_list_item_click = 'actionOnListItemClick'
-
-const button_text = 'buttonText';
-const is_interactive_chat = 'isInteractiveChat';
-const is_interactive_list = 'isInteractiveList';
-const list_item_key = 'listItemKey';
-const list_item_value = 'listItemValue';

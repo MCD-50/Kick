@@ -9,8 +9,6 @@ import {
 
 import MessageTextUI from './MessageTextUI.js';
 import MessageImageUI from './MessageImageUI.js';
-import InteractiveChatUI from './InteractiveChatUI.js';
-import InteractiveListUI from './InteractiveListUI.js';
 import CommunicationCommentUI from './CommunicationCommentUI.js';
 import CommunicationEmailUI from './CommunicationEmailUI.js';
 import TimeUI from './TimeUI.js';
@@ -216,27 +214,6 @@ class BubbleUI extends React.Component {
 		return null;
 	}
 
-	renderInteractiveChat() {
-		if (this.props.currentMessage.text) {
-			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
-			if (this.props.renderInteractiveChat) {
-				return this.props.renderInteractiveChat(messageTextProps);
-			}
-			return <InteractiveChatUI { ...messageTextProps} />;
-		}
-		return null;
-	}
-
-	renderInteractiveList() {
-		if (this.props.currentMessage.text) {
-			const { containerStyle, wrapperStyle, ...messageTextProps } = this.props;
-			if (this.props.renderInteractiveList) {
-				return this.props.renderInteractiveList(messageTextProps);
-			}
-			return <InteractiveListUI { ...messageTextProps } />;
-		}
-		return null;
-	}
 
 	renderTicks() {
 		const { currentMessage } = this.props;
@@ -307,11 +284,6 @@ class BubbleUI extends React.Component {
 		} else {
 			return this.renderMessageText()
 		}
-		// else if (info && info.is_interactive_chat) {
-		// 	return this.renderInteractiveChat();
-		// } else if (info && info.is_interactive_list) {
-		// 	return this.renderInteractiveList();
-		// }
 	}
 
 	render() {

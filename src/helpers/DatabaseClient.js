@@ -1,10 +1,8 @@
-var RNDBModel = require('../test/index.js');
-
-import { CHATITEMS, CHATS } from '../constants/AppConstant.js';
-
-var DB = {
-	'CHATS': new RNDBModel.create_db(CHATS),
-	'CHATITEMS': new RNDBModel.create_db(CHATITEMS),
+//import from system
+const RNDBModel = require('../test/index.js');
+const DB = {
+	'CHATS': new RNDBModel.create_db('chats'),
+	'CHATITEMS': new RNDBModel.create_db('chatitems')
 }
 
 export default DB;
