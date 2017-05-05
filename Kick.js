@@ -12,16 +12,16 @@ import StateHelper from './src/helpers/StateHelper.js';
 
 
 //pages 
-import SplashPage from './src/ui/kick/others/SplashPage.js';
-import LoginPage from './src/ui/kick/main/LoginPage.js';
-import ChatListPage from './src/ui/kick/main/ChatListPage.js';
-import ContactListPage from './src/ui/kick/main/ContactListPage.js';
-import ChatPage from './src/ui/kick/chat/ChatPage.js';
-import SettingsPage from './src/ui/kick/main/SettingsPage.js';
-import ContactInfoPage from './src/ui/kick/others/ContactInfoPage.js';
-import GroupInfoPage from './src/ui/kick/others/GroupInfoPage.js';
-import NewGroupPage from './src/ui/kick/others/NewGroupPage.js';
-import ProfilePage from './src/ui/kick/others/OwnerInfoPage.js';
+import SplashPage from './src/ui/views/SplashPage.js';
+import LoginPage from './src/ui/views/LoginPage.js';
+import ChatListPage from './src/ui/views/ChatListPage.js';
+import ContactListPage from './src/ui/views/ContactListPage.js';
+import ChatPage from './src/ui/views/ChatPage.js';
+import SettingsPage from './src/ui/views/SettingsPage.js';
+import ContactInfoPage from './src/ui/views/ContactInfoPage.js';
+import GroupInfoPage from './src/ui/views/GroupInfoPage.js';
+import NewGroupPage from './src/ui/views/NewGroupPage.js';
+import ProfilePage from './src/ui/views/ProfilePage.js';
 
 
 class Kick extends Component {

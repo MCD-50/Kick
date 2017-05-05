@@ -120,7 +120,7 @@ class NewGroupPage extends Component {
 			this.setState({ isLoading: true });
 			const appInfo = this.state.appInfo;
 			const room = getRoom(appInfo.email, Type.GROUP, null, this.state.groupName);
-			const message = owner.userName + ' created this group.';
+			const message = appInfo.user_name + ' created this group.';
 			const createdOn = getCreatedOn();
 			let contacts = this.state.contacts
 				.filter((nn) => nn.is_selected == true)
@@ -142,9 +142,9 @@ class NewGroupPage extends Component {
 					(y)=>{
 						DatabaseHelper.addNewChatItem([chatItem],
 						(yy)=>{
-							const msg_to_be_send = prepareBeforeSending(Type.GROUP, this.state.groupName, room, null, chatItem, 1);
+							const data = prepareBeforeSending(Type.GROUP, Type.GROUP, this.state.groupName, room, null, chatItem, 1);
 							url = SEND_MESSAGE.format(this.state.appInfo.domain);
-							resolveRequest(url, msg_to_be_send)
+							resolveRequest(url, data)
 							.then(()=>{
 								this.popPage();
 							}).catch((ex)=>{

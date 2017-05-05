@@ -7,7 +7,7 @@ import { View, Text, BackAndroid } from 'react-native';
 import { Toolbar, Avatar, Progress, ListItem, Badge, Toast, SwipeListView } from 'react-native-material-component';
 import { Page } from '../../enums/Page.js';
 import { resolveRequest } from '../../helpers/InternetHelper.js';
-import { APP_INFO, GET_ISSUES, GET_MESSAGES, REMOVE_USER_FROM_GROUP } from '../../constants/AppConstant.js';
+import { APP_INFO, GET_MESSAGES, REMOVE_USER_FROM_GROUP } from '../../constants/AppConstant.js';
 import { style } from '../../constants/AppStyle.js';
 import { STATUS_BAR_COLOR } from '../../constants/AppColor.js'
 import { getTitle, getTextColor, getSortedArrayByLastMessageTime, getUniqueArrayByRoom, getTodayDate, pushNewDataAndSortArray, createChatItemFromResponse, convertToAirChatMessageObject, createChatFromResponse, checkIfResponseItemInChatListByRoom } from '../../helpers/CollectionHelper.js';
@@ -99,7 +99,7 @@ class ChatListPage extends Component {
 		const rooms = chats.map((n) => n.info.room);
 		const last_message_times = chats.map((n) => n.info.last_message_time);
 
-		let url = GET_ISSUES.format(this.state.appInfo.domain);
+		let url = GET_MESSAGES.format(this.state.appInfo.domain);
 		let data = { email: this.state.appInfo.email, rooms: rooms, last_message_times: last_message_times }
 
 		resolveRequest(url, data)

@@ -1,7 +1,6 @@
 //import from system
 import Fluxify from 'fluxify';
 
-
 //import from app
 import { Chat } from '../models/Chat.js';
 import { ChatItem } from '../models/ChatItem.js';
@@ -10,7 +9,7 @@ import { Type } from '../enums/Type.js';
 import { CARROT, PETER_RIVER, WISTERIA, ALIZARIN, TURQUOISE, MIDNIGHT_BLUE } from '../constants/AppColor.js';
 
 //prepare data before sending to server
-export const prepareBeforeSending = (chat_type, chat_title, room, obj, item, add = 1) => {
+export const prepareBeforeSending = (chat_type, chat_item_type, chat_title, room, obj, item, add = 1) => {
 	if (obj)
 		return {
 			meta: {
@@ -20,7 +19,7 @@ export const prepareBeforeSending = (chat_type, chat_title, room, obj, item, add
 			created_on: this.parseCreatedAt(obj.createdAt.toString()),
 			text: obj.text,
 			chat_data: {
-				chat_title: chat_title, chat_type: chat_type,
+				chat_title: chat_title, chat_item_type: chat_item_type,
 				user_name: obj.user.name, user_id: obj.user._id,
 				is_alert: obj.isAlert
 			},
@@ -34,8 +33,8 @@ export const prepareBeforeSending = (chat_type, chat_title, room, obj, item, add
 		created_on: item.message.created_on,
 		text: item.message.text,
 		chat_data: {
-			chat_title: chat_title, chat_type: chat_type,
-			user_name: item.message.user.name, user_id: item.message.user_id,
+			chat_title: chat_title, chat_item_type: chat_item_type,
+			user_name: item.message.user_name, user_id: item.message.user_id,
 			is_alert: item.message.is_alert
 		},
 		communication: item.message.communication
@@ -143,7 +142,7 @@ export const convertToAirChatMessageObject = (chat_item, is_group_chat) => {
 }
 
 //add new contact
-export const addAndUpdateContactList = (contacts, new_contacts, owner) => {
+export const addAndUpdateContactList = (contacts, new_contacts, appInfo) => {
 	let __list = [];
 	for (u of new_contacts) {
 		const x = contacts.filter((n) => n.info.email == u.email);
@@ -159,9 +158,9 @@ export const addAndUpdateContactList = (contacts, new_contacts, owner) => {
 				}
 			});
 		} else {
-			const room = getRoom(owner.email, true, null, email);
+			const room = getRoom(appInfo.email, true, null, email);
 			const array = [].push({ title: title, email: email });
-			const users = pushAndGetUsersInRoom(owner, array);
+			const users = pushAndGetUsersInRoom(appInfo, array);
 			chat = createChat(title, 'No new message', false, Type.PERSONAL, email, 0, null, last_active, users);
 		}
 		__list.push(chat);
@@ -265,7 +264,7 @@ export const getMonth = (index, month = null) => {
 //misc functions
 export const pushAndGetUsersInRoom = (app_info, array) => {
 	if (array.length < 1) return []
-	return array.push({ title: app_info.name, email: app_info.email });
+	return array.push({ title: app_info.user_name, email: app_info.email });
 }
 
 export const pushNewDataAndSortArray = (contacts, __list, sort_by_name = false) => {

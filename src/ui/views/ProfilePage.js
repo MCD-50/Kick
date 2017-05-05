@@ -68,7 +68,7 @@ class ProfilePage extends Component {
 	popPage() {
 		if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
 			if (this.props.route.data.callback)
-				this.props.route.data.callback(Page.OWNER_INFO_PAGE)
+				this.props.route.data.callback(Page.PROFILE_PAGE)
 			this.props.navigator.pop();
 			return true;
 		}
@@ -103,7 +103,7 @@ class ProfilePage extends Component {
 							</View>
 							<View style={style.view_with_flex_1_and_margin_all_sides}>
 								<Text style={[style.text_with_black_color_and_font_size_17, {marginBottom:5}]}>Current site</Text>
-								<Text style={style.text_with_gray_color_and_font_size_14}>{this.state.owner.domain}</Text>
+								<Text style={style.text_with_gray_color_and_font_size_14}>{this.state.appInfo.domain}</Text>
 							</View>
 						</Card>
 						<Card fullWidth='0'>

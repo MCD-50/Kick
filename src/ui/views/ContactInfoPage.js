@@ -2,17 +2,14 @@
 import React, { Component, PropTypes } from 'react';
 import { View, Text, ListView, TouchableOpacity, BackAndroid } from 'react-native';
 
-
 //import from app
-import { Toolbar, Avatar, Progress, ListItem} from 'react-native-material-component';
+import { Toolbar, Avatar, Progress, ListItem } from 'react-native-material-component';
 import { Page } from '../../enums/Page.js';
 import { resolveRequest } from '../../helpers/InternetHelper.js';
-import { IS_LOGGED, GET_USERS } from '../../constants/AppConstant.js';
 import { style } from '../../constants/AppStyle.js';
 import { STATUS_BAR_COLOR } from '../../constants/AppColor.js'
-import { getTitle, getTextColor} from '../../helpers/CollectionHelper.js';
+import { getTitle, getTextColor } from '../../helpers/CollectionHelper.js';
 import DatabaseHelper from '../../helpers/DatabaseHelper.js';
-
 
 const propTypes = {
 	navigator: PropTypes.object.isRequired,
@@ -21,8 +18,6 @@ const propTypes = {
 	messages: PropTypes.array.isRequired,
 	chat: PropTypes.object.isRequired,
 };
-
-
 
 class ContactInfoPage extends Component {
 
@@ -85,7 +80,7 @@ class ContactInfoPage extends Component {
 						</View>
 					</View>
 				</View>
-				
+
 				<ScrollView style={style.container_with_flex_1} keyboardDismissMode='interactive'>
 					<Card fullWidth='0'>
 						<View style={style.view_with_flex_1_and_margin_all_sides}>
@@ -110,8 +105,7 @@ class ContactInfoPage extends Component {
 				<Toolbar
 					leftElement="arrow-back"
 					onLeftElementPress={() => this.popPage()}
-					translucent={true}
-				/>
+					translucent={true} />
 				{this.renderElement()}
 			</View>
 		)

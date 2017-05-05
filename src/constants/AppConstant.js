@@ -38,7 +38,7 @@ export const GET_USERS = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_
 export const GET_USER_BY_EMAIL = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_user_by_email";
 export const GET_MESSAGES = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_messages";
 
-export const GET_ISSUES = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_issues";
+//export const GET_ISSUES = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_issues";
 export const GET_ISSUES_FOR_USER = "http://{0}/api/method/frappe.utils.kickapp.bridge.get_issues_for_user";
 export const SEND_MESSAGE = "http://{0}/api/method/frappe.utils.kickapp.bridge.send_message";
 

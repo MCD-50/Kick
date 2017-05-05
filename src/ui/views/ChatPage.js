@@ -7,10 +7,10 @@ import { Toolbar, Toast } from 'react-native-material-component';
 import { Page } from '../../enums/Page.js';
 import { AirChatUI } from '../customUI/airchat/AirChatUI.js';
 import { resolveRequest } from '../../helpers/InternetHelper.js';
-import { APP_INFO, SET_USERS_IN_ROOM } from '../../constants/AppConstant.js';
+import { APP_INFO, SET_USERS_IN_ROOM, GET_USERS_IN_ROOM, SEND_MESSAGE } from '../../constants/AppConstant.js';
 import { style } from '../../constants/AppStyle.js';
 import { STATUS_BAR_COLOR } from '../../constants/AppColor.js'
-import { getTitle, getTextColor, getSortedArrayByLastMessageTime, getUniqueArrayByRoom, getTodayDate, pushNewDataAndSortArray, createChatItemFromResponse, convertToAirChatMessageObject, createChatFromResponse, checkIfResponseItemInChatListByRoom } from '../../helpers/CollectionHelper.js';
+import { getTitle, getTextColor, getSortedArrayByLastMessageTime, getUniqueArrayByRoom, getTodayDate, pushNewDataAndSortArray, createChatItemFromResponse, convertToAirChatMessageObject, createChatFromResponse, checkIfResponseItemInChatListByRoom, prepareBeforeSending } from '../../helpers/CollectionHelper.js';
 import { getData, setData } from '../../helpers/AsyncStore.js';
 import { Type } from '../../enums/Type.js';
 import { Message } from '../../models/Message.js';
@@ -43,17 +43,17 @@ class ChatPage extends Component {
 			messages: this.props.messages || [],
 			appInfo: this.props.route.data.appInfo,
 			chat_type: chat.info.chat_type,
-			is_personal_communication_chat: false,
+			chat_item_type: chat.info.chat_type == Type.GROUP ? Type.GROUP : Type.PERSONAL
 		};
 
 		this.addBackEvent = this.addBackEvent.bind(this);
 		this.removeBackEvent = this.removeBackEvent.bind(this);
 		this.popPage = this.popPage.bind(this);
-		
-		
+
+
 		this.storeChatItemInDatabase = this.storeChatItemInDatabase.bind(this);
 		this.saveMessageOnSend = this.saveMessageOnSend.bind(this);
-		
+
 		this.renderSend = this.renderSend.bind(this);
 		this.onSend = this.onSend.bind(this);
 
@@ -104,7 +104,7 @@ class ChatPage extends Component {
 		let chat = this.state.chat;
 		const is_group_chat = this.state.chat_type == Type.GROUP;
 		if (is_group_chat) {
-			const url = SET_USERS_IN_ROOM.format(this.state.appInfo.domain);
+			const url = GET_USERS_IN_ROOM.format(this.state.appInfo.domain);
 			const data = { room: chat.info.room };
 			resolveRequest(url, data)
 				.then((res) => {
@@ -126,7 +126,7 @@ class ChatPage extends Component {
 
 		} else if (this.state.chat.info.chat_type == Type.PERSONAL) {
 			const url = SET_USERS_IN_ROOM.format(this.state.appInfo.domain);
-			const data = { users: chat.info.users, room: chat.info.room, chat_type: chat.info.chat_type };
+			const data = { users: chat.info.users, room: chat.info.room };
 			resolveRequest(url, data)
 				.then((res) => {
 					console.log(res);
@@ -145,50 +145,54 @@ class ChatPage extends Component {
 
 
 	storeChatItemInDatabase(airChatObject) {
-		const chatItem = CollectionUtils.convertToChatItemFromAirChatMessageObject(airChatObject,
-			this.state.chat.info.room, this.state.chat.info.chat_type);
-		this.saveMessageOnSend(chatItem, this.state.chat);
+
+		// const chatItem = CollectionUtils.convertToChatItemFromAirChatMessageObject(airChatObject,
+		// 	this.state.chat.info.room, this.state.chat.info.chat_type);
+		// this.saveMessageOnSend(chatItem, this.state.chat);
 	}
 
 	saveMessageOnSend(item, chat) {
-		chat = Object.assign({}, chat, {
-			sub_title: item.message.text,
-			info: {
-				...chat.info,
-				is_added_to_chat_list: true,
-				last_message_time: item.message.created_on,
-				new_message_count: null,
-				last_active: CollectionUtils.getLastActive(item.message.created_on)
-			}
-		});
+		// chat = Object.assign({}, chat, {
+		// 	sub_title: item.message.text,
+		// 	info: {
+		// 		...chat.info,
+		// 		is_added_to_chat_list: true,
+		// 		last_message_time: item.message.created_on,
+		// 		new_message_count: null,
+		// 		last_active: CollectionUtils.getLastActive(item.message.created_on)
+		// 	}
+		// });
 
-		Fluxify.doAction('updateCurrentChat', chat);
-		DatabaseHelper.updateChatByQuery({ room: chat.info.room }, chat, (msg) => {
-			console.log('chat page', msg);
-			DatabaseHelper.addNewChatItem([item], (msg) => {
-				console.log('chat page', msg);
-			})
-		});
+		// Fluxify.doAction('updateCurrentChat', chat);
+		// DatabaseHelper.updateChatByQuery({ room: chat.info.room }, chat, (msg) => {
+		// 	console.log('chat page', msg);
+		// 	DatabaseHelper.addNewChatItem([item], (msg) => {
+		// 		console.log('chat page', msg);
+		// 	})
+		// });
 	}
 
-	onSend(messages = [], item_id = null) {
-		console.log(messages)
-		InternetHelper.checkIfNetworkAvailable((isConnected) => {
-			if (isConnected) {
-				this.storeChatItemInDatabase(messages[0], null);
-				this.updateFluxStateMessages(messages.concat(this.state.messages));
-				let chat_title = this.state.chat.info.chat_type == Type.PERSONAL ? this.state.owner.userName
-					: this.state.chat.title;
-				let obj = CollectionUtils.prepareBeforeSending(this.state.chat.info.chat_type,
-					chat_title, this.state.chat.info.room, messages[0], null, item_id,
-					this.state.chat.info.chat_type == Type.BOT ? 0 : 1);
-				InternetHelper.sendData(this.state.owner.domain, obj, this.state.owner.userId);
-			}
-		})
+	onSend(messages = []) {
+		const url = SEND_MESSAGE.format(this.state.appInfo.domain);
+		const data = prepareBeforeSending(this.state.chat_type, this.state.chat_item_type, this.state.groupName, room, null, chatItem, 1);
+		resolveRequest()
+		// InternetHelper.checkIfNetworkAvailable((isConnected) => {
+		// 	if (isConnected) {
+		// 		this.storeChatItemInDatabase(messages[0], null);
+		// 		this.updateFluxStateMessages(messages.concat(this.state.messages));
+		// 		let chat_title = this.state.chat.info.chat_type == Type.PERSONAL ? this.state.owner.userName
+		// 			: this.state.chat.title;
+		// 		let obj = CollectionUtils.prepareBeforeSending(this.state.chat.info.chat_type,
+		// 			chat_title, this.state.chat.info.room, messages[0], null, item_id,
+		// 			this.state.chat.info.chat_type == Type.BOT ? 0 : 1);
+		// 		InternetHelper.sendData(this.state.owner.domain, obj, this.state.owner.userId);
+		// 	}
+		// })
 	}
 
 	onRespond(message) {
 		console.log(message);
+
 	}
 
 	renderSend(props) {
@@ -211,11 +215,11 @@ class ChatPage extends Component {
 			AlertHelper.showAlert(null, 'Are you sure you want to delete all messages in this chat?',
 				(data) => {
 					if (data.ok) {
-						DatabaseHelper.removeChatItemsByQuery({chat_room: this.state.chat.info.room}, 
+						DatabaseHelper.removeChatItemsByQuery({ chat_room: this.state.chat.info.room },
 							(results) => {
-							Fluxify.doAction('updateCurrentChatMessages', []);
-							Toast.show('All Message deleted');
-						});
+								Fluxify.doAction('updateCurrentChatMessages', []);
+								Toast.show('All Message deleted');
+							});
 					}
 				});
 		}
@@ -238,7 +242,7 @@ class ChatPage extends Component {
 					onSend={this.onSend}
 					user={{
 						_id: this.state.appInfo.email,
-						name: this.state.owner.user_name,
+						name: this.state.appInfo.user_name,
 					}}
 					communication={{
 						from_name: null,
